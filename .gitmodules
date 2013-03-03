@@ -1,0 +1,3 @@
+[submodule "bricabrac"]
+	path = bricabrac
+	url = marcelocantos.com:git/bricabrac.git
