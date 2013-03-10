@@ -15,6 +15,9 @@
 #include <mutex>
 #include <bitset>
 #include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <sstream>
 
 using namespace squz;
 
@@ -23,65 +26,21 @@ using namespace squz;
 typedef bricabrac::ShaderProgram<MatteVertexShader, MatteFragmentShader> MatteProgram;
 typedef MatteVertexShader::Vertex MatteVertex;
 
-vec4 rgb_to_hsv(vec4 c) {
-    float min = std::min(c.x, std::min(c.y, c.z));
-    float max = std::max(c.x, std::max(c.y, c.z));
-    float delta = max - min;
-
-    float v = max;
-    float s = max ? delta/max : 0;
-    float h = (delta    ? (1/6.0)*(max == c.x ?     (c.y - c.z)/delta :    // between yellow & magenta
-                                   max == c.y ? 2 + (c.z - c.x)/delta :    // between cyan & yellow
-                                   /* else */   4 + (c.x - c.y)/delta ) :  // between magenta & cyan
-               /*else*/   0);
-
-    if (h < 0) h += 1;
-
-    return {h, s, v, c.w};
-}
-
-vec4 hsv_to_rgb(vec4 c) {
-    float hh = 6*c.x;
-    int i = hh;
-    float ff = hh - i;
-    float p = c.z * (1 - c.y);
-    float q = c.z * (1 - c.y*ff);
-    float t = c.z * (1 - c.y*(1 - ff));
-
-    switch (i) {
-        case 0 : return {c.z, t, p, c.w};
-        case 1 : return {q, c.z, p, c.w};
-        case 2 : return {p, c.z, t, c.w};
-        case 3 : return {p, q, c.z, c.w};
-        case 4 : return {t, p, c.z, c.w};
-        default: return {c.z, p, q, c.w};
-    }
-}
-
-vec4 blendColors(vec4 p, vec4 q) {
-    p = rgb_to_hsv(p);
-    q = rgb_to_hsv(q);
-    vec4 r = 0.5*(p + q);
-
-    // Find the closest mean hue (could be one of two, because hue is modular).
-    auto meanHue = [](const vec4& u, const vec4& v) {
-        float h1 = u.x, h2 = v.x;
-        float s1 = u.y, s2 = v.y; // Weight hues by saturation.
-        float h3 = h1 + 1;
-        float S = s1 + s2;
-        return fmodf(((h2 - h1 < h3 - h2 ? h1 : h3)*s1 + h2*s2)*(S ? 1/S : 0), 1);
-    };
-    r.x = p.x < q.x ? meanHue(p, q) : meanHue(q, p);
-
-    return hsv_to_rgb(r);
-}
-
 enum {
     sph_layers = 16,
     sph_segments = 32,
     sph_verts = sph_layers*sph_segments + 1,
     sph_elems = 6*sph_layers*sph_segments,
 };
+
+static vec4 ballColors[] = {
+    {1, 0, 0, 1},
+    {0, 1, 0, 1},
+    {0, 0, 1, 1},
+    {1, 1, 1, 1},
+    {0, 0, 0, 1},
+};
+enum { numBallColors = sizeof(ballColors)/sizeof(*ballColors) };
 
 std::array<MatteVertex, sph_verts> gSphereVertices_;
 std::array<GLushort, sph_elems> gSphereElements_;
@@ -132,18 +91,17 @@ std::array<GLushort, sph_elems> sphereElements() {
 }
 
 struct Selection {
-    std::array<std::bitset<11>, 11> cells;
-    std::vector<MatteVertex> border;
+    enum { threshold = 3 };
 
-    void clear() {
-        for (auto& row : cells)
-            row.reset();
-        border.clear();
-    }
+    std::array<std::bitset<12>, 12> cells;
+    std::vector<MatteVertex> border;
+    size_t count;
+
+    Selection() : count(0) { }
 };
 
 @interface ViewController () {
-    std::array<std::array<vec4, 11>, 11> _balls;
+    std::array<std::array<vec4, 12>, 12> _balls;
 
     MatteProgram *_matte;
 
@@ -153,6 +111,7 @@ struct Selection {
 
     std::array<Selection, 2> _sels;
     int _cursel;
+    bool _moved;
 
     GLuint _sphereVerts, _sphereElems;
 }
@@ -165,17 +124,9 @@ struct Selection {
 @implementation ViewController
 
 - (void)setupGame {
-    vec4 colors[] = {
-        {1, 0, 0, 1},
-        {0, 1, 0, 1},
-        {0, 0, 1, 1},
-        {1, 1, 1, 1},
-        {0, 0, 0, 1},
-    };
-
     for (auto& row : _balls)
         for (auto& b : row)
-            b = colors[rand()%(std::end(colors) - std::begin(colors))];
+            b = ballColors[rand()%numBallColors];
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -255,7 +206,7 @@ struct Selection {
 - (void)update {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
 
-    auto proj = mat4::ortho(-14*aspect, 14*aspect, -14, 14, -5, 5);
+    auto proj = mat4::ortho(-12.5*aspect, 12.5*aspect, -12.5, 12.5, -5, 5);
     auto mv = mat4::identity();
 
     _modelViewProjectionMatrix = proj*mv;
@@ -270,11 +221,11 @@ struct Selection {
     if (auto matte = (*_matte)()) {
         matte.vs.normalMat = _normalMatrix;
 
-        vec4 borderColors[2] = {{1, 1, 0, 1}, {0.5, 0.5, 1, 1}};
+        vec3 borderColors[2] = {{1, 1, 0}, {0.5, 0.5, 1}};
         for (auto& sel : _sels)
-            if (!sel.border.empty()) {
+            if (!sel.border.empty() && !(!_moved && &sel == &_sels[_cursel])) {
                 matte.vs.mvpMat = _modelViewProjectionMatrix;
-                matte.vs.color  = borderColors[&sel - &_sels[0]];
+                matte.vs.color  = vec4(borderColors[&sel - &_sels[0]]*(sel.count < Selection::threshold ? 0.5 : 1), 1);
 
                 matte.vs.enableArray(sel.border.data());
 
@@ -312,8 +263,9 @@ struct Selection {
         y = clamp(y, 1, 10);
         auto& sel = _sels[_cursel];
         auto& cells = sel.cells;
-        if (began || (!cells[y][x] && (cells[y][x - 1] || cells[y][x + 1] || cells[y - 1][x] || cells[y + 1][x]))) {
+        if (!cells[y][x] && _balls[y][x].w && (began || cells[y][x - 1] || cells[y][x + 1] || cells[y - 1][x] || cells[y + 1][x])) {
             cells[y].set(x);
+            ++sel.count;
         }
 
         // Redo border.
@@ -336,25 +288,112 @@ struct Selection {
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    _sels[_cursel].clear();
+    _sels[_cursel] = Selection();
     [self handleTouch:[touches anyObject] began:true];
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     [self handleTouch:[touches anyObject] began:false];
+    _moved = true;
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (!(_cursel = (_cursel + 1)%2)) {
+    if (!_moved) {
+        _sels[1] = Selection();
+        _cursel = 0;
+    } else if (_sels[_cursel].count >= Selection::threshold && !(_cursel = (_cursel + 1)%2)) {
+        typedef std::array<std::vector<vec2>, numBallColors> Paths;
 
+#if 0
+        auto pathStr = [](const std::vector<vec2>& path) {
+            std::ostringstream oss;
+            for (auto v : path)
+                oss << " [" << v.x << "," << v.y << "]";
+            return oss.str();
+        };
+
+        auto reportPaths = [&](const Paths& paths) {
+            auto path = begin(paths);
+            for (const auto& c : ballColors) {
+                if (&c == &ballColors[0])
+                    NSLog(@"Paths:");
+                NSLog(@"  {%g, %g, %g, %g}:%s", c.x, c.y, c.z, c.w, pathStr(*path).c_str());
+                ++path;
+            }
+        };
+#else
+        auto reportPaths = [](const Paths&) { };
+#endif
+        
+        auto sortPath = [](std::vector<vec2>& path) {
+            std::sort(begin(path), end(path), [](vec2 a, vec2 b) { return a.y < b.y || (a.y == b.y && a.x < b.x); });
+        };
+
+        auto pathsForSelection = [&](const Selection& sel) {
+            Paths paths;
+            int n = 0;
+            vec2 bl{10, 10}, tr{0, 0};
+            auto path = begin(paths);
+            for (const auto& c : ballColors) {
+                for (int i = 1; i <= 10; ++i)
+                    for (int j = 1; j <= 10; ++j)
+                        if (sel.cells[i][j] && _balls[i][j] == c) {
+                            vec2 v{j, i};
+                            path->push_back(v);
+                            bl = {std::min(bl.x, v.x), std::min(bl.y, v.y)};
+                            tr = {std::max(tr.x, v.x), std::max(tr.y, v.y)};
+                            ++n;
+                        }
+                sortPath(*path);
+                ++path;
+            }
+
+            auto mid = 0.5*(bl + tr);
+            for (auto& path : paths)
+                for (auto& v : path)
+                    v -= mid;
+
+            reportPaths(paths);
+            return paths;
+        };
+
+        auto p0 = pathsForSelection(_sels[0]);
+        auto p1 = pathsForSelection(_sels[1]);
+        auto rot = mat4::rotate(0.5*M_PI, {0, 0, 1});
+
+        // Stabilise rot
+        for (float *f = &rot.a.x; f != &rot.a.x + 16; ++f)
+            *f = std::round(*f);
+
+        for (int i = 0; i < 4; ++i) {
+            if (std::equal(begin(p0), end(p0), begin(p1), [&](const std::vector<vec2>& a, const std::vector<vec2>& b) {
+                return a.size() == b.size() && std::equal(begin(a), end(a), begin(b));
+            })) {
+                for (int i = 1; i <= 10; ++i)
+                    for (int j = 1; j <= 10; ++j)
+                        if (_sels[0].cells[i][j] || _sels[1].cells[i][j])
+                            _balls[i][j] = {0, 0, 0, 0};
+                break;
+            }
+
+            for (auto& path : p1) {
+                for (auto& v : path)
+                    v = (rot*vec4(v, {0, 1})).xy();
+                sortPath(path);
+            }
+            reportPaths(p1);
+        }
+        _sels[1] = Selection();
     }
+    _sels[_cursel] = Selection();
+    _moved = false;
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    _sels[_cursel].clear();
+    _sels[_cursel] = Selection();
 }
 
-- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+- (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
     if (motion == UIEventSubtypeMotionShake)
         [self setupGame];
 }
