@@ -82,6 +82,10 @@
 		9C0307C716E36C4A0087F0FB /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0307C216E36C2D0087F0FB /* QuartzCore.framework */; };
 		9C0307C816E36C4F0087F0FB /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0307C416E36C330087F0FB /* AudioToolbox.framework */; };
 		9C0307C916E36C700087F0FB /* Matte.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C0307BF16E36BDB0087F0FB /* Matte.shader.h */; };
+		9C2FEDA216EC9C03009C0245 /* appicon57.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA116EC9C03009C0245 /* appicon57.png */; };
+		9C2FEDA416EC9C06009C0245 /* appicon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA316EC9C06009C0245 /* appicon114.png */; };
+		9C2FEDA616EC9C0E009C0245 /* appicon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA516EC9C0E009C0245 /* appicon72.png */; };
+		9C2FEDA816EC9C11009C0245 /* appicon144.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA716EC9C11009C0245 /* appicon144.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -235,6 +239,10 @@
 		9C0307C016E36C260087F0FB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		9C0307C216E36C2D0087F0FB /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		9C0307C416E36C330087F0FB /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		9C2FEDA116EC9C03009C0245 /* appicon57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon57.png; sourceTree = "<group>"; };
+		9C2FEDA316EC9C06009C0245 /* appicon114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon114.png; sourceTree = "<group>"; };
+		9C2FEDA516EC9C0E009C0245 /* appicon72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon72.png; sourceTree = "<group>"; };
+		9C2FEDA716EC9C11009C0245 /* appicon144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon144.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -259,6 +267,10 @@
 		9C0306B316E36AA20087F0FB = {
 			isa = PBXGroup;
 			children = (
+				9C2FEDA716EC9C11009C0245 /* appicon144.png */,
+				9C2FEDA516EC9C0E009C0245 /* appicon72.png */,
+				9C2FEDA316EC9C06009C0245 /* appicon114.png */,
+				9C2FEDA116EC9C03009C0245 /* appicon57.png */,
 				9C0306C916E36AA20087F0FB /* DoubleDots */,
 				9C0306BE16E36AA20087F0FB /* Frameworks */,
 				9C0306BD16E36AA20087F0FB /* Products */,
@@ -631,6 +643,10 @@
 				9C0306DD16E36AA20087F0FB /* MainStoryboard_iPhone.storyboard in Resources */,
 				9C0306E016E36AA20087F0FB /* MainStoryboard_iPad.storyboard in Resources */,
 				9C03079116E36B100087F0FB /* SockJSProxy.html in Resources */,
+				9C2FEDA216EC9C03009C0245 /* appicon57.png in Resources */,
+				9C2FEDA416EC9C06009C0245 /* appicon114.png in Resources */,
+				9C2FEDA616EC9C0E009C0245 /* appicon72.png in Resources */,
+				9C2FEDA816EC9C11009C0245 /* appicon144.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -758,7 +774,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -783,7 +799,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -832,6 +848,7 @@
 				9C0306EC16E36AA20087F0FB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
