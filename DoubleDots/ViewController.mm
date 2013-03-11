@@ -93,7 +93,7 @@ std::array<GLushort, sph_elems> sphereElements() {
 struct Selection {
     enum { threshold = 3 };
 
-    std::array<std::bitset<12>, 12> cells;
+    std::array<std::bitset<10>, 10> cells;
     std::vector<MatteVertex> border;
     size_t count;
 
@@ -101,7 +101,7 @@ struct Selection {
 };
 
 @interface ViewController () {
-    std::array<std::array<vec4, 12>, 12> _balls;
+    std::array<std::array<vec4, 10>, 10> _balls;
 
     MatteProgram *_matte;
 
@@ -206,7 +206,7 @@ struct Selection {
 - (void)update {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
 
-    auto proj = mat4::ortho(-12.5*aspect, 12.5*aspect, -12.5, 12.5, -5, 5);
+    auto proj = mat4::ortho(-10.5*aspect, 10.5*aspect, -10.5, 10.5, -5, 5);
     auto mv = mat4::identity();
 
     _modelViewProjectionMatrix = proj*mv;
@@ -237,9 +237,9 @@ struct Selection {
         matte.vs.enableVBO(_sphereVerts);
         matte.vs.enableElementVBO(_sphereElems);
 
-        for (int i = 0; i < 10; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                auto mvp = _modelViewProjectionMatrix*mat4::translate({-11.25+2.5*j, -11.25+2.5*i, 0});
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                auto mvp = _modelViewProjectionMatrix*mat4::translate({2.5*j - 8.75, 2.5*i - 8.75, 0});
 
                 matte.vs.mvpMat = mvp;
                 matte.vs.color  = _balls[i + 1][j + 1];
@@ -254,13 +254,13 @@ struct Selection {
     auto loc = [touch locationInView:self.view];
     auto size = self.view.bounds.size;
 
-    vec2 pos = (((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0}) + vec3{11.25, 11.25, 0})*(1/2.5)).xy();
+    vec2 pos = (((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0}) + vec3{8.75, 8.75, 0})*(1/2.5)).xy();
     float x = (int)(pos.x + 0.5 + 1);
     float y = (int)(pos.y + 0.5 + 1);
 
-    if (1 <= x && x <= 10 && 1 <= y && y <= 10) {
-        x = clamp(x, 1, 10);
-        y = clamp(y, 1, 10);
+    if (1 <= x && x <= 8 && 1 <= y && y <= 8) {
+        x = clamp(x, 1, 8);
+        y = clamp(y, 1, 8);
         auto& sel = _sels[_cursel];
         auto& cells = sel.cells;
         if (!cells[y][x] && _balls[y][x].w && (began || cells[y][x - 1] || cells[y][x + 1] || cells[y - 1][x] || cells[y + 1][x])) {
@@ -270,10 +270,10 @@ struct Selection {
 
         // Redo border.
         sel.border.clear();
-        for (int i = 0; i < 11; ++i) {
-            float y = -11.25+2.5*(i - 1.5);
-            for (int j = 0; j < 11; ++j) {
-                float x = -11.25+2.5*(j - 1.5);
+        for (int i = 0; i < 9; ++i) {
+            float y = -8.75+2.5*(i - 1.5);
+            for (int j = 0; j < 9; ++j) {
+                float x = -8.75+2.5*(j - 1.5);
                 if (cells[i][j] != cells[i][j + 1]) {
                     sel.border.push_back({{x + 2.5, y      , 0}, {0, 0, 1}});
                     sel.border.push_back({{x + 2.5, y + 2.5, 0}, {0, 0, 1}});
@@ -332,11 +332,11 @@ struct Selection {
         auto pathsForSelection = [&](const Selection& sel) {
             Paths paths;
             int n = 0;
-            vec2 bl{10, 10}, tr{0, 0};
+            vec2 bl{8, 8}, tr{0, 0};
             auto path = begin(paths);
             for (const auto& c : ballColors) {
-                for (int i = 1; i <= 10; ++i)
-                    for (int j = 1; j <= 10; ++j)
+                for (int i = 1; i <= 8; ++i)
+                    for (int j = 1; j <= 8; ++j)
                         if (sel.cells[i][j] && _balls[i][j] == c) {
                             vec2 v{j, i};
                             path->push_back(v);
@@ -369,8 +369,8 @@ struct Selection {
             if (std::equal(begin(p0), end(p0), begin(p1), [&](const std::vector<vec2>& a, const std::vector<vec2>& b) {
                 return a.size() == b.size() && std::equal(begin(a), end(a), begin(b));
             })) {
-                for (int i = 1; i <= 10; ++i)
-                    for (int j = 1; j <= 10; ++j)
+                for (int i = 1; i <= 8; ++i)
+                    for (int j = 1; j <= 8; ++j)
                         if (_sels[0].cells[i][j] || _sels[1].cells[i][j])
                             _balls[i][j] = {0, 0, 0, 0};
                 break;
