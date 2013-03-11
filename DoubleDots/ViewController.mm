@@ -38,7 +38,7 @@ static vec4 ballColors[] = {
     {0, 1, 0, 1},
     {0, 0, 1, 1},
     {1, 1, 1, 1},
-    {0, 0, 0, 1},
+    {0.4, 0.4, 0.4, 1},
 };
 enum { numBallColors = sizeof(ballColors)/sizeof(*ballColors) };
 
@@ -221,7 +221,7 @@ struct Selection {
     if (auto matte = (*_matte)()) {
         matte.vs.normalMat = _normalMatrix;
 
-        vec3 borderColors[2] = {{1, 1, 0}, {0.5, 0.5, 1}};
+        vec3 borderColors[2] = {{1, 0.7, 0.1}, {0.6, 0.6, 1}};
         for (auto& sel : _sels)
             if (!sel.border.empty() && !(!_moved && &sel == &_sels[_cursel])) {
                 matte.vs.mvpMat = _modelViewProjectionMatrix;
