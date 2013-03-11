@@ -263,7 +263,7 @@ struct Selection {
         y = clamp(y, 1, 8);
         auto& sel = _sels[_cursel];
         auto& cells = sel.cells;
-        if (!cells[y][x] && _balls[y][x].w && (began || cells[y][x - 1] || cells[y][x + 1] || cells[y - 1][x] || cells[y + 1][x])) {
+        if (!cells[y][x] && !_sels[!_cursel].cells[y][x] && _balls[y][x].w && (began || cells[y][x - 1] || cells[y][x + 1] || cells[y - 1][x] || cells[y + 1][x])) {
             cells[y].set(x);
             ++sel.count;
         }
