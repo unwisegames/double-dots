@@ -7,19 +7,41 @@
 //
 
 #import "ViewController.h"
+#import "ShapeCell.h"
+
 #import "ShaderProgram.h"
 #import "MathUtil.h"
 
 #include <array>
 #include <vector>
+#include <unordered_map>
 #include <mutex>
 #include <bitset>
 #include <cmath>
 #include <algorithm>
+#include <functional>
 #include <numeric>
 #include <sstream>
 
 using namespace squz;
+
+namespace std {
+
+    template <>
+    struct hash<vec2> {
+        size_t operator()(const vec2& p) const {
+            return hash<float>()(p.x)*1129803267 + hash<float>()(p.y);
+        }
+    };
+
+    template <>
+    struct equal_to<vec2> {
+        bool operator()(const vec2& p, const vec2& q) const {
+            return p == q;
+        }
+    };
+
+}
 
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
@@ -206,7 +228,7 @@ struct Selection {
 - (void)update {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
 
-    auto proj = mat4::ortho(-10.5*aspect, 10.5*aspect, -10.5, 10.5, -5, 5);
+    auto proj = mat4::ortho(-10.5, 21*aspect - 10.5, -10.5, 10.5, -5, 5);
     auto mv = mat4::identity();
 
     _modelViewProjectionMatrix = proj*mv;
@@ -231,7 +253,7 @@ struct Selection {
 
                 glLineWidth(3);
 
-                glDrawArrays(GL_LINES, 0, sel.border.size());
+                glDrawArrays(GL_LINE_STRIP, 0, sel.border.size());
             }
 
         matte.vs.enableVBO(_sphereVerts);
@@ -269,18 +291,55 @@ struct Selection {
         }
 
         // Redo border.
-        sel.border.clear();
+        std::unordered_multimap<vec2, vec2> edges;
         for (int i = 0; i < 9; ++i) {
             float y = -8.75+2.5*(i - 1.5);
             for (int j = 0; j < 9; ++j) {
                 float x = -8.75+2.5*(j - 1.5);
                 if (cells[i][j] != cells[i][j + 1]) {
-                    sel.border.push_back({{x + 2.5, y      , 0}, {0, 0, 1}});
-                    sel.border.push_back({{x + 2.5, y + 2.5, 0}, {0, 0, 1}});
+                    vec2 a{x + 2.5, y + 2.5}, b{x + 2.5, y};
+                    edges.emplace(a, b);
+                    edges.emplace(b, a);
                 }
                 if (cells[i][j] != cells[i + 1][j]) {
-                    sel.border.push_back({{x      , y + 2.5, 0}, {0, 0, 1}});
-                    sel.border.push_back({{x + 2.5, y + 2.5, 0}, {0, 0, 1}});
+                    vec2 a{x, y + 2.5}, b{x + 2.5, y + 2.5};
+                    edges.insert({a, b});
+                    edges.insert({b, a});
+                }
+            }
+        }
+        if (!edges.empty()) {
+            // Follow adjacent vertices to build a line strip.
+            // Stop when the border has at least two edges and we've just passed the start. As a result,
+            // the first vertex is added twice.
+            for (int pass = 0; pass < 1; ++pass) {
+                sel.border.clear();
+                if (pass) {
+                    NSLog(@"edges:");
+                    for (const auto& i : edges)
+                        NSLog(@"  [%g %g] -> [%g %g]", i.first.x, i.first.y, i.second.x, i.second.y);
+                    NSLog(@"...:");
+                }
+
+                for (auto i = begin(edges); sel.border.size() < 2 || i->first != begin(edges)->second;) {
+                    if (pass)
+                        NSLog(@"  [%g %g] -> [%g %g]", i->first.x, i->first.y, i->second.x, i->second.y);
+                    sel.border.push_back({{i->first, 0}, {0, 0, 1}});
+                    auto next = edges.equal_range(i->second);
+                    i = std::find_if(next.first, next.second, [&](const std::unordered_multimap<vec2, vec2>::value_type& j) { return j.second != i->first; });
+                    if (pass) {
+                        NSLog(@"next:");
+                        for (auto i = next.first; i != next.second; ++i)
+                            NSLog(@"  [%g %g] -> [%g %g]", i->first.x, i->first.y, i->second.x, i->second.y);
+                    }
+                    if (i == next.second) {
+                        if (pass) {
+                            assert(i != next.second);
+                        } else {
+                            --pass;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -326,7 +385,7 @@ struct Selection {
 #endif
         
         auto sortPath = [](std::vector<vec2>& path) {
-            std::sort(begin(path), end(path), [](vec2 a, vec2 b) { return a.y < b.y || (a.y == b.y && a.x < b.x); });
+            std::sort(begin(path), end(path), [](const vec2& a, const vec2& b) { return a.x < b.x || (a.x == b.x && a.y < b.y); });
         };
 
         auto pathsForSelection = [&](const Selection& sel) {
@@ -396,6 +455,29 @@ struct Selection {
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
     if (motion == UIEventSubtypeMotionShake)
         [self setupGame];
+}
+
+#pragma mark - UITableViewDataSource
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *CellIdentifier = @"shape";
+    ShapeCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (!cell) {
+        cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    }
+
+    cell.quantity.text = [NSString stringWithFormat:@"%d ×", 42];
+    cell.shape.image = [UIImage imageNamed:@"appicon57.png"];
+
+    return cell;
 }
 
 @end

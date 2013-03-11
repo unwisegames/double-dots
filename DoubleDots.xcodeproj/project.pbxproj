@@ -86,6 +86,7 @@
 		9C2FEDA416EC9C06009C0245 /* appicon114.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA316EC9C06009C0245 /* appicon114.png */; };
 		9C2FEDA616EC9C0E009C0245 /* appicon72.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA516EC9C0E009C0245 /* appicon72.png */; };
 		9C2FEDA816EC9C11009C0245 /* appicon144.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA716EC9C11009C0245 /* appicon144.png */; };
+		9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -243,6 +244,8 @@
 		9C2FEDA316EC9C06009C0245 /* appicon114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon114.png; sourceTree = "<group>"; };
 		9C2FEDA516EC9C0E009C0245 /* appicon72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon72.png; sourceTree = "<group>"; };
 		9C2FEDA716EC9C11009C0245 /* appicon144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appicon144.png; sourceTree = "<group>"; };
+		9C90732C16EDD05B00BC8A1B /* ShapeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShapeCell.h; sourceTree = "<group>"; };
+		9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShapeCell.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -304,6 +307,7 @@
 		9C0306C916E36AA20087F0FB /* DoubleDots */ = {
 			isa = PBXGroup;
 			children = (
+				9C0306CA16E36AA20087F0FB /* Supporting Files */,
 				9C0307BA16E36B460087F0FB /* Shaders */,
 				9C0306D216E36AA20087F0FB /* AppDelegate.h */,
 				9C0306D316E36AA20087F0FB /* AppDelegate.mm */,
@@ -311,7 +315,8 @@
 				9C0306DE16E36AA20087F0FB /* MainStoryboard_iPad.storyboard */,
 				9C0306E516E36AA20087F0FB /* ViewController.h */,
 				9C0306E616E36AA20087F0FB /* ViewController.mm */,
-				9C0306CA16E36AA20087F0FB /* Supporting Files */,
+				9C90732C16EDD05B00BC8A1B /* ShapeCell.h */,
+				9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */,
 			);
 			path = DoubleDots;
 			sourceTree = "<group>";
@@ -716,6 +721,7 @@
 				9C0307B616E36B100087F0FB /* TextureMgr.mm in Sources */,
 				9C0307B716E36B100087F0FB /* UIImage+ExtraFormats.mm in Sources */,
 				9C0307B816E36B100087F0FB /* xcf.cpp in Sources */,
+				9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
