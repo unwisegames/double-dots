@@ -22,16 +22,12 @@
                                             <rect key="frame" x="0.0" y="0.0" width="248" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" translatesAutoresizingMaskIntoConstraints="NO" id="Jgz-IP-3SP">
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" constant="189" type="user" id="34H-dc-KyA"/>
-                                                    </constraints>
-                                                </imageView>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" translatesAutoresizingMaskIntoConstraints="NO" id="Jgz-IP-3SP"/>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="999 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5X1-uw-5SH">
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="49" type="user" id="mvR-ey-Thr"/>
+                                                        <constraint firstAttribute="width" constant="50" type="user" id="XOq-UQ-hRV"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
@@ -39,13 +35,13 @@
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
-                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="top" secondItem="5X1-uw-5SH" secondAttribute="top" type="default" id="0J0-wd-EMS"/>
-                                            <constraint firstAttribute="bottom" secondItem="Jgz-IP-3SP" secondAttribute="bottom" constant="2" type="user" id="5wF-qu-yJi"/>
-                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" type="user" id="Qnn-QF-XMW"/>
-                                            <constraint firstAttribute="trailing" secondItem="Jgz-IP-3SP" secondAttribute="trailing" constant="2" type="user" id="XV8-d7-2ds"/>
-                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="bottom" secondItem="5X1-uw-5SH" secondAttribute="bottom" type="default" id="jfC-Oi-Sdy"/>
-                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" constant="2" type="user" id="rh5-mI-uER"/>
-                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="leading" secondItem="5X1-uw-5SH" secondAttribute="trailing" constant="8" symbolic="YES" type="user" id="udj-Uc-7W4"/>
+                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" constant="2" type="user" id="0uY-ee-eMx"/>
+                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="bottom" secondItem="5X1-uw-5SH" secondAttribute="bottom" type="user" id="F8R-lW-4RQ"/>
+                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" type="default" id="f4t-BJ-Z3w"/>
+                                            <constraint firstAttribute="trailing" secondItem="Jgz-IP-3SP" secondAttribute="trailing" constant="2" type="user" id="pFX-co-qiU"/>
+                                            <constraint firstAttribute="bottom" secondItem="Jgz-IP-3SP" secondAttribute="bottom" constant="2" type="user" id="tOm-TS-lMT"/>
+                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="top" secondItem="5X1-uw-5SH" secondAttribute="top" type="user" id="tmq-Wj-7aW"/>
+                                            <constraint firstItem="Jgz-IP-3SP" firstAttribute="leading" secondItem="5X1-uw-5SH" secondAttribute="trailing" constant="8" symbolic="YES" type="user" id="wSL-Xh-6Sv"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="quantity" destination="5X1-uw-5SH" id="sag-VE-JbJ"/>
@@ -70,6 +66,9 @@
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+                    <connections>
+                        <outlet property="tableView" destination="5AE-za-VPd" id="1TP-Se-pZ9"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="4" sceneMemberID="firstResponder"/>
             </objects>
@@ -89,6 +88,9 @@
         </class>
         <class className="ViewController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
+            </relationships>
         </class>
     </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">

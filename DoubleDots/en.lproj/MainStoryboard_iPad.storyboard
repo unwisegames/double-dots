@@ -22,16 +22,12 @@
                                             <rect key="frame" x="0.0" y="0.0" width="256" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="ne9-YL-Vee">
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" constant="189" type="user" id="LTU-au-zPA"/>
-                                                    </constraints>
-                                                </imageView>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" translatesAutoresizingMaskIntoConstraints="NO" id="ne9-YL-Vee"/>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="999 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="egi-Ac-w4s">
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="49" type="user" id="UvE-RB-31O"/>
+                                                        <constraint firstAttribute="width" constant="50" type="user" id="UvE-RB-31O"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
@@ -40,18 +36,23 @@
                                         </view>
                                         <constraints>
                                             <constraint firstItem="ne9-YL-Vee" firstAttribute="top" secondItem="EEN-PP-QUM" secondAttribute="top" constant="2" type="user" id="TUo-xl-uyV"/>
+                                            <constraint firstAttribute="trailing" secondItem="ne9-YL-Vee" secondAttribute="trailing" constant="2" type="user" id="VK3-hG-mEX"/>
                                             <constraint firstItem="ne9-YL-Vee" firstAttribute="bottom" secondItem="egi-Ac-w4s" secondAttribute="bottom" type="default" id="ZOp-yb-aBF"/>
                                             <constraint firstItem="ne9-YL-Vee" firstAttribute="top" secondItem="egi-Ac-w4s" secondAttribute="top" type="default" id="ZlV-GQ-Yxv"/>
-                                            <constraint firstItem="egi-Ac-w4s" firstAttribute="leading" secondItem="EEN-PP-QUM" secondAttribute="leading" type="user" id="cQR-l5-3ba"/>
-                                            <constraint firstItem="ne9-YL-Vee" firstAttribute="leading" secondItem="egi-Ac-w4s" secondAttribute="trailing" constant="8" symbolic="YES" type="user" id="gYW-iR-omd"/>
+                                            <constraint firstItem="egi-Ac-w4s" firstAttribute="leading" secondItem="EEN-PP-QUM" secondAttribute="leading" type="default" id="knL-ba-d3P"/>
                                             <constraint firstAttribute="bottom" secondItem="ne9-YL-Vee" secondAttribute="bottom" constant="2" type="user" id="wMd-pH-AvF"/>
+                                            <constraint firstItem="ne9-YL-Vee" firstAttribute="leading" secondItem="egi-Ac-w4s" secondAttribute="trailing" constant="8" symbolic="YES" type="user" id="yAP-rQ-mX7"/>
                                         </constraints>
                                         <connections>
-                                            <outlet property="quantity" destination="egi-Ac-w4s" id="j7A-t7-bU3"/>
-                                            <outlet property="shape" destination="ne9-YL-Vee" id="eVf-4J-7TK"/>
+                                            <outlet property="quantity" destination="egi-Ac-w4s" id="R3R-PP-M4a"/>
+                                            <outlet property="shape" destination="ne9-YL-Vee" id="pA8-9G-O8p"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
+                                <connections>
+                                    <outlet property="dataSource" destination="2" id="Iqk-9x-eLl"/>
+                                    <outlet property="delegate" destination="2" id="NGG-fT-6Qo"/>
+                                </connections>
                             </tableView>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -64,6 +65,9 @@
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <connections>
+                        <outlet property="tableView" destination="7PZ-Jj-N0u" id="C15-vY-MoM"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
             </objects>
@@ -82,6 +86,9 @@
         </class>
         <class className="ViewController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
+            </relationships>
         </class>
     </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
