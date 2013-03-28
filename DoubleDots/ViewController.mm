@@ -302,6 +302,8 @@ struct Board {
 @synthesize tableView = _tableView;
 
 - (void)setupGame {
+    for (auto& b : _board.colors)
+        b.bits = 0;
     for (int i = 0; i < 64; ++i)
         _board.colors[rand()%numBallColors].bits |= 1ULL << i;
 }
