@@ -13,7 +13,7 @@
 		9C0306C616E36AA20087F0FB /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0306C516E36AA20087F0FB /* GLKit.framework */; };
 		9C0306C816E36AA20087F0FB /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0306C716E36AA20087F0FB /* OpenGLES.framework */; };
 		9C0306CE16E36AA20087F0FB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9C0306CC16E36AA20087F0FB /* InfoPlist.strings */; };
-		9C0306D016E36AA20087F0FB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C0306CF16E36AA20087F0FB /* main.m */; };
+		9C0306D016E36AA20087F0FB /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C0306CF16E36AA20087F0FB /* main.mm */; };
 		9C0306D416E36AA20087F0FB /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C0306D316E36AA20087F0FB /* AppDelegate.mm */; };
 		9C0306D616E36AA20087F0FB /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C0306D516E36AA20087F0FB /* Default.png */; };
 		9C0306D816E36AA20087F0FB /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C0306D716E36AA20087F0FB /* Default@2x.png */; };
@@ -87,6 +87,7 @@
 		9C2FEDA816EC9C11009C0245 /* appicon144.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C2FEDA716EC9C11009C0245 /* appicon144.png */; };
 		9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */; };
 		9CCAACDD1703D63600C495CA /* quat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACDB1703D63600C495CA /* quat.cpp */; };
+		9CCAACE317044DA700C495CA /* BitBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACE217044DA700C495CA /* BitBoard.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -98,7 +99,7 @@
 		9C0306C716E36AA20087F0FB /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		9C0306CB16E36AA20087F0FB /* DoubleDots-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "DoubleDots-Info.plist"; sourceTree = "<group>"; };
 		9C0306CD16E36AA20087F0FB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		9C0306CF16E36AA20087F0FB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		9C0306CF16E36AA20087F0FB /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		9C0306D116E36AA20087F0FB /* DoubleDots-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DoubleDots-Prefix.pch"; sourceTree = "<group>"; };
 		9C0306D216E36AA20087F0FB /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9C0306D316E36AA20087F0FB /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
@@ -246,6 +247,9 @@
 		9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShapeCell.mm; sourceTree = "<group>"; };
 		9CCAACDB1703D63600C495CA /* quat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quat.cpp; sourceTree = "<group>"; };
 		9CCAACDC1703D63600C495CA /* quat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = quat.h; sourceTree = "<group>"; };
+		9CCAACDF1703FEB700C495CA /* BitBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitBoard.h; sourceTree = "<group>"; };
+		9CCAACE11704094400C495CA /* Board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
+		9CCAACE217044DA700C495CA /* BitBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitBoard.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,6 +321,7 @@
 				9C0306E616E36AA20087F0FB /* ViewController.mm */,
 				9C90732C16EDD05B00BC8A1B /* ShapeCell.h */,
 				9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */,
+				9CCAACE11704094400C495CA /* Board.h */,
 			);
 			path = DoubleDots;
 			sourceTree = "<group>";
@@ -326,7 +331,7 @@
 			children = (
 				9C0306CB16E36AA20087F0FB /* DoubleDots-Info.plist */,
 				9C0306CC16E36AA20087F0FB /* InfoPlist.strings */,
-				9C0306CF16E36AA20087F0FB /* main.m */,
+				9C0306CF16E36AA20087F0FB /* main.mm */,
 				9C0306D116E36AA20087F0FB /* DoubleDots-Prefix.pch */,
 				9C0306D516E36AA20087F0FB /* Default.png */,
 				9C0306D716E36AA20087F0FB /* Default@2x.png */,
@@ -547,6 +552,8 @@
 				9C03076816E36B100087F0FB /* vec3.h */,
 				9C03076916E36B100087F0FB /* vec4.cpp */,
 				9C03076A16E36B100087F0FB /* vec4.h */,
+				9CCAACDF1703FEB700C495CA /* BitBoard.h */,
+				9CCAACE217044DA700C495CA /* BitBoard.cpp */,
 			);
 			path = Math;
 			sourceTree = "<group>";
@@ -662,7 +669,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C0306D016E36AA20087F0FB /* main.m in Sources */,
+				9C0306D016E36AA20087F0FB /* main.mm in Sources */,
 				9C0306D416E36AA20087F0FB /* AppDelegate.mm in Sources */,
 				9C0306E716E36AA20087F0FB /* ViewController.mm in Sources */,
 				9C03077D16E36B100087F0FB /* AFHTTPClient.m in Sources */,
@@ -722,6 +729,7 @@
 				9C0307B816E36B100087F0FB /* xcf.cpp in Sources */,
 				9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */,
 				9CCAACDD1703D63600C495CA /* quat.cpp in Sources */,
+				9CCAACE317044DA700C495CA /* BitBoard.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -777,6 +785,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -802,6 +811,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;

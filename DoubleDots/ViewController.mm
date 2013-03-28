@@ -1,6 +1,6 @@
 //
 //  ViewController.mm
-//  HabeoMath
+//  DoubleDots
 //
 //  Created by Marcelo Cantos on 1/03/13.
 //  Copyright (c) 2013 Habeo Soft. All rights reserved.
@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "ShapeCell.h"
+#import "Board.h"
 
 #import "ShaderProgram.h"
 #import "MathUtil.h"
@@ -26,128 +27,7 @@
 #include <sstream>
 
 using namespace squz;
-
-namespace std {
-
-    template <>
-    struct hash<vec2> {
-        size_t operator()(const vec2& p) const {
-            return hash<float>()(p.x)*1129803267 + hash<float>()(p.y);
-        }
-    };
-
-    template <>
-    struct equal_to<vec2> {
-        bool operator()(const vec2& p, const vec2& q) const {
-            return p == q;
-        }
-    };
-
-}
-
-inline uint8_t reverseByte(uint8_t b) {
-    return ((b * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32;
-}
-
-inline uint64_t transposeByte(uint8_t b) {
-    return ((b&0x7f) * 0x40810204081ULL & 0x0101010101010101ULL) + ((b & 0x80ULL) << 56);
-}
-
-struct BitBoard {
-    uint64_t bits;
-
-    bool operator!() const { return !bits; }
-    explicit operator bool() const { return !!*this; }
-
-    BitBoard& SQUZ_OPERATOR(&=)(const BitBoard& b) { bits &= b.bits; return *this; }
-    BitBoard& SQUZ_OPERATOR(|=)(const BitBoard& b) { bits |= b.bits; return *this; }
-    BitBoard& SQUZ_OPERATOR(^=)(const BitBoard& b) { bits ^= b.bits; return *this; }
-
-    bool is_set(int x, int y) const {
-        return bits & (1ULL << (x + 8*y));
-    }
-    void set(int x, int y) {
-        bits |= (1ULL << (x + 8*y));
-    }
-    void clear(int x, int y) {
-        bits &= ~(1ULL << (x + 8*y));
-    }
-
-    BitBoard reverse() const {
-        uint64_t v = bits; // high word
-        v = ((v >>  1) & 0x5555555555555555ULL) | ((v & 0x5555555555555555ULL) <<  1); // swap odd and even bits
-        v = ((v >>  2) & 0x3333333333333333ULL) | ((v & 0x3333333333333333ULL) <<  2); // swap consecutive pairs
-        v = ((v >>  4) & 0x0F0F0F0F0F0F0F0FULL) | ((v & 0x0F0F0F0F0F0F0F0FULL) <<  4); // swap nibbles ...
-        v = ((v >>  8) & 0x00FF00FF00FF00FFULL) | ((v & 0x00FF00FF00FF00FFULL) <<  8); // swap bytes
-        v = ((v >> 16) & 0x0000FFFF0000FFFFULL) | ((v & 0x0000FFFF0000FFFFULL) << 16); // swap 2-byte long pairs
-        v = ( v >> 32                         ) | ( v                          << 32); // swap 4-byte long long pairs
-        return {v};
-    }
-    BitBoard transpose() const {
-        return {(transposeByte(bits      )      |
-                 transposeByte(bits >>  8) << 1 |
-                 transposeByte(bits >> 16) << 2 |
-                 transposeByte(bits >> 24) << 3 |
-                 transposeByte(bits >> 32) << 4 |
-                 transposeByte(bits >> 40) << 5 |
-                 transposeByte(bits >> 48) << 6 |
-                 transposeByte(bits >> 56) << 7)};
-    }
-
-    BitBoard flipH() const {
-        return{((uint64_t)reverseByte(bits      )       |
-                (uint64_t)reverseByte(bits >>  8) <<  8 |
-                (uint64_t)reverseByte(bits >> 16) << 16 |
-                (uint64_t)reverseByte(bits >> 24) << 24 |
-                (uint64_t)reverseByte(bits >> 32) << 32 |
-                (uint64_t)reverseByte(bits >> 40) << 40 |
-                (uint64_t)reverseByte(bits >> 48) << 48 |
-                (uint64_t)reverseByte(bits >> 56) << 56)};
-    }
-    BitBoard flipV() const {
-        return {((bits                        ) << 56 |
-                 (bits & 0xff00ULL            ) << 40 |
-                 (bits & 0xff0000ULL          ) << 24 |
-                 (bits & 0xff000000ULL        ) <<  8 |
-                 (bits & 0xff00000000ULL      ) >>  8 |
-                 (bits & 0xff0000000000ULL    ) >> 24 |
-                 (bits & 0xff000000000000ULL  ) >> 40 |
-                 (bits                        ) >> 56)};
-    }
-
-    BitBoard rotL() const { return flipV().transpose(); }
-    BitBoard rotR() const { return transpose().flipV(); }
-
-    BitBoard trimS(int n) const { return {bits & ~((1ULL<<(     8*n)) - 1)}; }
-    BitBoard trimN(int n) const { return {bits &  ((1ULL<<(64 - 8*n)) - 1)}; }
-    BitBoard trimW(int n) const { return {bits & ~((0x0101010101010101ULL<<     n ) - 0x0101010101010101)}; }
-    BitBoard trimE(int n) const { return {bits &  ((0x0101010101010101ULL<<(8 - n)) - 0x0101010101010101)}; }
-
-    BitBoard shiftN(int n) const { return n < 0 ? shiftS(-n) : n > 0 ? BitBoard{bits<<(8*n)}          : *this; }
-    BitBoard shiftS(int n) const { return n < 0 ? shiftN(-n) : n > 0 ? BitBoard{bits>>(8*n)}          : *this; }
-    BitBoard shiftE(int n) const { return n < 0 ? shiftW(-n) : n > 0 ? BitBoard{bits<<   n }.trimW(n) : *this; }
-    BitBoard shiftW(int n) const { return n < 0 ? shiftE(-n) : n > 0 ? BitBoard{bits>>   n }.trimE(n) : *this; }
-
-    int marginN() const { return margin<&BitBoard::trimS>(); }
-    int marginS() const { return margin<&BitBoard::trimN>(); }
-    int marginE() const { return margin<&BitBoard::trimW>(); }
-    int marginW() const { return margin<&BitBoard::trimE>(); }
-
-private:
-    template <BitBoard (BitBoard::*trim)(int n) const>
-    int margin() const {
-        return ((this->*trim)(4) ? (this->*trim)(6) ? !(this->*trim)(7)     : !(this->*trim)(5) + 2 :
-                /* otherwise */    (this->*trim)(2) ? !(this->*trim)(3) + 4 : !(this->*trim)(1) + 6);
-    }
-};
-
-inline bool operator==(const BitBoard& a, const BitBoard& b) { return a.bits == b.bits; }
-inline bool operator!=(const BitBoard& a, const BitBoard& b) { return !(a == b); }
-
-inline BitBoard operator&(const BitBoard& a, const BitBoard& b) { return {a.bits & b.bits}; }
-inline BitBoard operator|(const BitBoard& a, const BitBoard& b) { return {a.bits | b.bits}; }
-inline BitBoard operator^(const BitBoard& a, const BitBoard& b) { return {a.bits ^ b.bits}; }
-inline BitBoard operator~(const BitBoard& b) { return {~b.bits}; }
+using namespace habeo;
 
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
@@ -161,11 +41,11 @@ enum {
     sph_elems = 6*sph_layers*sph_segments,
 };
 
-static vec4 ballColors[] = {
-    {1  , 0  , 0  , 1},
-    {0  , 1  , 0  , 1},
-    {0  , 0  , 1  , 1},
-    {1  , 1  , 1  , 1},
+static Color ballColors[] = {
+    Color::red  (),
+    Color::green(),
+    Color::blue (),
+    Color::white(),
     {0.4, 0.4, 0.4, 1},
 };
 enum { numBallColors = sizeof(ballColors)/sizeof(*ballColors) };
@@ -221,7 +101,7 @@ std::array<GLushort, sph_elems> sphereElements() {
 struct Selection {
     enum { threshold = 3 };
 
-    BitBoard cells;
+    brac::BitBoard cells;
     std::vector<MatteVertex> border;
     size_t count;
 
@@ -229,56 +109,13 @@ struct Selection {
 };
 
 struct Shape {
-    std::vector<BitBoard> possibles;
+    std::vector<brac::BitBoard> possibles;
     UIImage *repr;
-};
-
-struct Board {
-    std::array<BitBoard, numBallColors> colors;
-
-    bool operator<(const Board& b) const {
-        for (int i = 0; i < numBallColors; ++i)
-            if (colors[i].bits != b.colors[i].bits)
-                return (colors[i].bits < b.colors[i].bits);
-        return false;
-    }
-
-    BitBoard mask() const {
-        return std::accumulate(begin(colors), end(colors), BitBoard{0}, [](BitBoard b, BitBoard c) { return b | c; });
-    }
-
-    void clear(int x, int y) {
-        for (auto& c : colors)
-            c.clear(x, y);
-    }
-
-    template <typename F>
-    Board map(F f) const {
-        std::array<BitBoard, numBallColors> colors;
-        for (int i = 0; i < numBallColors; ++i)
-            colors[i] = f(colors[i]);
-        return {colors};
-    }
-
-    Board rotL   () const { return map([=](const BitBoard& b) { return b.rotL   (); }); }
-    Board rotR   () const { return map([=](const BitBoard& b) { return b.rotR   (); }); }
-    Board reverse() const { return map([=](const BitBoard& b) { return b.reverse(); }); }
-
-    Board swCorner() const {
-        BitBoard all = mask();
-        int s = all.marginS();
-        int w = all.marginW();
-        return map([=](const BitBoard& b) { return b.shiftS(s).shiftW(w); });
-    }
-
-    Board canonical() const {
-        return std::min(std::min(std::min(swCorner(), rotL().swCorner()), rotR().swCorner()), reverse().swCorner());
-    }
 };
 
 @interface ViewController () {
     // Game state
-    Board _board;
+    Board<numBallColors> _board;
     std::array<Selection, 2> _sels;
     int _cursel;
     bool _moved;
@@ -302,8 +139,7 @@ struct Board {
 @synthesize tableView = _tableView;
 
 - (void)setupGame {
-    for (auto& b : _board.colors)
-        b.bits = 0;
+    std::fill(begin(_board.colors), end(_board.colors), 0);
     for (int i = 0; i < 64; ++i)
         _board.colors[rand()%numBallColors].bits |= 1ULL << i;
 }
@@ -420,8 +256,8 @@ struct Board {
         matte.vs.enableElementVBO(_sphereElems);
 
         for (int c = 0; c < numBallColors; ++c) {
-            const BitBoard& bb = _board.colors[c];
-            matte.vs.color = ballColors[c];
+            const brac::BitBoard& bb = _board.colors[c];
+            matte.vs.color = (vec4)ballColors[c];
 
             for (int i = 0; i < 8; ++i)
                 for (int j = 0; j < 8; ++j)
@@ -444,7 +280,7 @@ struct Board {
     if (0 <= x && x < 8 && 0 <= y && y < 8) {
         auto& sel = _sels[_cursel];
         auto& cells = sel.cells;
-        BitBoard mask = _board.mask();
+        brac::BitBoard mask = _board.mask();
         if (!cells.is_set(x, y) &&
             !_sels[!_cursel].cells.is_set(x, y) &&
             mask.is_set(x, y) &&
@@ -464,13 +300,23 @@ struct Board {
             y = -8.75+2.5*(i - 1.5);
             for (int j = 0; j < 9; ++j) {
                 x = -8.75+2.5*(j - 1.5);
-                if (cells.shiftN(5 - i).shiftE(5 - j).is_set(4, 4) != cells.shiftN(5 - i).shiftE(4 - j).is_set(4, 4)) {
-                    vec2 a{x + 2.5, y + 2.5}, b{x + 2.5, y};
+                bool C  = cells.shiftN(5 - i).shiftE(5 - j).is_set(4, 4);
+                bool E  = cells.shiftN(5 - i).shiftE(4 - j).is_set(4, 4);
+                bool N  = cells.shiftN(4 - i).shiftE(5 - j).is_set(4, 4);
+                bool NE = cells.shiftN(4 - i).shiftE(4 - j).is_set(4, 4);
+                if (C != E) {
+                    bool S  = cells.shiftN(6 - i).shiftE(5 - j).is_set(4, 4);
+                    bool SE = cells.shiftN(6 - i).shiftE(4 - j).is_set(4, 4);
+                    float X = x + 2.45 + 0.1*(C < E);
+                    vec2 a{X, y + 2.45 + 0.1*((C || NE) && (E || N))}, b{X, y + 0.05 - 0.1*((C || SE) && (E || S))};
                     sel.border.push_back({{a, 0}, {0, 0, 1}});
                     sel.border.push_back({{b, 0}, {0, 0, 1}});
                 }
-                if (cells.shiftN(5 - i).shiftE(5 - j).is_set(4, 4) != cells.shiftN(4 - i).shiftE(5 - j).is_set(4, 4)) {
-                    vec2 a{x, y + 2.5}, b{x + 2.5, y + 2.5};
+                if (C != N) {
+                    bool W  = cells.shiftN(5 - i).shiftE(6 - j).is_set(4, 4);
+                    bool NW = cells.shiftN(4 - i).shiftE(6 - j).is_set(4, 4);
+                    float Y = y + 2.45 + 0.1*(C < N);
+                    vec2 a{x + 0.05 - 0.1*((C || NW) && (W || N)), Y}, b{x + 2.45 + 0.1*((C || NE) && (E || N)), Y};
                     sel.border.push_back({{a, 0}, {0, 0, 1}});
                     sel.border.push_back({{b, 0}, {0, 0, 1}});
                 }
@@ -494,89 +340,8 @@ struct Board {
         _sels[1] = Selection();
         _cursel = 0;
     } else if (_sels[_cursel].count >= Selection::threshold && !(_cursel = (_cursel + 1)%2)) {
-        typedef std::array<std::vector<vec2>, numBallColors> Paths;
-
-#if 0
-        auto pathStr = [](const std::vector<vec2>& path) {
-            std::ostringstream oss;
-            for (auto v : path)
-                oss << " [" << v.x << "," << v.y << "]";
-            return oss.str();
-        };
-
-        auto reportPaths = [&](const Paths& paths) {
-            auto path = begin(paths);
-            for (const auto& c : ballColors) {
-                if (&c == &ballColors[0])
-                    NSLog(@"Paths:");
-                NSLog(@"  {%g, %g, %g, %g}:%s", c.x, c.y, c.z, c.w, pathStr(*path).c_str());
-                ++path;
-            }
-        };
-#else
-        auto reportPaths = [](const Paths&) { };
-#endif
-
-        auto sortPath = [](std::vector<vec2>& path) {
-            std::sort(begin(path), end(path), [](const vec2& a, const vec2& b) { return a.x < b.x || (a.x == b.x && a.y < b.y); });
-        };
-
-        auto pathsForSelection = [&](const Selection& sel) {
-            Paths paths;
-            int n = 0;
-            vec2 bl{8, 8}, tr{0, 0};
-            auto path = begin(paths);
-            for (int c = 0; c < numBallColors; ++c) {
-                auto mask = sel.cells & _board.colors[c];
-                for (int i = 0; i < 8; ++i)
-                    for (int j = 0; j < 8; ++j)
-                        if (mask.is_set(j, i)) {
-                            vec2 v{j, i};
-                            path->push_back(v);
-                            bl = {std::min(bl.x, v.x), std::min(bl.y, v.y)};
-                            tr = {std::max(tr.x, v.x), std::max(tr.y, v.y)};
-                            ++n;
-                        }
-                sortPath(*path);
-                ++path;
-            }
-
-            auto mid = 0.5*(bl + tr);
-            for (auto& path : paths)
-                for (auto& v : path)
-                    v -= mid;
-
-            reportPaths(paths);
-            return paths;
-        };
-
-        auto p0 = pathsForSelection(_sels[0]);
-        auto p1 = pathsForSelection(_sels[1]);
-        auto rot = mat4::rotate(0.5*M_PI, {0, 0, 1});
-
-        // Stabilise rot
-        for (float *f = &rot.a.x; f != &rot.a.x + 16; ++f)
-            *f = std::round(*f);
-
-        for (int i = 0; i < 4; ++i) {
-            if (std::equal(begin(p0), end(p0), begin(p1), [&](const std::vector<vec2>& a, const std::vector<vec2>& b) {
-                return a.size() == b.size() && std::equal(begin(a), end(a), begin(b));
-            })) {
-                auto mask = _sels[0].cells | _sels[1].cells;
-                for (int i = 0; i < 8; ++i)
-                    for (int j = 0; j < 8; ++j)
-                        if (mask.is_set(j, i))
-                            _board.clear(j, i);
-                break;
-            }
-
-            for (auto& path : p1) {
-                for (auto& v : path)
-                    v = (rot*vec4(v, {0, 1})).xy();
-                sortPath(path);
-            }
-            reportPaths(p1);
-        }
+        if ((_board & _sels[0].cells).matches(_board & _sels[1].cells))
+            _board &= ~(_sels[0].cells | _sels[1].cells);
         _sels[1] = Selection();
     }
     _sels[_cursel] = Selection();
