@@ -114,10 +114,15 @@ struct Selection {
     Selection() : cells{0}, count(0) { }
 };
 
+struct Match {
+    brac::BitBoard a, b;
+    int score;
+};
+
 struct Shape {
-    std::vector<brac::BitBoard> possibles;
+    std::vector<Match> matches;
     UIImage *repr;
-    NSString *text;
+    NSString *count, *text, *scores;
     int height;
 };
 
@@ -127,7 +132,7 @@ struct Shape {
     std::array<Selection, 2> _sels;
     int _cursel;
     bool _moved;
-    std::vector<std::unique_ptr<Shape>> _shapes;
+    std::vector<Shape> _shapes;
 
     // OpenGL
     MatteProgram *_matte;
@@ -153,61 +158,82 @@ struct Shape {
     std::call_once(once, []{
         mach_timebase_info(&tbi);
     });
-    auto matches = findMatches(_board);
+    auto pairs = findMatchingPairs(_board);
 
 #if 0
     auto at = []{ return mach_absolute_time()*tbi.numer/tbi.denom/1000000; };
     auto t1 = at();
-    constexpr int numtests = 0;
+    constexpr int numtests = 1;
     for (int i = 0; i < numtests; ++i)
-        auto matches2 = findMatches(_board);
+        auto pairs2 = findMatchingPairs(_board);
     auto t2 = at();
 
     if (numtests)
-        std::cerr << matches.size() << " matches found in " << (t2 - t1)/numtests << "ms\n";
+        std::cerr << pairs.size() << " matches found in " << (t2 - t1)/numtests << "ms\n";
 
-    std::vector<std::tuple<brac::BitBoard, brac::BitBoard>> biggest;
+    std::vector<std::pair<brac::BitBoard, brac::BitBoard>> biggest;
     int biggest_count = 0;
 
     std::map<int, int> histogram;
-    for (const auto& m : matches) {
-        int count = std::get<0>(m).count();
+    for (const auto& p : pairs) {
+        int count = p.first.count();
         ++histogram[count];
         if (biggest_count <= count) {
             if (biggest_count < count) {
                 biggest_count = count;
                 biggest.clear();
             }
-            biggest.push_back(m);
+            biggest.push_back(p);
         }
     }
 
     for (const auto& h : histogram)
         std::cerr << h.first << ": " << h.second << "\n";
 
-    for (const auto& m : biggest) {
-        brac::BitBoard a, b;
-        std::tie(a, b) = m;
-        write(std::cerr, _board, {a, b}, "-RGBWK");
+    for (const auto& p : biggest) {
+        write(std::cerr, _board, {p.first, p.second}, "-RGBWK");
     }
 #endif
 
-    std::unordered_map<brac::BitBoard, int> shape_histogram;
-    for (const auto& m : matches) {
-        auto bb = std::get<0>(m);
-        int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
-        ++shape_histogram[std::min(bb.shiftSW(sm, wm).bits,
-                                   std::min(bb.rotL().shiftSW(wm, nm).bits,
-                                            std::min(bb.reverse().shiftSW(nm, em).bits,
-                                                     bb.rotR().shiftSW(em, sm).bits)))];
-    }
-    std::vector<std::pair<brac::BitBoard, int>> shapes(begin(shape_histogram), end(shape_histogram));
-    std::sort(begin(shapes), end(shapes), [](const std::pair<brac::BitBoard, int>& a, const std::pair<brac::BitBoard, int>& b) { return a.first.bits > b.first.bits; });
+    std::vector<Match> matches;
+    for (const auto& p : pairs) {
+        int score = p.first.count();
 
-    // Cull shapes that are subsets of larger shapes.
+        // Add the score of every smaller match that this pair clobbers but doesn't contain.
+        for (const auto& m : matches) {
+            brac::BitBoard bb = m.a | m.b;
+            brac::BitBoard diff = bb & ~(p.first | p.second);
+            if (diff && diff != bb)
+                score += m.a.count();
+        }
+
+        matches.push_back({p.first, p.second, score});
+    }
+
+    typedef std::unordered_map<brac::BitBoard, std::vector<Match>> ShapeMap;
+    typedef std::pair<brac::BitBoard, std::vector<Match>> ShapeMatches;
+    ShapeMap shape_histogram;
+    for (const auto& m : matches) {
+        auto bb = m.a;
+        int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
+        auto& h = shape_histogram[std::min(bb.shiftSW(sm, wm).bits,
+                                           std::min(bb.rotL().shiftSW(wm, nm).bits,
+                                                    std::min(bb.reverse().shiftSW(nm, em).bits,
+                                                             bb.rotR().shiftSW(em, sm).bits)))];
+        h.push_back(m);
+    }
+    std::vector<ShapeMatches> shapes(begin(shape_histogram), end(shape_histogram));
+    std::sort(begin(shapes), end(shapes), [](const ShapeMatches& a, const ShapeMatches& b) {
+        auto comp = [](const Match& a, const Match& b) { return a.score > b.score; };
+        return (std::lexicographical_compare(begin(a.second), end(a.second), begin(b.second), end(a.second), comp) ||
+                (!std::lexicographical_compare(begin(b.second), end(b.second), begin(a.second), end(a.second), comp) &&
+                 a.first.bits > b.first.bits));
+    });
+
+    // Cull any shapes that are subsets of larger shapes.
     auto dst = begin(shapes);
     for (auto i = dst; i != end(shapes); ++i)
-        if (std::find_if(begin(shapes), dst, [&](const std::pair<brac::BitBoard, int>& bb) { return !(i->first & ~bb.first); }) == dst) {
+        if (std::find_if(begin(shapes), dst, [&](const ShapeMatches& sm) { return !(i->first & ~sm.first); }) == dst) {
             if (dst != i)
                 *dst = *i;
             ++dst;
@@ -216,14 +242,22 @@ struct Shape {
 
     _shapes.clear();
     for (auto i = shapes.begin(); i != shapes.end(); ++i) {
-        std::ostringstream oss;
-        write(oss, Board<1>{{{0xffffffffffffffffULL}}}, {i->first}, " O", true);
-        _shapes.emplace_back(new Shape({
-            std::vector<brac::BitBoard>{i->second},
+        std::ostringstream shapeText;
+        write(shapeText, Board<1>{{{0xffffffffffffffffULL}}}, {i->first}, " O", true);
+
+        std::vector<int> scores; scores.reserve(i->second.size());
+        std::ostringstream scoresText;
+        for (const auto& m : i->second)
+            scoresText << (&m == &i->second[0] ? "" : "\n") << m.score;
+
+        _shapes.push_back({
+            i->second,
             nil,
-            [NSString stringWithFormat:@"%s", oss.str().c_str()],
+            [NSString stringWithFormat:@"%ld ×", i->second.size()],
+            [NSString stringWithUTF8String:shapeText.str().c_str()],
+            [NSString stringWithUTF8String:scoresText.str().c_str()],
             8 - i->first.marginN()
-        }));
+        });
     }
     [_tableView reloadData];
 
@@ -465,7 +499,7 @@ struct Shape {
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return (iPad ? 137 : 130) - (iPad ? 15 : 14)*(8 - _shapes[indexPath.row]->height);
+    return (iPad ? 137 : 130) - (iPad ? 15 : 14)*(8 - _shapes[indexPath.row].height);
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -477,7 +511,7 @@ struct Shape {
     headerView.backgroundColor = [UIColor clearColor];
 
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 33)];
-    label.text = @"Possible matches";
+    label.text = @"Best shapes";
     label.textColor = [UIColor whiteColor];
     label.textAlignment = NSTextAlignmentCenter;
     label.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.7];
@@ -499,11 +533,14 @@ struct Shape {
         cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
 
-    const auto& shape = *_shapes[indexPath.row];
-    cell.quantity.text = [NSString stringWithFormat:@"%ld ×", shape.possibles.size()];
+    const auto& shape = _shapes[indexPath.row];
+    cell.quantity.text = shape.count;
+    cell.quantity.hidden = shape.matches.size() < 2;
     cell.shape.image = [UIImage imageNamed:@"appicon57.png"];
     cell.shapeText.text = shape.text;
-    
+    cell.scores.numberOfLines = shape.matches.size();
+    cell.scores.text = shape.scores;
+
     return cell;
 }
 

@@ -21,9 +21,9 @@
 namespace std {
 
     template <>
-    struct hash<std::tuple<brac::BitBoard, brac::BitBoard>> {
-        size_t operator()(const std::tuple<brac::BitBoard, brac::BitBoard>& bb) const {
-            return hash<brac::BitBoard>()(std::get<0>(bb))*1129803267 + hash<brac::BitBoard>()(std::get<1>(bb));
+    struct hash<std::pair<brac::BitBoard, brac::BitBoard>> {
+        size_t operator()(const std::pair<brac::BitBoard, brac::BitBoard>& bb) const {
+            return hash<brac::BitBoard>()(bb.first)*1129803267 + hash<brac::BitBoard>()(bb.second);
         }
     };
 
@@ -147,8 +147,8 @@ namespace habeo {
     }
 
     template <size_t N>
-    std::unordered_set<std::tuple<brac::BitBoard, brac::BitBoard>> findMatches(const Board<N>& b) {
-        std::unordered_set<std::tuple<brac::BitBoard, brac::BitBoard>> matches;
+    std::unordered_set<std::pair<brac::BitBoard, brac::BitBoard>> findMatchingPairs(const Board<N>& b) {
+        std::unordered_set<std::pair<brac::BitBoard, brac::BitBoard>> pairs;
         auto mask = b.mask();
         int analyses = 0, tests = 0, passes = 0, overlaps = 0;
 
@@ -157,11 +157,11 @@ namespace habeo {
         analysePair = [&](brac::BitBoard bb1, brac::BitBoard bb2, int level) {
             ++analyses;
             if (!(bb1 & bb2) && (bb1.bits < bb2.bits)) {
-                if (!matches.count(std::make_tuple(bb1, bb2))) {
+                if (!pairs.count(std::make_tuple(bb1, bb2))) {
                     ++tests;
                     if (match(b, bb1, bb2)) {
                         ++passes;
-                        matches.emplace(bb1, bb2);
+                        pairs.emplace(bb1, bb2);
 
                         //std::cerr << "Analyse[" << level << "] " << bb1.bits << " <-> " << bb2.bits << "\n";
                         //std::cerr << level;
@@ -225,7 +225,7 @@ namespace habeo {
         std::cerr << analyses << " analyses; " << tests << " tests; " << passes << " passes; " << overlaps << " overlaps\n";
 #endif
 
-        return matches;
+        return pairs;
     }
 
     template <size_t N>

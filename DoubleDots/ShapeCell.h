@@ -13,5 +13,6 @@
 @property (nonatomic, strong) IBOutlet UILabel     *quantity;
 @property (nonatomic, strong) IBOutlet UIImageView *shape;
 @property (strong, nonatomic) IBOutlet UITextView  *shapeText;
+@property (strong, nonatomic) IBOutlet UILabel *scores;
 
 @end

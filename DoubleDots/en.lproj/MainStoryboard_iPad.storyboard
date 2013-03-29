@@ -12,7 +12,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="137" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="7PZ-Jj-N0u">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" allowsSelection="NO" rowHeight="137" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="7PZ-Jj-N0u">
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <color key="separatorColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
@@ -23,18 +23,18 @@
                                             <rect key="frame" x="0.0" y="0.0" width="256" height="136"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label hidden="YES" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="999 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="egi-Ac-w4s">
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="99 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="egi-Ac-w4s">
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="50" type="user" id="UvE-RB-31O"/>
+                                                        <constraint firstAttribute="width" constant="42" id="IQt-Vc-ViP"/>
                                                         <constraint firstAttribute="height" constant="40" id="pyh-ph-Ycj"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" userInteractionEnabled="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8z1-hB-fIo">
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" userInteractionEnabled="NO" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" editable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8z1-hB-fIo">
                                                     <constraints>
-                                                        <constraint firstAttribute="height" constant="179" id="xT1-Fk-SCu"/>
+                                                        <constraint firstAttribute="width" constant="141" id="zOl-gA-eRG"/>
                                                     </constraints>
                                                     <string key="text"> - - - - - - - -
  - - - - - - - -
@@ -48,18 +48,32 @@
                                                     <fontDescription key="fontDescription" name="CourierNewPS-BoldMT" family="Courier New" pointSize="13"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                                 </textView>
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="82" translatesAutoresizingMaskIntoConstraints="NO" id="fPp-r7-GDi">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="82" id="4RB-uH-jbk"/>
+                                                    </constraints>
+                                                    <string key="text">12345
+23456</string>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                    <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                </label>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
+                                            <constraint firstItem="fPp-r7-GDi" firstAttribute="top" secondItem="EEN-PP-QUM" secondAttribute="top" type="default" id="2lD-CF-ubc"/>
                                             <constraint firstItem="egi-Ac-w4s" firstAttribute="centerY" secondItem="EEN-PP-QUM" secondAttribute="centerY" type="default" id="DFm-q7-AGo"/>
-                                            <constraint firstItem="8z1-hB-fIo" firstAttribute="leading" secondItem="egi-Ac-w4s" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="U5F-Vp-OSx"/>
-                                            <constraint firstAttribute="trailing" secondItem="8z1-hB-fIo" secondAttribute="trailing" constant="20" type="default" id="bqn-pI-ngY"/>
+                                            <constraint firstItem="fPp-r7-GDi" firstAttribute="bottom" secondItem="EEN-PP-QUM" secondAttribute="bottom" type="default" id="JSb-nL-iWh"/>
+                                            <constraint firstAttribute="trailing" secondItem="fPp-r7-GDi" secondAttribute="trailing" constant="6" id="KCb-Iv-Etl"/>
                                             <constraint firstItem="8z1-hB-fIo" firstAttribute="top" secondItem="EEN-PP-QUM" secondAttribute="top" type="default" id="cND-3o-vFW"/>
+                                            <constraint firstItem="8z1-hB-fIo" firstAttribute="leading" secondItem="EEN-PP-QUM" secondAttribute="leading" constant="35" id="fUc-yB-JgK"/>
                                             <constraint firstItem="egi-Ac-w4s" firstAttribute="leading" secondItem="EEN-PP-QUM" secondAttribute="leading" type="default" id="knL-ba-d3P"/>
+                                            <constraint firstItem="8z1-hB-fIo" firstAttribute="bottom" secondItem="EEN-PP-QUM" secondAttribute="bottom" type="default" id="zoi-5C-BPv"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="quantity" destination="egi-Ac-w4s" id="R3R-PP-M4a"/>
+                                            <outlet property="scores" destination="fPp-r7-GDi" id="bLJ-fr-2Hh"/>
                                             <outlet property="shapeText" destination="8z1-hB-fIo" id="DX9-y1-iYy"/>
                                         </connections>
                                     </tableViewCell>
@@ -86,6 +100,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="60" y="282"/>
         </scene>
     </scenes>
     <classes>
@@ -96,6 +111,7 @@
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
             <relationships>
                 <relationship kind="outlet" name="quantity" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="scores" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
                 <relationship kind="outlet" name="shapeText" candidateClass="UITextView"/>
             </relationships>

@@ -12,7 +12,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="130" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="5AE-za-VPd">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" allowsSelection="NO" rowHeight="130" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="5AE-za-VPd">
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <color key="separatorColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
@@ -23,41 +23,57 @@
                                             <rect key="frame" x="0.0" y="0.0" width="248" height="129"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label hidden="YES" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="999 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5X1-uw-5SH">
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="99 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5X1-uw-5SH">
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="40" id="Dcu-VJ-v4M"/>
-                                                        <constraint firstAttribute="width" constant="50" type="user" id="XOq-UQ-hRV"/>
+                                                        <constraint firstAttribute="width" constant="39" id="KrH-OL-VGY"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Twg-jM-Pm2">
-                                                    <string key="text"> - - - - - - - -
- - - - - - - - -
- - - - - - - - -
- - - - - - - - -
- O - - - - - - -
- O O O O - - - -
- O O O - - - - -
- O - - - - - - -</string>
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" userInteractionEnabled="NO" contentMode="scaleToFill" editable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Twg-jM-Pm2">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="129" id="L3h-N8-ZVB"/>
+                                                    </constraints>
+                                                    <string key="text">- - - - - - - -
+- - - - - - - -
+- - - - - - - -
+- - - - - - - -
+O - - - - - - -
+O O O O - - - -
+O O O - - - - -
+O - - - - - - -</string>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <fontDescription key="fontDescription" name="CourierNewPS-BoldMT" family="Courier New" pointSize="12"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                                 </textView>
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="83" translatesAutoresizingMaskIntoConstraints="NO" id="H3n-KT-Yym">
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="83" id="GwS-jF-mQF"/>
+                                                    </constraints>
+                                                    <string key="text">12345
+23456</string>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                    <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                </label>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
                                             <constraint firstItem="Twg-jM-Pm2" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="2xK-0B-Yhd"/>
-                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="centerY" secondItem="5Ky-Pg-p6K" secondAttribute="centerY" type="default" id="M7x-A6-gtx"/>
-                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="centerY" secondItem="5Ky-Pg-p6K" secondAttribute="centerY" type="default" id="PRC-TH-vPJ"/>
+                                            <constraint firstAttribute="trailing" secondItem="H3n-KT-Yym" secondAttribute="trailing" constant="5" id="GY2-yD-HJ4"/>
+                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="centerY" secondItem="Twg-jM-Pm2" secondAttribute="centerY" type="default" id="IL3-PP-EAW"/>
+                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" constant="37" id="SjP-Qh-9iJ"/>
                                             <constraint firstItem="5X1-uw-5SH" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" type="default" id="f4t-BJ-Z3w"/>
-                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="leading" secondItem="5X1-uw-5SH" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="kAD-pU-G7T"/>
-                                            <constraint firstAttribute="trailing" secondItem="Twg-jM-Pm2" secondAttribute="trailing" constant="20" type="default" id="sms-N5-xPj"/>
+                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="f9f-qP-sCi"/>
+                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="fBM-pw-BYS"/>
+                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="yKc-C5-PM2"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="quantity" destination="5X1-uw-5SH" id="sag-VE-JbJ"/>
+                                            <outlet property="scores" destination="H3n-KT-Yym" id="gCe-65-6Oe"/>
                                             <outlet property="shapeText" destination="Twg-jM-Pm2" id="QEq-9C-3QX"/>
                                         </connections>
                                     </tableViewCell>
@@ -96,6 +112,7 @@
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
             <relationships>
                 <relationship kind="outlet" name="quantity" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="scores" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
                 <relationship kind="outlet" name="shapeText" candidateClass="UITextView"/>
             </relationships>
