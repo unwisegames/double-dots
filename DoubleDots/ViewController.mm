@@ -33,6 +33,8 @@
 using namespace squz;
 using namespace habeo;
 
+static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
 typedef bricabrac::ShaderProgram<MatteVertexShader, MatteFragmentShader> MatteProgram;
@@ -115,6 +117,8 @@ struct Selection {
 struct Shape {
     std::vector<brac::BitBoard> possibles;
     UIImage *repr;
+    NSString *text;
+    int height;
 };
 
 @interface ViewController () {
@@ -184,9 +188,44 @@ struct Shape {
     for (const auto& m : biggest) {
         brac::BitBoard a, b;
         std::tie(a, b) = m;
-        write(std::cerr, _board, {a, b}, "RGBWK");
+        write(std::cerr, _board, {a, b}, "-RGBWK");
     }
 #endif
+
+    std::unordered_map<brac::BitBoard, int> shape_histogram;
+    for (const auto& m : matches) {
+        auto bb = std::get<0>(m);
+        int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
+        ++shape_histogram[std::min(bb.shiftSW(sm, wm).bits,
+                                   std::min(bb.rotL().shiftSW(wm, nm).bits,
+                                            std::min(bb.reverse().shiftSW(nm, em).bits,
+                                                     bb.rotR().shiftSW(em, sm).bits)))];
+    }
+    std::vector<std::pair<brac::BitBoard, int>> shapes(begin(shape_histogram), end(shape_histogram));
+    std::sort(begin(shapes), end(shapes), [](const std::pair<brac::BitBoard, int>& a, const std::pair<brac::BitBoard, int>& b) { return a.first.bits > b.first.bits; });
+
+    // Cull shapes that are subsets of larger shapes.
+    auto dst = begin(shapes);
+    for (auto i = dst; i != end(shapes); ++i)
+        if (std::find_if(begin(shapes), dst, [&](const std::pair<brac::BitBoard, int>& bb) { return !(i->first & ~bb.first); }) == dst) {
+            if (dst != i)
+                *dst = *i;
+            ++dst;
+        }
+    shapes.erase(dst, end(shapes));
+
+    _shapes.clear();
+    for (auto i = shapes.begin(); i != shapes.end(); ++i) {
+        std::ostringstream oss;
+        write(oss, Board<1>{{{0xffffffffffffffffULL}}}, {i->first}, " O", true);
+        _shapes.emplace_back(new Shape({
+            std::vector<brac::BitBoard>{i->second},
+            nil,
+            [NSString stringWithFormat:@"%s", oss.str().c_str()],
+            8 - i->first.marginN()
+        }));
+    }
+    [_tableView reloadData];
 
     if (matches.empty())
         [self setupGame];
@@ -195,7 +234,8 @@ struct Shape {
 - (void)setupGame {
     std::fill(begin(_board.colors), end(_board.colors), 0);
     for (int i = 0; i < 64; ++i)
-        _board.colors[rand()%numBallColors].bits |= 1ULL << i;
+        //_board.colors[rand()%numBallColors].bits |= 1ULL << i;
+        _board.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
     [self updatePossibles];
 }
 
@@ -421,7 +461,11 @@ struct Shape {
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
+    return _shapes.size();
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return (iPad ? 137 : 130) - (iPad ? 15 : 14)*(8 - _shapes[indexPath.row]->height);
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -454,9 +498,11 @@ struct Shape {
     if (!cell) {
         cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
-    
-    cell.quantity.text = [NSString stringWithFormat:@"%d ×", 42];
+
+    const auto& shape = *_shapes[indexPath.row];
+    cell.quantity.text = [NSString stringWithFormat:@"%ld ×", shape.possibles.size()];
     cell.shape.image = [UIImage imageNamed:@"appicon57.png"];
+    cell.shapeText.text = shape.text;
     
     return cell;
 }

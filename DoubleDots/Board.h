@@ -97,22 +97,22 @@ namespace habeo {
             for (int i = 0; i < N; ++i) {
                 auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "identity " << (c1 == c2.shiftSW(sm, wm)) << "\n", b, {c1, c2, c2, c2.shiftSW(sm, wm)}, "RGBWK");
+                write(std::cerr << "identity " << (c1 == c2.shiftSW(sm, wm)) << "\n", b, {c1, c2, c2, c2.shiftSW(sm, wm)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
                 auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotL " << (c1 == c2.rotL().shiftSW(wm, nm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftSW(wm, nm)}, "RGBWK");
+                write(std::cerr << "rotL " << (c1 == c2.rotL().shiftSW(wm, nm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftSW(wm, nm)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
                 auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "reverse " << (c1 == c2.reverse().shiftSW(nm, em)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftSW(nm, em)}, "RGBWK");
+                write(std::cerr << "reverse " << (c1 == c2.reverse().shiftSW(nm, em)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftSW(nm, em)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
                 auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotR " << (c1 == c2.rotR().shiftSW(em, sm)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftSW(em, sm)}, "RGBWK");
+                write(std::cerr << "rotR " << (c1 == c2.rotR().shiftSW(em, sm)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftSW(em, sm)}, "-RGBWK");
             }
             std::cerr << "nm = " << nm << "; sm = " << sm << "; em = " << em << "; wm = " << wm << "\n";
         }
@@ -229,14 +229,18 @@ namespace habeo {
     }
 
     template <size_t N>
-    std::ostream& write(std::ostream& os, const Board<N>& b, std::initializer_list<brac::BitBoard> bbs, const char* colors) {
-        for (int y = 8; y--;) {
+    std::ostream& write(std::ostream& os, const Board<N>& b, std::initializer_list<brac::BitBoard> bbs, const char* colors, bool trimNorth = false) {
+        int mn = 8;
+        for (const auto& bb : bbs)
+            mn = std::min(mn, bb.marginN());
+
+        for (int y = 8 - trimNorth*mn; y--;) {
             for (const auto& bb : bbs) {
                 if (&bb != &*begin(bbs))
                     os << " |";
                 for (int x = 0; x < 8; ++x) {
                     auto c = b.color(x, y);
-                    (os << " " << (c < 0 ? ' ' : bb.is_set(x, y) ? colors[c] : '-'));
+                    (os << " " << (c < 0 ? ' ' : bb.is_set(x, y) ? colors[1 + c] : colors[0]));
                 }
             }
             (os << "\n");

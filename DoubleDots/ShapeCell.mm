@@ -10,7 +10,7 @@
 
 @implementation ShapeCell
 
-@synthesize quantity = _quantity, shape = _shape;
+@synthesize quantity = _quantity, shape = _shape, shapeText = _shapeText;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
