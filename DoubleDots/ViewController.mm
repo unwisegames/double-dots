@@ -151,13 +151,16 @@ struct Shape {
     });
     auto matches = findMatches(_board);
 
-    auto at = []{ return mach_absolute_time()*tbi.numer/tbi.denom/1000; };
+#if 0
+    auto at = []{ return mach_absolute_time()*tbi.numer/tbi.denom/1000000; };
     auto t1 = at();
-    for (int i = 0; i < 100; ++i)
+    constexpr int numtests = 0;
+    for (int i = 0; i < numtests; ++i)
         auto matches2 = findMatches(_board);
     auto t2 = at();
 
-    std::cerr << matches.size() << " matches found in " << t2 - t1 << "µs\n";
+    if (numtests)
+        std::cerr << matches.size() << " matches found in " << (t2 - t1)/numtests << "ms\n";
 
     std::vector<std::tuple<brac::BitBoard, brac::BitBoard>> biggest;
     int biggest_count = 0;
@@ -178,20 +181,12 @@ struct Shape {
     for (const auto& h : histogram)
         std::cerr << h.first << ": " << h.second << "\n";
 
-    auto mask = _board.mask();
     for (const auto& m : biggest) {
         brac::BitBoard a, b;
         std::tie(a, b) = m;
-        std::cerr << "\n";
-        for (int y = 8; y--;) {
-            for (int x = 0; x < 8; ++x)
-                std::cerr << (!mask.is_set(x, y) ? "  " : a.is_set(x, y) ? " X" : " -");
-            std::cerr << "        ";
-            for (int x = 0; x < 8; ++x)
-                std::cerr << (!mask.is_set(x, y) ? "  " : b.is_set(x, y) ? " X" : " -");
-            std::cerr << "\n";
-        }
+        write(std::cerr, _board, {a, b}, "RGBWK");
     }
+#endif
 
     if (matches.empty())
         [self setupGame];
@@ -400,7 +395,7 @@ struct Shape {
         _sels[1] = Selection();
         _cursel = 0;
     } else if (_sels[_cursel].count >= Selection::threshold && !(_cursel = (_cursel + 1)%2)) {
-        if ((_board & _sels[0].cells).matches(_board & _sels[1].cells)) {
+        if (match(_board, _sels[0].cells, _sels[1].cells)) {
             _board &= ~(_sels[0].cells | _sels[1].cells);
             [self updatePossibles];
         }
