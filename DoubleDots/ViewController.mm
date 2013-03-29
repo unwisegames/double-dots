@@ -15,6 +15,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
+#include <mach/mach_time.h>
+
 #include <array>
 #include <vector>
 #include <unordered_map>
@@ -25,6 +27,8 @@
 #include <functional>
 #include <numeric>
 #include <sstream>
+#include <iostream>
+#include <map>
 
 using namespace squz;
 using namespace habeo;
@@ -130,6 +134,7 @@ struct Shape {
 }
 @property (strong, nonatomic) EAGLContext *context;
 
+- (void)setupGame;
 - (void)setupGL;
 - (void)tearDownGL;
 @end
@@ -138,10 +143,65 @@ struct Shape {
 
 @synthesize tableView = _tableView;
 
+- (void)updatePossibles {
+    static mach_timebase_info_data_t tbi;
+    static std::once_flag once;
+    std::call_once(once, []{
+        mach_timebase_info(&tbi);
+    });
+    auto matches = findMatches(_board);
+
+    auto at = []{ return mach_absolute_time()*tbi.numer/tbi.denom/1000; };
+    auto t1 = at();
+    for (int i = 0; i < 100; ++i)
+        auto matches2 = findMatches(_board);
+    auto t2 = at();
+
+    std::cerr << matches.size() << " matches found in " << t2 - t1 << "µs\n";
+
+    std::vector<std::tuple<brac::BitBoard, brac::BitBoard>> biggest;
+    int biggest_count = 0;
+
+    std::map<int, int> histogram;
+    for (const auto& m : matches) {
+        int count = std::get<0>(m).count();
+        ++histogram[count];
+        if (biggest_count <= count) {
+            if (biggest_count < count) {
+                biggest_count = count;
+                biggest.clear();
+            }
+            biggest.push_back(m);
+        }
+    }
+
+    for (const auto& h : histogram)
+        std::cerr << h.first << ": " << h.second << "\n";
+
+    auto mask = _board.mask();
+    for (const auto& m : biggest) {
+        brac::BitBoard a, b;
+        std::tie(a, b) = m;
+        std::cerr << "\n";
+        for (int y = 8; y--;) {
+            for (int x = 0; x < 8; ++x)
+                std::cerr << (!mask.is_set(x, y) ? "  " : a.is_set(x, y) ? " X" : " -");
+            std::cerr << "        ";
+            for (int x = 0; x < 8; ++x)
+                std::cerr << (!mask.is_set(x, y) ? "  " : b.is_set(x, y) ? " X" : " -");
+            std::cerr << "\n";
+        }
+    }
+
+    if (matches.empty())
+        [self setupGame];
+}
+
 - (void)setupGame {
     std::fill(begin(_board.colors), end(_board.colors), 0);
     for (int i = 0; i < 64; ++i)
         _board.colors[rand()%numBallColors].bits |= 1ULL << i;
+    [self updatePossibles];
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -340,8 +400,10 @@ struct Shape {
         _sels[1] = Selection();
         _cursel = 0;
     } else if (_sels[_cursel].count >= Selection::threshold && !(_cursel = (_cursel + 1)%2)) {
-        if ((_board & _sels[0].cells).matches(_board & _sels[1].cells))
+        if ((_board & _sels[0].cells).matches(_board & _sels[1].cells)) {
             _board &= ~(_sels[0].cells | _sels[1].cells);
+            [self updatePossibles];
+        }
         _sels[1] = Selection();
     }
     _sels[_cursel] = Selection();
@@ -355,10 +417,6 @@ struct Shape {
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
     if (motion == UIEventSubtypeMotionShake)
         [self setupGame];
-}
-
-- (void)updatePossibles {
-
 }
 
 #pragma mark - UITableViewDataSource
