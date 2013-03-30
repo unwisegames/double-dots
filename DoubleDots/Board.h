@@ -84,62 +84,62 @@ namespace habeo {
         Board reverse() const { return map([=](const brac::BitBoard& b) { return b.reverse(); }); }
 
         Board shiftSW(int s, int w) const {
-            return map([=](const brac::BitBoard& b) { return b.shiftSW(s, w); });
+            return map([=](const brac::BitBoard& b) { return b.shiftWS(w, s); });
         }
     };
 
     template <size_t N>
-    bool match(const Board<N>& b, const brac::BitBoard& bb1, const brac::BitBoard& bb2, bool report = false) {
+    bool selectionsMatch(const Board<N>& b, const brac::BitBoard& bb1, const brac::BitBoard& bb2, bool report = false) {
         int sm1 = bb1.marginS(), wm1 = bb1.marginW();
         int nm = bb2.marginN(), sm = bb2.marginS(), em = bb2.marginE(), wm = bb2.marginW();
 
         if (report) {
             for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
+                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "identity " << (c1 == c2.shiftSW(sm, wm)) << "\n", b, {c1, c2, c2, c2.shiftSW(sm, wm)}, "-RGBWK");
+                write(std::cerr << "identity " << (c1 == c2.shiftWS(wm, sm)) << "\n", b, {c1, c2, c2, c2.shiftWS(wm, sm)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
+                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotL " << (c1 == c2.rotL().shiftSW(wm, nm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftSW(wm, nm)}, "-RGBWK");
+                write(std::cerr << "rotL " << (c1 == c2.rotL().shiftWS(nm, wm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftWS(nm, wm)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
+                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "reverse " << (c1 == c2.reverse().shiftSW(nm, em)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftSW(nm, em)}, "-RGBWK");
+                write(std::cerr << "reverse " << (c1 == c2.reverse().shiftWS(em, nm)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftWS(em, nm)}, "-RGBWK");
             }
             for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftSW(sm1, wm1);
+                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
                 auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotR " << (c1 == c2.rotR().shiftSW(em, sm)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftSW(em, sm)}, "-RGBWK");
+                write(std::cerr << "rotR " << (c1 == c2.rotR().shiftWS(sm, em)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftWS(sm, em)}, "-RGBWK");
             }
             std::cerr << "nm = " << nm << "; sm = " << sm << "; em = " << em << "; wm = " << wm << "\n";
         }
 
         brac::BitBoard c1[N], c2[N];
         for (int i = 0; i < N; ++i) {
-            c1[i] = (b.colors[i] & bb1).shiftSW(sm1, wm1);
+            c1[i] = (b.colors[i] & bb1).shiftWS(wm1, sm1);
             c2[i] =  b.colors[i] & bb2;
         }
 
         for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].shiftSW(sm, wm))
+            if (c1[i] != c2[i].shiftWS(wm, sm))
                 goto rotl;
         return true;
     rotl:
         for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].rotL().shiftSW(wm, nm))
+            if (c1[i] != c2[i].rotL().shiftWS(nm, wm))
                 goto reverse;
         return true;
     reverse:
         for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].reverse().shiftSW(nm, em))
+            if (c1[i] != c2[i].reverse().shiftWS(em, nm))
                 goto rotr;
         return true;
     rotr:
         for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].rotR().shiftSW(em, sm))
+            if (c1[i] != c2[i].rotR().shiftWS(sm, em))
                 goto gulp;
         return true;
     gulp:
@@ -159,7 +159,7 @@ namespace habeo {
             if (!(bb1 & bb2) && (bb1.bits < bb2.bits)) {
                 if (!pairs.count(std::make_tuple(bb1, bb2))) {
                     ++tests;
-                    if (match(b, bb1, bb2)) {
+                    if (selectionsMatch(b, bb1, bb2)) {
                         ++passes;
                         pairs.emplace(bb1, bb2);
 
