@@ -266,7 +266,7 @@ struct Shape {
 
 - (void)setupGame {
     std::fill(begin(_board.colors), end(_board.colors), 0);
-    for (int i = 0; i < 64; ++i)
+    for (int i = 0; i < (iPad ? 64 : 56); ++i)
         //_board.colors[rand()%numBallColors].bits |= 1ULL << i;
         _board.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
     [self updatePossibles];
@@ -352,7 +352,8 @@ struct Shape {
 - (void)update {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
 
-    auto proj = mat4::ortho(0, 21*aspect, 0, 21, -2, 2);//*mat4::scale(8/7.0);
+    auto proj = mat4::ortho(0, 21*aspect, 0, 21, -2, 2);
+    if (!iPad) proj *= mat4::scale(8/7.0);
     auto mv = mat4::identity()*mat4::translate({10.5, 10.5, 0});
 
     _modelViewProjectionMatrix = proj*mv;

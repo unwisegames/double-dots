@@ -14,13 +14,16 @@
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" allowsSelection="NO" rowHeight="130" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="5AE-za-VPd">
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="210" id="bEf-L9-fAJ"/>
+                                </constraints>
                                 <color key="separatorColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
                                     <tableViewCell contentMode="scaleToFill" selectionStyle="blue" indentationWidth="10" reuseIdentifier="shape" rowHeight="130" id="5Ky-Pg-p6K" customClass="ShapeCell">
-                                        <rect key="frame" x="0.0" y="22" width="248" height="130"/>
+                                        <rect key="frame" x="0.0" y="22" width="210" height="130"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="248" height="129"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="210" height="129"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="99 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5X1-uw-5SH">
@@ -48,9 +51,9 @@ O - - - - - - -</string>
                                                     <fontDescription key="fontDescription" name="CourierNewPS-BoldMT" family="Courier New" pointSize="12"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                                 </textView>
-                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="83" translatesAutoresizingMaskIntoConstraints="NO" id="H3n-KT-Yym">
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="55" translatesAutoresizingMaskIntoConstraints="NO" id="H3n-KT-Yym">
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="83" id="GwS-jF-mQF"/>
+                                                        <constraint firstAttribute="width" constant="55" id="kkC-ye-I4x"/>
                                                     </constraints>
                                                     <string key="text">12345
 23456</string>
@@ -63,8 +66,8 @@ O - - - - - - -</string>
                                         </view>
                                         <constraints>
                                             <constraint firstItem="Twg-jM-Pm2" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="2xK-0B-Yhd"/>
-                                            <constraint firstAttribute="trailing" secondItem="H3n-KT-Yym" secondAttribute="trailing" constant="5" id="GY2-yD-HJ4"/>
                                             <constraint firstItem="5X1-uw-5SH" firstAttribute="centerY" secondItem="Twg-jM-Pm2" secondAttribute="centerY" type="default" id="IL3-PP-EAW"/>
+                                            <constraint firstAttribute="trailing" secondItem="H3n-KT-Yym" secondAttribute="trailing" constant="5" id="Iy4-yY-ws3"/>
                                             <constraint firstItem="Twg-jM-Pm2" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" constant="37" id="SjP-Qh-9iJ"/>
                                             <constraint firstItem="5X1-uw-5SH" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" type="default" id="f4t-BJ-Z3w"/>
                                             <constraint firstItem="H3n-KT-Yym" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="f9f-qP-sCi"/>
@@ -87,8 +90,7 @@ O - - - - - - -</string>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="5AE-za-VPd" firstAttribute="top" secondItem="3" secondAttribute="top" type="user" id="HiB-JQ-Hje"/>
-                            <constraint firstAttribute="trailing" secondItem="5AE-za-VPd" secondAttribute="trailing" type="user" id="aza-xw-HTN"/>
-                            <constraint firstItem="5AE-za-VPd" firstAttribute="leading" secondItem="3" secondAttribute="leading" constant="320" type="user" id="hsS-c6-OVc"/>
+                            <constraint firstItem="5AE-za-VPd" firstAttribute="trailing" secondItem="3" secondAttribute="trailing" type="default" id="eOc-rt-IWf"/>
                             <constraint firstItem="5AE-za-VPd" firstAttribute="bottom" secondItem="3" secondAttribute="bottom" type="user" id="tSj-ei-1xq"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
