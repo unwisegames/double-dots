@@ -12,6 +12,7 @@
 
 #import "ShaderProgram.h"
 #import "MathUtil.h"
+#import "Texture2D.h"
 
 #include <boost/iterator/transform_iterator.hpp>
 
@@ -39,8 +40,8 @@ static bool running_on_an_iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdi
 
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
-typedef bricabrac::ShaderProgram<MatteVertexShader, MatteFragmentShader> MatteProgram;
-typedef MatteVertexShader::Vertex MatteVertex;
+#define BRICABRAC_SHADER_NAME Border
+#include "LoadShaders.h"
 
 enum {
     sph_layers = 16,
@@ -59,11 +60,11 @@ static Color ballColors[] = {
 enum { numBallColors = sizeof(ballColors)/sizeof(*ballColors) };
 
 static Color selectionColors[] = {
-    {1, 0.7, 0.1},
-    {0.6, 0.8, 1},
+    {1  , 0.7, 0.1},
+    {0.6, 0.6, 1  },
+    {0.9, 0.3, 0.6},
     {0.4, 0.8, 0.4},
     {0.6, 0.6, 0.2},
-    {0.6, 0.6, 0.6},
 };
 
 std::array<MatteVertex, sph_verts> gSphereVertices_;
@@ -119,12 +120,11 @@ public:
     enum { threshold = 3 };
 
     UITouch *touch;
-    bool has_moved;
     brac::BitBoard is_selected;
     GLuint vboBorderVerts;
     size_t nBorderVerts;
 
-    Selection() : touch{nil}, has_moved{false}, is_selected{0}, vboBorderVerts{0}, nBorderVerts{0} { }
+    Selection() : touch{nil}, is_selected{0}, vboBorderVerts{0}, nBorderVerts{0} { }
     Selection(Selection&& s) : Selection{(const Selection&)s} { s.vboBorderVerts = 0; }
     ~Selection() { glDeleteBuffers(1, &vboBorderVerts); }
 
@@ -154,11 +154,13 @@ struct Shape {
     std::vector<Shape> _shapes;
 
     // OpenGL
-    MatteProgram *_matte;
+    std::unique_ptr<MatteProgram> _matte;
+    std::unique_ptr<BorderProgram> _border;
     mat4 _modelViewProjectionMatrix, _pick;
     mat3 _normalMatrix;
     float _rotation;
     GLuint _sphereVerts, _sphereElems;
+    Texture2D *_atlas;
 }
 @property (strong, nonatomic) EAGLContext *context;
 
@@ -347,7 +349,8 @@ struct Shape {
 - (void)setupGL {
     [EAGLContext setCurrentContext:self.context];
 
-    _matte = new MatteProgram;
+    _matte.reset(new MatteProgram);
+    _border.reset(new BorderProgram);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -356,6 +359,8 @@ struct Shape {
     glGenBuffers(1, &_sphereElems);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _sphereElems);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*sphereElements().size(), sphereElements().data(), GL_STATIC_DRAW);
+
+    _atlas = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"atlas.png"]];
 }
 
 - (void)tearDownGL {
@@ -364,7 +369,8 @@ struct Shape {
     glDeleteBuffers(1, &_sphereVerts);
     glDeleteBuffers(1, &_sphereElems);
 
-    delete _matte; _matte = nullptr;
+    _matte.reset();
+    _border.reset();
 }
 
 #pragma mark - GLKView and GLKViewController delegate methods
@@ -374,7 +380,7 @@ struct Shape {
 
     auto proj = mat4::ortho(0, 21*aspect, 0, 21, -2, 2);
     if (!running_on_an_iPad) proj *= mat4::scale(8/7.0);
-    auto mv = mat4::identity()*mat4::translate({10.5, 10.5, 0});
+    auto mv = mat4::identity()*mat4::translate({1.75, 1.75, 0});
 
     _modelViewProjectionMatrix = proj*mv;
     _normalMatrix = mv.ToMat3().inverse().transpose();
@@ -385,23 +391,25 @@ struct Shape {
     glClearColor(0.15, 0.15, 0.15, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (auto matte = (*_matte)()) {
-        matte.vs.normalMat = _normalMatrix;
+    if (auto border = (*_border)()) {
+        border.vs.pmvMat = _modelViewProjectionMatrix;
+
+        border.fs.atlas = 0;
+        [_atlas activateAndBind:GL_TEXTURE0];
 
         for (int i = 0; i != _sels.size(); ++i) {
             const auto& sel = _sels[i];
             if (sel.vboBorderVerts) {
-                matte.vs.mvpMat = _modelViewProjectionMatrix;
-                matte.vs.color  = vec4{(vec3)selectionColors[i]*(1 - 0.5*(sel.is_selected.count() < Selection::threshold)), 1};
+                border.fs.color  = vec4{(vec3)selectionColors[i]*(1 - 0.5*(sel.is_selected.count() < Selection::threshold)), 1};
 
-                matte.vs.enableVBO(sel.vboBorderVerts);
-
-                glLineWidth(3);
-
-                glDrawArrays(GL_LINES, 0, sel.nBorderVerts);
+                border.vs.enableVBO(sel.vboBorderVerts);
+                glDrawArrays(GL_TRIANGLES, 0, sel.nBorderVerts);
             }
         }
+    }
 
+    if (auto matte = (*_matte)()) {
+        matte.vs.normalMat = _normalMatrix;
         matte.vs.enableVBO(_sphereVerts);
         matte.vs.enableElementVBO(_sphereElems);
 
@@ -412,23 +420,22 @@ struct Shape {
             for (int y = 0; y < 8; ++y)
                 for (int x = 0; x < 8; ++x)
                     if (bb.is_set(x, y)) {
-                        matte.vs.mvpMat = _modelViewProjectionMatrix*mat4::translate({2.5*x - 8.75, 2.5*y - 8.75, 0});
+                        matte.vs.mvpMat = _modelViewProjectionMatrix*mat4::translate({2.5*x, 2.5*y, 0});
                         glDrawElements(GL_TRIANGLES, sph_elems, GL_UNSIGNED_SHORT, 0);
                     }
         }
     }
 }
 
-- (std::unique_ptr<vec2>)touchPosition:(UITouch *)touch {
-    auto loc = [touch locationInView:self.view];
+- (std::unique_ptr<vec2>)touchPosition:(CGPoint)loc {
     auto size = self.view.bounds.size;
 
-    vec2 p = (((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0}) + vec3{8.75, 8.75, 0})*(1/2.5)).xy();
+    vec2 p = ((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0})*(1/2.5)).xy();
     p = {std::round(p.x), std::round(p.y)};
     return std::unique_ptr<vec2>{0 <= p.x && p.x < 8 && 0 <= p.y && p.y < 8 ? new vec2{p} : nullptr};
 }
 
-- (brac::BitBoard)is_selected_by_some_touch {
+- (brac::BitBoard)is_selected {
     return std::accumulate(begin(_sels), end(_sels), brac::BitBoard{0}, [](brac::BitBoard acc, const Selection& sel) { return acc | sel.is_selected; });
 }
 
@@ -436,46 +443,86 @@ struct Shape {
     auto adjoins_touch = is_touched.shiftN(1) | is_touched.shiftS(1) | is_touched.shiftE(1) | is_touched.shiftW(1);
     auto is_occupied = _board.mask();
 
-    if ((is_touched & is_occupied & ~[self is_selected_by_some_touch]) && (!sel.is_selected || (sel.is_selected & adjoins_touch)))
+    if ((is_touched & is_occupied & ~[self is_selected]) && (!sel.is_selected || (sel.is_selected & adjoins_touch)))
         sel.is_selected |= is_touched;
 
     // Redo border.
     const auto& is_selected = sel.is_selected;
     glDeleteBuffers(1, &sel.vboBorderVerts);
-    std::vector<MatteVertex> border;
-    for (int i = 0; i < 9; ++i) {
-        float y = -8.75+2.5*(i - 1.5);
-        for (int j = 0; j < 9; ++j) {
-            float x = -8.75+2.5*(j - 1.5);
-            bool C  = is_selected.shiftEN(5 - j, 5 - i).is_set(4, 4);
-            bool E  = is_selected.shiftEN(4 - j, 5 - i).is_set(4, 4);
-            bool N  = is_selected.shiftEN(5 - j, 4 - i).is_set(4, 4);
-            bool NE = is_selected.shiftEN(4 - j, 4 - i).is_set(4, 4);
-            if (C != E) {
-                bool S  = is_selected.shiftN(6 - i).shiftE(5 - j).is_set(4, 4);
-                bool SE = is_selected.shiftN(6 - i).shiftE(4 - j).is_set(4, 4);
-                float X = x + 2.45 + 0.1*(C < E);
-                vec2 a{X, y + 2.45 + 0.1*((C || NE) && (E || N))}, b{X, y + 0.05 - 0.1*((C || SE) && (E || S))};
-                border.push_back({{a, 0}, {0, 0, 1}});
-                border.push_back({{b, 0}, {0, 0, 1}});
-            }
-            if (C != N) {
-                bool W  = is_selected.shiftN(5 - i).shiftE(6 - j).is_set(4, 4);
-                bool NW = is_selected.shiftN(4 - i).shiftE(6 - j).is_set(4, 4);
-                float Y = y + 2.45 + 0.1*(C < N);
-                vec2 a{x + 0.05 - 0.1*((C || NW) && (W || N)), Y}, b{x + 2.45 + 0.1*((C || NE) && (E || N)), Y};
-                border.push_back({{a, 0}, {0, 0, 1}});
-                border.push_back({{b, 0}, {0, 0, 1}});
+    std::vector<BorderVertex> border;
+
+    vec2 Ci{0, 0}, I{0.25, 0.25}, Cs{0.25, 0}, S{0.5, 0.25}, Co{0.5, 0}, O{0.75, 0.25};
+    vec2 texcoords[] = {Cs, O, S, I, I};
+
+    enum CornerType { none, outer, straight, inner, own_inner };
+    auto cornerType = [](bool cw, bool diag, bool ccw) {
+        switch (cw + 2*diag + 4*ccw) {
+            case 0 : return outer;
+            case 1 : return straight;
+            case 2 : return outer;
+            case 3 : return inner;
+            case 4 : return straight;
+            case 5 : return own_inner;
+            case 6 : return inner;
+            default: return none;
+        }
+    };
+
+    auto triangle = [&](vec2 a, vec2 b, vec2 c, CornerType edge, CornerType corner) {
+        BorderVertex vs[] = {
+            {a, corner == own_inner && edge == none ? Ci : Co},
+            {b, texcoords[edge]},
+            {c, texcoords[corner]},
+        };
+        if (cross(b, c) < 0)
+            std::swap(vs[1], vs[2]);
+        border.insert(end(border), std::begin(vs), std::end(vs));
+    };
+
+    for (int i = 0; i < 8; ++i) {
+        float y = 2.5*i;
+        for (int j = 0; j < 8; ++j) {
+            float x = 2.5*j;
+            vec2 c{x, y};
+            uint32_t hood = is_selected.shiftWS(j - 1, i - 1).bits;
+            if (hood & (2<<8)) {
+                bool SW = hood & 1;
+                bool S  = hood & 2;
+                bool SE = hood & 4;
+                bool W  = hood & (1<<8);
+                bool E  = hood & (4<<8);
+                bool NW = hood & (1<<16);
+                bool N  = hood & (2<<16);
+                bool NE = hood & (4<<16);
+                CornerType SWc = cornerType(W, SW, S);
+                CornerType SEc = cornerType(S, SE, E);
+                CornerType NEc = cornerType(E, NE, N);
+                CornerType NWc = cornerType(N, NW, W);
+
+                // Edge types
+                CornerType Ne = N ? none : straight;
+                CornerType Se = S ? none : straight;
+                CornerType Ee = E ? none : straight;
+                CornerType We = W ? none : straight;
+
+                triangle(c, c + vec2{-1.25,  0   }, c + vec2{-1.25, -1.25}, We, SWc);
+                triangle(c, c + vec2{-1.25,  0   }, c + vec2{-1.25,  1.25}, We, NWc);
+                triangle(c, c + vec2{ 0   , -1.25}, c + vec2{ 1.25, -1.25}, Se, SEc);
+                triangle(c, c + vec2{ 0   , -1.25}, c + vec2{-1.25, -1.25}, Se, SWc);
+                triangle(c, c + vec2{ 1.25,  0   }, c + vec2{ 1.25, -1.25}, Ee, SEc);
+                triangle(c, c + vec2{ 1.25,  0   }, c + vec2{ 1.25,  1.25}, Ee, NEc);
+                triangle(c, c + vec2{ 0   ,  1.25}, c + vec2{ 1.25,  1.25}, Ne, NEc);
+                triangle(c, c + vec2{ 0   ,  1.25}, c + vec2{-1.25,  1.25}, Ne, NWc);
             }
         }
     }
-    sel.vboBorderVerts = MatteVertex::makeBuffer(border.data(), border.size());
+    sel.vboBorderVerts = BorderVertex::makeBuffer(border.data(), border.size());
     sel.nBorderVerts = border.size();
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     for (UITouch *touch in touches) {
-        if (auto p = [self touchPosition:touch]) {
+        if (auto p = [self touchPosition:[touch locationInView:self.view]]) {
             auto is_touched = brac::BitBoard{1, p->x, p->y};
 
             auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return is_touched & s.is_selected; });
@@ -486,7 +533,6 @@ struct Shape {
             }
             if (sel != end(_sels)) {
                 sel->touch = touch;
-                sel->has_moved = false;
                 [self handleTouch:is_touched forSelection:*sel];
             }
         }
@@ -495,11 +541,10 @@ struct Shape {
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     for (UITouch *touch in touches) {
-        if (auto p = [self touchPosition:touch]) {
+        if (auto p = [self touchPosition:[touch locationInView:self.view]]) {
             auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
             if (sel != end(_sels)) {
                 auto is_touched = brac::BitBoard{1, p->x, p->y};
-                sel->has_moved = true;
                 [self handleTouch:is_touched forSelection:*sel];
             }
         }
@@ -510,25 +555,16 @@ struct Shape {
     for (UITouch *touch in touches) {
         auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
         if (sel != end(_sels)) {
-            if (!sel->has_moved) {
-                if (sel->is_selected.count() > 1) {
-                    *sel = Selection{};
-                } else {
-                    for (auto& s : _sels)
-                        s = Selection{};
-                }
+            if (sel->is_selected.count() < 3) {
+                *sel = Selection{};
+            } else {
+                sel->touch = nil;
             }
-            sel->touch = nil;
         }
     }
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    for (UITouch *touch in touches) {
-        auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
-        if (sel != end(_sels))
-            *sel = Selection{};
-    }
 }
 
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
@@ -592,16 +628,29 @@ struct Shape {
     return cell;
 }
 
-- (IBAction)tappedMatch:(id)sender {
+- (IBAction)tappedMatch {
     std::array<brac::BitBoard, numBallColors> bbs;
     std::transform(begin(_sels), end(_sels), begin(bbs), [](const Selection& s) { return s.is_selected; });
     auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard{0});
-    if (selectionsMatch(_board, begin(bbs), finish)) {
+    if (finish - begin(bbs) > 1 && bbs[0].count() > 2 && selectionsMatch(_board, begin(bbs), finish)) {
         for (auto& s : _sels) {
             _board &= ~s.is_selected;
             s = Selection{};
         }
         [self updatePossibles];
+    }
+}
+
+- (IBAction)tapGestured:(UITapGestureRecognizer *)sender {
+    if (auto pos = [self touchPosition:[sender locationInView:self.view]]) {
+        brac::BitBoard is_touched{1, pos->x, pos->y};
+        for (auto& sel : _sels)
+            if ((sel.is_selected & is_touched) && sel.is_selected.count() > 1) {
+                sel = Selection{};
+                return;
+            }
+        for (auto& s : _sels)
+            s = Selection{};
     }
 }
 

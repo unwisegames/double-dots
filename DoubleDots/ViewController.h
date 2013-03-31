@@ -13,5 +13,6 @@
 
 @property (nonatomic, strong) IBOutlet UITableView *tableView;
 
-- (IBAction)tappedMatch:(id)sender;
+- (IBAction)tappedMatch;
+- (IBAction)tapGestured:(UITapGestureRecognizer *)sender;
 @end

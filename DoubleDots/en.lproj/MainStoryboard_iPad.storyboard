@@ -96,11 +96,12 @@
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
-                                    <action selector="tappedMatch:" destination="2" eventType="touchUpInside" id="0WW-2E-vEZ"/>
+                                    <action selector="tappedMatch" destination="2" eventType="touchUpInside" id="ebn-MX-NFV"/>
                                 </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="RYG-zX-G78" firstAttribute="top" secondItem="7PZ-Jj-N0u" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="CkH-EB-hiT"/>
                             <constraint firstItem="7PZ-Jj-N0u" firstAttribute="top" secondItem="5" secondAttribute="top" type="user" id="OSG-gZ-Aw9"/>
@@ -111,6 +112,10 @@
                             <constraint firstItem="RYG-zX-G78" firstAttribute="centerX" secondItem="7PZ-Jj-N0u" secondAttribute="centerX" type="default" id="xoQ-I7-dFo"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="Mxn-2b-QWG" appends="YES" id="vzd-nX-0he"/>
+                            <outletCollection property="gestureRecognizers" destination="Mxn-2b-QWG" appends="YES" id="aBl-LU-ug3"/>
+                        </connections>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
@@ -118,10 +123,37 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="Mxn-2b-QWG">
+                    <connections>
+                        <action selector="tapGestured:" destination="2" id="gVV-3u-tHS"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="60" y="282"/>
         </scene>
     </scenes>
+    <classes>
+        <class className="NSLayoutConstraint" superclassName="NSObject">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
+        </class>
+        <class className="ShapeCell" superclassName="UITableViewCell">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
+            <relationships>
+                <relationship kind="outlet" name="quantity" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="scores" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
+                <relationship kind="outlet" name="shapeText" candidateClass="UITextView"/>
+            </relationships>
+        </class>
+        <class className="ViewController" superclassName="GLKViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
+                <relationship kind="action" name="tappedMatch"/>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
+            </relationships>
+        </class>
+    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <nil key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>
