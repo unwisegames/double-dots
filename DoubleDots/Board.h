@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <numeric>
 #include <vector>
+#include <array>
 #include <unordered_set>
 #include <iostream>
 
@@ -88,62 +89,59 @@ namespace habeo {
         }
     };
 
-    template <size_t N>
-    bool selectionsMatch(const Board<N>& b, const brac::BitBoard& bb1, const brac::BitBoard& bb2, bool report = false) {
+    template <size_t N, typename I>
+    bool selectionsMatch(const Board<N>& b, I startBBs, I finishBBs, bool report = false) {
+        if (std::distance(startBBs, finishBBs) < 2)
+            return true;
+
+        const auto& bb1 = *startBBs;
         int sm1 = bb1.marginS(), wm1 = bb1.marginW();
-        int nm = bb2.marginN(), sm = bb2.marginS(), em = bb2.marginE(), wm = bb2.marginW();
 
-        if (report) {
-            for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
-                auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "identity " << (c1 == c2.shiftWS(wm, sm)) << "\n", b, {c1, c2, c2, c2.shiftWS(wm, sm)}, "-RGBWK");
+        typedef std::pair<brac::BitBoard, brac::BitBoard> Colors;
+        Colors colors[N];
+        for (int i = 0; i < N; ++i)
+            colors[i].first = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+
+        for (auto i = startBBs + 1; i != finishBBs; ++i) {
+            const auto& bb2 = *i;
+            int nm = bb2.marginN(), sm = bb2.marginS(), em = bb2.marginE(), wm = bb2.marginW();
+
+            if (report) {
+                for (int i = 0; i < N; ++i) {
+                    auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+                    auto c2 = b.colors[i] & bb2;
+                    write(std::cerr << "identity " << (c1 == c2.shiftWS(wm, sm)) << "\n", b, {c1, c2, c2, c2.shiftWS(wm, sm)}, "-RGBWK");
+                }
+                for (int i = 0; i < N; ++i) {
+                    auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+                    auto c2 = b.colors[i] & bb2;
+                    write(std::cerr << "rotL " << (c1 == c2.rotL().shiftWS(nm, wm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftWS(nm, wm)}, "-RGBWK");
+                }
+                for (int i = 0; i < N; ++i) {
+                    auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+                    auto c2 = b.colors[i] & bb2;
+                    write(std::cerr << "reverse " << (c1 == c2.reverse().shiftWS(em, nm)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftWS(em, nm)}, "-RGBWK");
+                }
+                for (int i = 0; i < N; ++i) {
+                    auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+                    auto c2 = b.colors[i] & bb2;
+                    write(std::cerr << "rotR " << (c1 == c2.rotR().shiftWS(sm, em)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftWS(sm, em)}, "-RGBWK");
+                }
+                std::cerr << "nm = " << nm << "; sm = " << sm << "; em = " << em << "; wm = " << wm << "\n";
             }
-            for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
-                auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotL " << (c1 == c2.rotL().shiftWS(nm, wm)) << "\n", b, {c1, c2, c2.rotL(), c2.rotL().shiftWS(nm, wm)}, "-RGBWK");
+
+            for (int i = 0; i < N; ++i)
+                colors[i].second =  b.colors[i] & bb2;
+
+            if (std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second          .shiftWS(wm, sm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.rotL()   .shiftWS(nm, wm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.reverse().shiftWS(em, nm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.rotR()   .shiftWS(sm, em); }))
+            {
+                return false;
             }
-            for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
-                auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "reverse " << (c1 == c2.reverse().shiftWS(em, nm)) << "\n", b, {c1, c2, c2.reverse(), c2.reverse().shiftWS(em, nm)}, "-RGBWK");
-            }
-            for (int i = 0; i < N; ++i) {
-                auto c1 = (b.colors[i] & bb1).shiftWS(wm1, sm1);
-                auto c2 = b.colors[i] & bb2;
-                write(std::cerr << "rotR " << (c1 == c2.rotR().shiftWS(sm, em)) << "\n", b, {c1, c2, c2.rotR(), c2.rotR().shiftWS(sm, em)}, "-RGBWK");
-            }
-            std::cerr << "nm = " << nm << "; sm = " << sm << "; em = " << em << "; wm = " << wm << "\n";
         }
-
-        brac::BitBoard c1[N], c2[N];
-        for (int i = 0; i < N; ++i) {
-            c1[i] = (b.colors[i] & bb1).shiftWS(wm1, sm1);
-            c2[i] =  b.colors[i] & bb2;
-        }
-
-        for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].shiftWS(wm, sm))
-                goto rotl;
         return true;
-    rotl:
-        for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].rotL().shiftWS(nm, wm))
-                goto reverse;
-        return true;
-    reverse:
-        for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].reverse().shiftWS(em, nm))
-                goto rotr;
-        return true;
-    rotr:
-        for (int i = 0; i < N; ++i)
-            if (c1[i] != c2[i].rotR().shiftWS(sm, em))
-                goto gulp;
-        return true;
-    gulp:
-        return false;
     }
 
     template <size_t N>
@@ -152,35 +150,35 @@ namespace habeo {
         auto mask = b.mask();
         int analyses = 0, tests = 0, passes = 0, overlaps = 0;
 
-        std::function<void(brac::BitBoard bb1, brac::BitBoard bb2, int level)> analysePair;
+        std::function<void(const std::array<brac::BitBoard, 2>& bbs, int level)> analysePair;
 
-        analysePair = [&](brac::BitBoard bb1, brac::BitBoard bb2, int level) {
+        analysePair = [&](const std::array<brac::BitBoard, 2>& bbs, int level) {
             ++analyses;
-            if (!(bb1 & bb2) && (bb1.bits < bb2.bits)) {
-                if (!pairs.count(std::make_tuple(bb1, bb2))) {
+            if (!(bbs[0] & bbs[1]) && (bbs[0].bits < bbs[1].bits)) {
+                if (!pairs.count(std::make_tuple(bbs[0], bbs[1]))) {
                     ++tests;
-                    if (selectionsMatch(b, bb1, bb2)) {
+                    if (selectionsMatch(b, begin(bbs), end(bbs))) {
                         ++passes;
-                        pairs.emplace(bb1, bb2);
+                        pairs.emplace(bbs[0], bbs[1]);
 
-                        //std::cerr << "Analyse[" << level << "] " << bb1.bits << " <-> " << bb2.bits << "\n";
+                        //std::cerr << "Analyse[" << level << "] " << bbs[0].bits << " <-> " << bbs[1].bits << "\n";
                         //std::cerr << level;
 
                         auto neighborhood = [&](brac::BitBoard bb) { return (bb.shiftN(1) | bb.shiftS(1) | bb.shiftE(1) | bb.shiftW(1)) & ~bb & mask; };
 
-                        auto hood2init = neighborhood(bb2);
+                        auto hood2init = neighborhood(bbs[1]);
 
-                        for (auto hood1 = neighborhood(bb1); hood1;) {
+                        for (auto hood1 = neighborhood(bbs[0]); hood1;) {
                             brac::BitBoard newHood1 = {hood1.bits & (hood1.bits - 1)};
-                            brac::BitBoard test1 = bb1 | (hood1 ^ newHood1);
+                            brac::BitBoard test1 = bbs[0] | (hood1 ^ newHood1);
                             hood1 = newHood1;
 
                             for (auto hood2 = hood2init; hood2;) {
                                 brac::BitBoard newHood2 = {hood2.bits & (hood2.bits - 1)};
-                                brac::BitBoard test2 = bb2 | (hood2 ^ newHood2);
+                                brac::BitBoard test2 = bbs[1] | (hood2 ^ newHood2);
                                 hood2 = newHood2;
 
-                                analysePair(test1, test2, level + 1);
+                                analysePair({test1, test2}, level + 1);
                             }
                         }
                     }
@@ -203,7 +201,7 @@ namespace habeo {
                     for (auto t = std::begin(bbs2); t != std::end(bbs2); ++t) {
                         brac::BitBoard bbt = bb2 << *t;
                         if ((bbt & mask) == bbt)
-                            analysePair(bbs, bbt, 3);
+                            analysePair({bbs, bbt}, 3);
                     }
             }
         };

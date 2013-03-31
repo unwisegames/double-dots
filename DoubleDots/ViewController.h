@@ -13,4 +13,5 @@
 
 @property (nonatomic, strong) IBOutlet UITableView *tableView;
 
+- (IBAction)tappedMatch:(id)sender;
 @end

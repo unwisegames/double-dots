@@ -13,6 +13,8 @@
 #import "ShaderProgram.h"
 #import "MathUtil.h"
 
+#include <boost/iterator/transform_iterator.hpp>
+
 #import <QuartzCore/QuartzCore.h>
 
 #include <mach/mach_time.h>
@@ -33,7 +35,7 @@
 using namespace squz;
 using namespace habeo;
 
-static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+static bool running_on_an_iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
@@ -55,6 +57,14 @@ static Color ballColors[] = {
     {0.4, 0.4, 0.4, 1},
 };
 enum { numBallColors = sizeof(ballColors)/sizeof(*ballColors) };
+
+static Color selectionColors[] = {
+    {1, 0.7, 0.1},
+    {0.6, 0.8, 1},
+    {0.4, 0.8, 0.4},
+    {0.6, 0.6, 0.2},
+    {0.6, 0.6, 0.6},
+};
 
 std::array<MatteVertex, sph_verts> gSphereVertices_;
 std::array<GLushort, sph_elems> gSphereElements_;
@@ -104,13 +114,25 @@ std::array<GLushort, sph_elems> sphereElements() {
     return gSphereElements_;
 }
 
-struct Selection {
+class Selection {
+public:
     enum { threshold = 3 };
 
+    UITouch *touch;
+    bool has_moved;
     brac::BitBoard is_selected;
-    std::vector<MatteVertex> border;
+    GLuint vboBorderVerts;
+    size_t nBorderVerts;
 
-    Selection() : is_selected{0} { }
+    Selection() : touch{nil}, has_moved{false}, is_selected{0}, vboBorderVerts{0}, nBorderVerts{0} { }
+    Selection(Selection&& s) : Selection{(const Selection&)s} { s.vboBorderVerts = 0; }
+    ~Selection() { glDeleteBuffers(1, &vboBorderVerts); }
+
+    Selection& operator=(Selection&& s) { *this = (const Selection&)s; s.vboBorderVerts = 0; return *this; }
+
+private:
+    Selection(const Selection&) = default;
+    Selection& operator=(const Selection&) = default;
 };
 
 struct Match {
@@ -128,9 +150,7 @@ struct Shape {
 @interface ViewController () {
     // Game state
     Board<numBallColors> _board;
-    std::array<Selection, 2> _sels;
-    Selection *_cursel;
-    bool _moved;
+    std::array<Selection, 5> _sels;
     std::vector<Shape> _shapes;
 
     // OpenGL
@@ -266,7 +286,7 @@ struct Shape {
 
 - (void)setupGame {
     std::fill(begin(_board.colors), end(_board.colors), 0);
-    for (int i = 0; i < (iPad ? 64 : 56); ++i)
+    for (int i = 0; i < (running_on_an_iPad ? 64 : 56); ++i)
         //_board.colors[rand()%numBallColors].bits |= 1ULL << i;
         _board.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
     [self updatePossibles];
@@ -353,7 +373,7 @@ struct Shape {
     float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
 
     auto proj = mat4::ortho(0, 21*aspect, 0, 21, -2, 2);
-    if (!iPad) proj *= mat4::scale(8/7.0);
+    if (!running_on_an_iPad) proj *= mat4::scale(8/7.0);
     auto mv = mat4::identity()*mat4::translate({10.5, 10.5, 0});
 
     _modelViewProjectionMatrix = proj*mv;
@@ -368,18 +388,19 @@ struct Shape {
     if (auto matte = (*_matte)()) {
         matte.vs.normalMat = _normalMatrix;
 
-        vec3 borderColors[2] = {{1, 0.7, 0.1}, {0.6, 0.6, 1}};
-        for (auto& sel : _sels)
-            if (!sel.border.empty()) {
+        for (int i = 0; i != _sels.size(); ++i) {
+            const auto& sel = _sels[i];
+            if (sel.vboBorderVerts) {
                 matte.vs.mvpMat = _modelViewProjectionMatrix;
-                matte.vs.color  = vec4(borderColors[&sel - &_sels[0]]*(sel.is_selected.count() < Selection::threshold ? 0.5 : 1), 1);
+                matte.vs.color  = vec4{(vec3)selectionColors[i]*(1 - 0.5*(sel.is_selected.count() < Selection::threshold)), 1};
 
-                matte.vs.enableArray(sel.border.data());
+                matte.vs.enableVBO(sel.vboBorderVerts);
 
                 glLineWidth(3);
 
-                glDrawArrays(GL_LINES, 0, sel.border.size());
+                glDrawArrays(GL_LINES, 0, sel.nBorderVerts);
             }
+        }
 
         matte.vs.enableVBO(_sphereVerts);
         matte.vs.enableElementVBO(_sphereElems);
@@ -407,16 +428,21 @@ struct Shape {
     return std::unique_ptr<vec2>{0 <= p.x && p.x < 8 && 0 <= p.y && p.y < 8 ? new vec2{p} : nullptr};
 }
 
-- (void)handleTouch:(brac::BitBoard)is_touched began:(bool)began {
+- (brac::BitBoard)is_selected_by_some_touch {
+    return std::accumulate(begin(_sels), end(_sels), brac::BitBoard{0}, [](brac::BitBoard acc, const Selection& sel) { return acc | sel.is_selected; });
+}
+
+- (void)handleTouch:(brac::BitBoard)is_touched forSelection:(Selection&)sel {
     auto adjoins_touch = is_touched.shiftN(1) | is_touched.shiftS(1) | is_touched.shiftE(1) | is_touched.shiftW(1);
     auto is_occupied = _board.mask();
-    if ((is_touched & is_occupied & ~(_sels[0].is_selected | _sels[1].is_selected)) && (!_cursel->is_selected || (_cursel->is_selected & adjoins_touch)))
-        _cursel->is_selected |= is_touched;
+
+    if ((is_touched & is_occupied & ~[self is_selected_by_some_touch]) && (!sel.is_selected || (sel.is_selected & adjoins_touch)))
+        sel.is_selected |= is_touched;
 
     // Redo border.
-    auto& sel = *_cursel;
     const auto& is_selected = sel.is_selected;
-    sel.border.clear();
+    glDeleteBuffers(1, &sel.vboBorderVerts);
+    std::vector<MatteVertex> border;
     for (int i = 0; i < 9; ++i) {
         float y = -8.75+2.5*(i - 1.5);
         for (int j = 0; j < 9; ++j) {
@@ -430,69 +456,79 @@ struct Shape {
                 bool SE = is_selected.shiftN(6 - i).shiftE(4 - j).is_set(4, 4);
                 float X = x + 2.45 + 0.1*(C < E);
                 vec2 a{X, y + 2.45 + 0.1*((C || NE) && (E || N))}, b{X, y + 0.05 - 0.1*((C || SE) && (E || S))};
-                sel.border.push_back({{a, 0}, {0, 0, 1}});
-                sel.border.push_back({{b, 0}, {0, 0, 1}});
+                border.push_back({{a, 0}, {0, 0, 1}});
+                border.push_back({{b, 0}, {0, 0, 1}});
             }
             if (C != N) {
                 bool W  = is_selected.shiftN(5 - i).shiftE(6 - j).is_set(4, 4);
                 bool NW = is_selected.shiftN(4 - i).shiftE(6 - j).is_set(4, 4);
                 float Y = y + 2.45 + 0.1*(C < N);
                 vec2 a{x + 0.05 - 0.1*((C || NW) && (W || N)), Y}, b{x + 2.45 + 0.1*((C || NE) && (E || N)), Y};
-                sel.border.push_back({{a, 0}, {0, 0, 1}});
-                sel.border.push_back({{b, 0}, {0, 0, 1}});
+                border.push_back({{a, 0}, {0, 0, 1}});
+                border.push_back({{b, 0}, {0, 0, 1}});
+            }
+        }
+    }
+    sel.vboBorderVerts = MatteVertex::makeBuffer(border.data(), border.size());
+    sel.nBorderVerts = border.size();
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    for (UITouch *touch in touches) {
+        if (auto p = [self touchPosition:touch]) {
+            auto is_touched = brac::BitBoard{1, p->x, p->y};
+
+            auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return is_touched & s.is_selected; });
+            if (sel == end(_sels)) {
+                sel = std::find_if(begin(_sels), end(_sels), [](const Selection& s){ return !s.is_selected; });
+                if (sel != end(_sels))
+                    *sel = Selection{};
+            }
+            if (sel != end(_sels)) {
+                sel->touch = touch;
+                sel->has_moved = false;
+                [self handleTouch:is_touched forSelection:*sel];
             }
         }
     }
 }
 
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (auto p = [self touchPosition:[touches anyObject]]) {
-        if (!_cursel) {
-            auto is_touched = brac::BitBoard{1, p->x, p->y};
-
-            for (int i = 0; i < 2; ++i)
-                if (is_touched & _sels[i].is_selected)
-                    _cursel = &_sels[i];
-
-            if (!_cursel)
-                for (int i = 0; i < 2; ++i)
-                    if (!_sels[i].is_selected)
-                        _cursel = &_sels[i];
-
-            if (_cursel)
-                [self handleTouch:is_touched began:true];
-        }
-    }
-}
-
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (auto p = [self touchPosition:[touches anyObject]]) {
-        if (_cursel) {
-            auto is_touched = brac::BitBoard{1, p->x, p->y};
-
-            [self handleTouch:is_touched began:false];
+    for (UITouch *touch in touches) {
+        if (auto p = [self touchPosition:touch]) {
+            auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
+            if (sel != end(_sels)) {
+                auto is_touched = brac::BitBoard{1, p->x, p->y};
+                sel->has_moved = true;
+                [self handleTouch:is_touched forSelection:*sel];
+            }
         }
-        _moved = true;
     }
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (!_moved) {
-        _sels[0] = _sels[1] = Selection();
-    } else if (_sels[0].is_selected.count() >= Selection::threshold) {
-        if (selectionsMatch(_board, _sels[0].is_selected, _sels[1].is_selected)) {
-            _board &= ~(_sels[0].is_selected | _sels[1].is_selected);
-            [self updatePossibles];
-            _sels[0] = _sels[1] = Selection();
+    for (UITouch *touch in touches) {
+        auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
+        if (sel != end(_sels)) {
+            if (!sel->has_moved) {
+                if (sel->is_selected.count() > 1) {
+                    *sel = Selection{};
+                } else {
+                    for (auto& s : _sels)
+                        s = Selection{};
+                }
+            }
+            sel->touch = nil;
         }
     }
-    _cursel = nullptr;
-    _moved = false;
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (_cursel)
-        *_cursel = Selection();
+    for (UITouch *touch in touches) {
+        auto sel = std::find_if(begin(_sels), end(_sels), [&](const Selection& s){ return s.touch == touch; });
+        if (sel != end(_sels))
+            *sel = Selection{};
+    }
 }
 
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
@@ -511,7 +547,7 @@ struct Shape {
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return (iPad ? 137 : 130) - (iPad ? 15 : 14)*(8 - _shapes[indexPath.row].height);
+    return (running_on_an_iPad ? 137 : 130) - (running_on_an_iPad ? 15 : 14)*(8 - _shapes[indexPath.row].height);
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
@@ -554,6 +590,19 @@ struct Shape {
     cell.scores.text = shape.scores;
 
     return cell;
+}
+
+- (IBAction)tappedMatch:(id)sender {
+    std::array<brac::BitBoard, numBallColors> bbs;
+    std::transform(begin(_sels), end(_sels), begin(bbs), [](const Selection& s) { return s.is_selected; });
+    auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard{0});
+    if (selectionsMatch(_board, begin(bbs), finish)) {
+        for (auto& s : _sels) {
+            _board &= ~s.is_selected;
+            s = Selection{};
+        }
+        [self updatePossibles];
+    }
 }
 
 @end
