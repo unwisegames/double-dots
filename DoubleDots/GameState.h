@@ -14,6 +14,8 @@
 
 #include "vec2.h"
 
+#include <boost/signals2.hpp>
+
 #include <vector>
 #include <functional>
 
@@ -21,6 +23,7 @@ class Selection {
 public:
     UITouch *touch = nil;
     brac::BitBoard is_selected = 0;
+    bool suppressTap = false;
 };
 
 struct Match {
@@ -47,6 +50,9 @@ private:
 struct GameState {
     enum { numBallColors = 5, minimumSelection = 3, maxTouches = 5 };
 
+    boost::signals2::signal<void()> selectionChanged;
+    boost::signals2::signal<void()> gameOver;
+
     GameState(bool iPad);
 
     void match();
@@ -60,8 +66,7 @@ struct GameState {
                                [](brac::BitBoard acc, const Selection& sel) { return acc | sel.is_selected; });
     }
 
-    template <typename F> void setTouchPosition(F f) { touchPosition_ = f; }
-    template <typename F> void setSelectionChanged(F f) { selectionChanged_ = f; }
+    template <typename F> void setTouchPosition   (F f) { touchPosition_    = f; }
 
     void touchesBegan(NSSet *touches);
     void touchesMoved(NSSet *touches);
@@ -73,7 +78,6 @@ private:
     std::vector<Shape> shapes_;
     std::array<Selection, maxTouches> sels_;
     std::function<std::shared_ptr<squz::vec2>(UITouch *touch)> touchPosition_;
-    std::function<void()> selectionChanged_;
 
     void handleTouch(brac::BitBoard is_touched, Selection& sel);
     void updatePossibles();

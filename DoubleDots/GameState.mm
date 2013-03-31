@@ -33,6 +33,7 @@ void GameState::match() {
         for (auto& s : sels_) {
             board_ &= ~s.is_selected;
             s = Selection{};
+            selectionChanged();
         }
         updatePossibles();
     }
@@ -51,7 +52,7 @@ void GameState::touchesBegan(NSSet *touches) {
             }
             if (sel != end(sels_)) {
                 sel->touch = touch;
-                handleTouch(is_touched, *sel);
+                //handleTouch(is_touched, *sel);
             }
         }
 }
@@ -71,12 +72,13 @@ void GameState::touchesEnded(NSSet *touches) {
     for (UITouch *touch in touches) {
         auto sel = std::find_if(begin(sels_), end(sels_), [&](const Selection& s){ return s.touch == touch; });
         if (sel != end(sels_)) {
-            if (sel->is_selected.count() < 3) {
+            if (sel->is_selected.count() < 2) {
                 *sel = Selection{};
-                selectionChanged_();
+                selectionChanged();
             } else {
                 sel->touch = nil;
             }
+            sel->suppressTap = false;
         }
     }
 }
@@ -84,14 +86,19 @@ void GameState::touchesEnded(NSSet *touches) {
 void GameState::tapped(vec2 p) {
     brac::BitBoard is_touched{1, p.x, p.y};
     for (auto& sel : sels_)
-        if ((sel.is_selected & is_touched) && sel.is_selected.count() > 1) {
-            sel = Selection{};
-            selectionChanged_();
-            return;
+        if ((sel.is_selected & is_touched)) {
+            if (sel.is_selected.count() > 1) {
+                if (!sel.suppressTap) {
+                    sel = Selection{};
+                    selectionChanged();
+                }
+                return;
+            }
+            break;
         }
     for (auto& s : sels_)
         s = Selection{};
-    selectionChanged_();
+    selectionChanged();
 }
 
 void GameState::handleTouch(brac::BitBoard is_touched, Selection& sel) {
@@ -100,7 +107,9 @@ void GameState::handleTouch(brac::BitBoard is_touched, Selection& sel) {
 
     if ((is_touched & is_occupied & ~isSelected()) && (!sel.is_selected || (sel.is_selected & adjoins_touch))) {
         sel.is_selected |= is_touched;
-        selectionChanged_();
+        if (sel.is_selected.count() > 1)
+            sel.suppressTap = true;
+        selectionChanged();
     }
 }
 
@@ -211,4 +220,6 @@ void GameState::updatePossibles() {
             8 - i->first.marginN()
         );
     }
+    if (shapes_.empty())
+        gameOver();
 }

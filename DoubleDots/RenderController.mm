@@ -44,11 +44,6 @@ public:
     ~VertexBuffer() { reset(); }
 
     VertexBuffer& operator=(VertexBuffer&& b) {
-        if (vbo_) {
-            NSLog(@"glDeleteBuffers(1, {%d}); move(%d, %d)", vbo_, b.vbo_, b.count_);
-        } else if (b.vbo_ || b.count_) {
-            NSLog(@"move(%d, %d)", b.vbo_, b.count_);
-        }
         glDeleteBuffers(1, &vbo_);
         vbo_ = b.vbo_;
         count_ = b.count_;
@@ -58,7 +53,6 @@ public:
     }
 
     void reset() {
-        if (vbo_) NSLog(@"glDeleteBuffers(1, {%d})", vbo_);
         glDeleteBuffers(1, &vbo_);
         vbo_ = 0;
         count_ = 0;
@@ -262,7 +256,7 @@ std::array<GLushort, sph_elems> sphereElements() {
     _game->setTouchPosition([=](UITouch *touch){
         return [self touchPosition:[touch locationInView:self.view]];
     });
-    _game->setSelectionChanged([=]{
+    _game->selectionChanged.connect([=]{
         [self updateBorders];
     });
 }
@@ -433,13 +427,6 @@ std::array<GLushort, sph_elems> sphereElements() {
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     _game->touchesEnded(touches);
-}
-
-- (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
-    if (motion == UIEventSubtypeMotionShake) {
-        _game = std::make_shared<GameState>(iPad);
-        [self updateBorders];
-    }
 }
 
 #pragma mark - Actions

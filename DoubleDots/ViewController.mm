@@ -26,6 +26,12 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
 @synthesize tableView = _tableView, renderer = _renderer;
 
+- (void)resetGame {
+    _renderer.game = _game = std::make_shared<GameState>(iPad);
+    _game->gameOver.connect([=]{ dispatch_async(dispatch_get_main_queue(), ^{ [self resetGame]; }); });
+    [self.tableView reloadData];
+}
+
 - (BOOL)canBecomeFirstResponder {
     return YES;
 }
@@ -43,11 +49,17 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
     [self addChildViewController:_renderer];
     [self.view addSubview:_renderer.view];
     [_renderer didMoveToParentViewController:self];
-    _renderer.game = _game = std::make_shared<GameState>(iPad);
+    [self resetGame];
 }
 
 -(void)viewDidLayoutSubviews {
     _renderer.view.frame = CGRectMake(0, 0, iPad ? 768 : std::ceil(320*8/7.0), iPad ? 768 : 320);
+}
+
+- (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    if (motion == UIEventSubtypeMotionShake) {
+        [self resetGame];
+    }
 }
 
 #pragma mark - UITableViewDataSource
