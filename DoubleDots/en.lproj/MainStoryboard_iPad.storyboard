@@ -8,15 +8,15 @@
         <scene sceneID="4">
             <objects>
                 <viewController id="2" customClass="ViewController" sceneMemberID="viewController">
-                    <view key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="5" customClass="GLKView">
+                    <view key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="5">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" allowsSelection="NO" rowHeight="137" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="7PZ-Jj-N0u">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" delaysContentTouches="NO" dataMode="prototypes" style="plain" rowHeight="137" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="7PZ-Jj-N0u">
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <color key="separatorColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
-                                    <tableViewCell contentMode="scaleToFill" selectionStyle="blue" indentationWidth="10" reuseIdentifier="shape" rowHeight="137" id="EEN-PP-QUM" customClass="ShapeCell">
+                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="shape" rowHeight="137" id="EEN-PP-QUM" customClass="ShapeCell">
                                         <rect key="frame" x="0.0" y="22" width="256" height="137"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
@@ -100,7 +100,7 @@
                                 </connections>
                             </button>
                         </subviews>
-                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="RYG-zX-G78" firstAttribute="top" secondItem="7PZ-Jj-N0u" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="CkH-EB-hiT"/>
@@ -112,10 +112,6 @@
                             <constraint firstItem="RYG-zX-G78" firstAttribute="centerX" secondItem="7PZ-Jj-N0u" secondAttribute="centerX" type="default" id="xoQ-I7-dFo"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
-                        <connections>
-                            <outletCollection property="gestureRecognizers" destination="Mxn-2b-QWG" appends="YES" id="vzd-nX-0he"/>
-                            <outletCollection property="gestureRecognizers" destination="Mxn-2b-QWG" appends="YES" id="aBl-LU-ug3"/>
-                        </connections>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
@@ -123,18 +119,45 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer id="Mxn-2b-QWG">
+            </objects>
+            <point key="canvasLocation" x="31" y="-439"/>
+        </scene>
+        <!--GLKit View Controller-->
+        <scene sceneID="t1e-kl-pXS">
+            <objects>
+                <glkViewController restorationIdentifier="" storyboardIdentifier="glkView" autoresizesArchivedViewToFullSize="NO" preferredFramesPerSecond="30" id="lu9-LA-aI2" customClass="RenderController" sceneMemberID="viewController">
+                    <glkView key="view" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="" id="7Eb-bT-be8">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="320"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <gestureRecognizers/>
+                        <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                        <connections>
+                            <outlet property="delegate" destination="lu9-LA-aI2" id="5E0-yJ-AWf"/>
+                            <outletCollection property="gestureRecognizers" destination="tag-l9-W4n" appends="YES" id="kDV-ka-ffh"/>
+                        </connections>
+                    </glkView>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                </glkViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="33O-AG-b6D" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="tag-l9-W4n">
                     <connections>
-                        <action selector="tapGestured:" destination="2" id="gVV-3u-tHS"/>
+                        <action selector="tapGestured:" destination="lu9-LA-aI2" id="1V0-du-a84"/>
                     </connections>
                 </tapGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="60" y="282"/>
+            <point key="canvasLocation" x="1099" y="-419"/>
         </scene>
     </scenes>
     <classes>
         <class className="NSLayoutConstraint" superclassName="NSObject">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
+        </class>
+        <class className="RenderController" superclassName="GLKViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
+            <relationships>
+                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
+            </relationships>
         </class>
         <class className="ShapeCell" superclassName="UITableViewCell">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
@@ -145,11 +168,11 @@
                 <relationship kind="outlet" name="shapeText" candidateClass="UITextView"/>
             </relationships>
         </class>
-        <class className="ViewController" superclassName="GLKViewController">
+        <class className="ViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
             <relationships>
-                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
                 <relationship kind="action" name="tappedMatch"/>
+                <relationship kind="outlet" name="renderer" candidateClass="RenderController"/>
                 <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
             </relationships>
         </class>

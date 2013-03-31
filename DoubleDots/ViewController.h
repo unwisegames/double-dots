@@ -6,13 +6,14 @@
 //  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
-#import <GLKit/GLKit.h>
+#import "RenderController.h"
 
-@interface ViewController : GLKViewController<UITableViewDataSource, UITableViewDelegate>
+#import <UIKit/UIKit.h>
+
+@interface ViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) IBOutlet UITableView *tableView;
+@property (nonatomic, strong) IBOutlet RenderController *renderer;
 
 - (IBAction)tappedMatch;
-- (IBAction)tapGestured:(UITapGestureRecognizer *)sender;
 @end
