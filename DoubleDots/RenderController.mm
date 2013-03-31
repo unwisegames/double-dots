@@ -376,7 +376,11 @@ std::array<GLushort, sph_elems> sphereElements() {
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-    glClearColor(0.15, 0.15, 0.15, 1);
+    {
+        float r, g, b, a;
+        [self.view.backgroundColor getRed:&r green:&g blue:&b alpha:&a];
+        glClearColor(r, g, b, a);
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (auto border = (*_border)()) {
