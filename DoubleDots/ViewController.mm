@@ -47,7 +47,7 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 }
 
 -(void)viewDidLayoutSubviews {
-    _renderer.view.frame = CGRectMake(0, 0, 768, 768);
+    _renderer.view.frame = CGRectMake(0, 0, iPad ? 768 : std::ceil(320*8/7.0), iPad ? 768 : 320);
 }
 
 #pragma mark - UITableViewDataSource
