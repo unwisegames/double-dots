@@ -22,9 +22,9 @@
 namespace std {
 
     template <>
-    struct hash<std::pair<brac::BitBoard, brac::BitBoard>> {
-        size_t operator()(const std::pair<brac::BitBoard, brac::BitBoard>& bb) const {
-            return hash<brac::BitBoard>()(bb.first)*1129803267 + hash<brac::BitBoard>()(bb.second);
+    struct hash<std::array<brac::BitBoard, 2>> {
+        size_t operator()(const std::array<brac::BitBoard, 2>& bb) const {
+            return hash<brac::BitBoard>()(bb[0])*1129803267 + hash<brac::BitBoard>()(bb[1]);
         }
     };
 
@@ -97,10 +97,10 @@ namespace habeo {
         const auto& bb1 = *startBBs;
         int sm1 = bb1.marginS(), wm1 = bb1.marginW();
 
-        typedef std::pair<brac::BitBoard, brac::BitBoard> Colors;
+        typedef std::array<brac::BitBoard, 2> Colors;
         Colors colors[N];
         for (int i = 0; i < N; ++i)
-            colors[i].first = (b.colors[i] & bb1).shiftWS(wm1, sm1);
+            colors[i][0] = (b.colors[i] & bb1).shiftWS(wm1, sm1);
 
         for (auto i = startBBs + 1; i != finishBBs; ++i) {
             const auto& bb2 = *i;
@@ -131,12 +131,12 @@ namespace habeo {
             }
 
             for (int i = 0; i < N; ++i)
-                colors[i].second =  b.colors[i] & bb2;
+                colors[i][1] =  b.colors[i] & bb2;
 
-            if (std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second          .shiftWS(wm, sm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.rotL()   .shiftWS(nm, wm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.reverse().shiftWS(em, nm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c.first != c.second.rotR()   .shiftWS(sm, em); }))
+            if (std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1]          .shiftWS(wm, sm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotL()   .shiftWS(nm, wm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].reverse().shiftWS(em, nm); }) &&
+                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotR()   .shiftWS(sm, em); }))
             {
                 return false;
             }
@@ -145,21 +145,24 @@ namespace habeo {
     }
 
     template <size_t N>
-    std::unordered_set<std::pair<brac::BitBoard, brac::BitBoard>> findMatchingPairs(const Board<N>& b) {
-        std::unordered_set<std::pair<brac::BitBoard, brac::BitBoard>> pairs;
+    std::unordered_set<std::array<brac::BitBoard, 2>> findMatchingPairs(const Board<N>& b) {
+        std::unordered_set<std::array<brac::BitBoard, 2>> result, discarded;
         auto mask = b.mask();
-        int analyses = 0, tests = 0, passes = 0, overlaps = 0;
+        int analyses = 0, tests = 0, matches = 0, overlaps = 0;
 
-        std::function<void(const std::array<brac::BitBoard, 2>& bbs, int level)> analysePair;
+        std::function<bool(const std::array<brac::BitBoard, 2>& bbs, int level)> analysePair;
 
-        analysePair = [&](const std::array<brac::BitBoard, 2>& bbs, int level) {
+        // Return true iff a match was found directly or recursively (even if it was already in the result or discarded).
+        analysePair = [&](const std::array<brac::BitBoard, 2>& bbs, int level) -> bool {
             ++analyses;
             if (!(bbs[0] & bbs[1]) && (bbs[0].bits < bbs[1].bits)) {
-                if (!pairs.count(std::make_tuple(bbs[0], bbs[1]))) {
+                if (discarded.count(bbs) || result.count(bbs)) {
+                    ++overlaps;
+                    return true;
+                } else {
                     ++tests;
                     if (selectionsMatch(b, begin(bbs), end(bbs))) {
-                        ++passes;
-                        pairs.emplace(bbs[0], bbs[1]);
+                        ++matches;
 
                         //std::cerr << "Analyse[" << level << "] " << bbs[0].bits << " <-> " << bbs[1].bits << "\n";
                         //std::cerr << level;
@@ -168,24 +171,28 @@ namespace habeo {
 
                         auto hood2init = neighborhood(bbs[1]);
 
+                        bool foundBigger = false;
                         for (auto hood1 = neighborhood(bbs[0]); hood1;) {
-                            brac::BitBoard newHood1 = {hood1.bits & (hood1.bits - 1)};
-                            brac::BitBoard test1 = bbs[0] | (hood1 ^ newHood1);
-                            hood1 = newHood1;
+                            brac::BitBoard test1 = {bbs[0].bits | (hood1.bits & -hood1.bits)};
+                            hood1 = {hood1.bits & (hood1.bits - 1)};
 
                             for (auto hood2 = hood2init; hood2;) {
-                                brac::BitBoard newHood2 = {hood2.bits & (hood2.bits - 1)};
-                                brac::BitBoard test2 = bbs[1] | (hood2 ^ newHood2);
-                                hood2 = newHood2;
+                                brac::BitBoard test2 = {bbs[1].bits | (hood2.bits & -hood2.bits)};
+                                hood2 = {hood2.bits & (hood2.bits - 1)};
 
-                                analysePair({test1, test2}, level + 1);
+                                foundBigger |= analysePair({test1, test2}, level + 1);
                             }
                         }
+                        if (!foundBigger) {
+                            result.insert(bbs);
+                        } else {
+                            discarded.insert(bbs);
+                        }
+                        return true;
                     }
-                } else {
-                    ++overlaps;
                 }
             }
+            return false;
         };
 
         auto enumeratePairs = [&](brac::BitBoard bb1, brac::BitBoard bb2) {
@@ -219,11 +226,11 @@ namespace habeo {
         ep({{1+2+4}, {1+A+C}});
         ep({{A+1+2}, {1+2+B}, {2+B+A}, {B+A+1}});
 
-#if 0
-        std::cerr << analyses << " analyses; " << tests << " tests; " << passes << " passes; " << overlaps << " overlaps\n";
+#if 1
+        std::cerr << analyses << " analyses; " << tests << " tests; " << matches << " matches; " << overlaps << " overlaps; " << result.size() << " returned; " << discarded.size() << " discarded\n";
 #endif
 
-        return pairs;
+        return result;
     }
 
     template <size_t N>

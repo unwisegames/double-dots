@@ -16,7 +16,7 @@
 
 @property (nonatomic, assign) std::shared_ptr<GameState> game;
 
-- (void)hint:(const Shape&)shape;
+- (void)hint:(const std::shared_ptr<ShapeMatches>&)sm;
 
 - (IBAction)tapGestured:(UITapGestureRecognizer *)sender;
 

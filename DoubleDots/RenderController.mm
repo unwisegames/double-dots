@@ -158,6 +158,8 @@ std::array<GLushort, sph_elems> sphereElements() {
 
     std::array<VertexBuffer, GameState::maxTouches> _sels;
 
+    std::weak_ptr<ShapeMatches> _shapeMatchesToHint;
+    int _nextMatchToHint;
     float _hintIntensity;
     std::array<VertexBuffer, 2> _hints;
 }
@@ -253,10 +255,10 @@ std::array<GLushort, sph_elems> sphereElements() {
 
 - (void)setGame:(std::shared_ptr<GameState>)game {
     _game = game;
-    _game->setTouchPosition([=](UITouch *touch){
+    _game->onTouchPosition([=](UITouch *touch){
         return [self touchPosition:[touch locationInView:self.view]];
     });
-    _game->selectionChanged.connect([=]{
+    _game->onSelectionChanged([=]{
         [self updateBorders];
     });
 }
@@ -313,10 +315,15 @@ std::array<GLushort, sph_elems> sphereElements() {
     // Dispose of any resources that can be recreated.
 }
 
-- (void)hint:(const Shape&)shape {
-    const auto& match = shape.nextMatch();
-    _hints[0] = [self prepareBorderForSelection:match.first];
-    _hints[1] = [self prepareBorderForSelection:match.second];
+- (void)hint:(const std::shared_ptr<ShapeMatches>&)sm {
+    if (auto hinted = _shapeMatchesToHint.lock())
+        if (hinted != sm) {
+            _shapeMatchesToHint = sm;
+            _nextMatchToHint = 0;
+        }
+    const auto& match = sm->matches[_nextMatchToHint++%sm->matches.size()];
+    _hints[0] = [self prepareBorderForSelection:match.shape1];
+    _hints[1] = [self prepareBorderForSelection:match.shape2];
     _hintIntensity = 1;
 }
 

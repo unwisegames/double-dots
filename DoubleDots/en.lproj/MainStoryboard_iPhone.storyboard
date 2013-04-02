@@ -15,7 +15,7 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="oSZ-9y-sg4">
                                 <color key="backgroundColor" red="0.14901960780000001" green="0.14901960780000001" blue="0.14901960780000001" alpha="1" colorSpace="calibratedRGB"/>
                             </view>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="130" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="5AE-za-VPd">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" indicatorStyle="white" dataMode="prototypes" style="plain" showsSelectionImmediatelyOnTouchBegin="NO" rowHeight="130" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="5AE-za-VPd">
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="202" id="WRM-Lm-sfL"/>
@@ -31,37 +31,47 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="99 ×" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5X1-uw-5SH">
+                                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="height" constant="40" id="Dcu-VJ-v4M"/>
                                                         <constraint firstAttribute="width" constant="39" id="KrH-OL-VGY"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" userInteractionEnabled="NO" contentMode="scaleToFill" editable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Twg-jM-Pm2">
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="43" translatesAutoresizingMaskIntoConstraints="NO" id="H3n-KT-Yym">
+                                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="129" id="L3h-N8-ZVB"/>
+                                                        <constraint firstAttribute="width" constant="43" id="vXh-Pp-paE"/>
                                                     </constraints>
-                                                    <string key="text">- - - - - - - -
-- - - - - - - -
-- - - - - - - -
-- - - - - - - -
-O - - - - - - -
-O O O O - - - -
-O O O - - - - -
-O - - - - - - -</string>
-                                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    <fontDescription key="fontDescription" name="CourierNewPS-BoldMT" family="Courier New" pointSize="12"/>
-                                                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                                                </textView>
-                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="55" translatesAutoresizingMaskIntoConstraints="NO" id="H3n-KT-Yym">
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" constant="55" id="kkC-ye-I4x"/>
-                                                    </constraints>
-                                                    <string key="text">12345
+                                                    <attributedString key="attributedText">
+                                                        <fragment>
+                                                            <string key="content">12345
 23456</string>
-                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="14"/>
+                                                            <attributes>
+                                                                <color key="NSBackgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                                <color key="NSColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                                <font key="NSFont" size="14" name="Helvetica"/>
+                                                                <paragraphStyle key="NSParagraphStyle" alignment="right" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                                            </attributes>
+                                                        </fragment>
+                                                    </attributedString>
+                                                    <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                </label>
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" lineBreakMode="tailTruncation" numberOfLines="8" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="128" translatesAutoresizingMaskIntoConstraints="NO" id="LJS-q4-HjZ">
+                                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="128" id="p4u-bY-649"/>
+                                                    </constraints>
+                                                    <string key="text"> - - - - - - - -
+ - - - - - - - -
+ - - - - - - - -
+ - - - - - - - -
+ O - - - - - - -
+ O O O O - - - -
+ O O O - - - - -
+ O - - - - - - -</string>
+                                                    <fontDescription key="fontDescription" name="CourierNewPS-BoldMT" family="Courier New" pointSize="12"/>
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="highlightedColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 </label>
@@ -69,19 +79,20 @@ O - - - - - - -</string>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
-                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="2xK-0B-Yhd"/>
-                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="centerY" secondItem="Twg-jM-Pm2" secondAttribute="centerY" type="default" id="IL3-PP-EAW"/>
-                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" constant="37" id="SjP-Qh-9iJ"/>
-                                            <constraint firstAttribute="trailing" secondItem="H3n-KT-Yym" secondAttribute="trailing" constant="5" id="ZaY-aK-TTE"/>
+                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="3Zl-Yx-NoL"/>
+                                            <constraint firstAttribute="trailing" secondItem="H3n-KT-Yym" secondAttribute="trailing" constant="8" id="4ZQ-ux-6E6"/>
+                                            <constraint firstItem="LJS-q4-HjZ" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="user" id="InM-e4-njD"/>
+                                            <constraint firstItem="LJS-q4-HjZ" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" constant="36" id="RlI-ba-7Ss"/>
+                                            <constraint firstAttribute="bottom" secondItem="LJS-q4-HjZ" secondAttribute="bottom" type="user" id="Rne-Ex-UDb"/>
+                                            <constraint firstItem="5X1-uw-5SH" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="SQS-rD-2ti"/>
                                             <constraint firstItem="5X1-uw-5SH" firstAttribute="leading" secondItem="5Ky-Pg-p6K" secondAttribute="leading" type="default" id="f4t-BJ-Z3w"/>
-                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="f9f-qP-sCi"/>
-                                            <constraint firstItem="Twg-jM-Pm2" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="default" id="fBM-pw-BYS"/>
-                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="default" id="yKc-C5-PM2"/>
+                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="bottom" secondItem="5Ky-Pg-p6K" secondAttribute="bottom" type="user" id="f9f-qP-sCi"/>
+                                            <constraint firstItem="H3n-KT-Yym" firstAttribute="top" secondItem="5Ky-Pg-p6K" secondAttribute="top" type="user" id="yKc-C5-PM2"/>
                                         </constraints>
                                         <connections>
+                                            <outlet property="border" destination="LJS-q4-HjZ" id="yfR-9L-jcZ"/>
                                             <outlet property="quantity" destination="5X1-uw-5SH" id="sag-VE-JbJ"/>
                                             <outlet property="scores" destination="H3n-KT-Yym" id="gCe-65-6Oe"/>
-                                            <outlet property="shapeText" destination="Twg-jM-Pm2" id="QEq-9C-3QX"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -173,10 +184,10 @@ O - - - - - - -</string>
         <class className="ShapeCell" superclassName="UITableViewCell">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
             <relationships>
+                <relationship kind="outlet" name="border" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="quantity" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="scores" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
-                <relationship kind="outlet" name="shapeText" candidateClass="UITextView"/>
             </relationships>
         </class>
         <class className="ViewController" superclassName="UIViewController">

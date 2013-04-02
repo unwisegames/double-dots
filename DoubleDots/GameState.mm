@@ -20,8 +20,13 @@ using namespace squz;
 GameState::GameState(bool iPad) {
     std::fill(begin(board_.colors), end(board_.colors), 0);
     for (int i = 0; i < (iPad ? 64 : 56); ++i)
-        //_board.colors[rand()%numBallColors].bits |= 1ULL << i;
-        board_.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
+        board_.colors[rand()%numBallColors].bits |= 1ULL << i;
+        //board_.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
+//    board_.colors[0] = { 1     + 16};
+//    board_.colors[1] = { 2     + 32};
+//    board_.colors[2] = {(2<< 8)+(32<< 8)};
+//    board_.colors[3] = {(4<< 8)+(64<< 8)};
+//    board_.colors[4] = {(4<<16)+(64<<16)};
     updatePossibles();
 }
 
@@ -33,7 +38,7 @@ void GameState::match() {
         for (auto& s : sels_) {
             board_ &= ~s.is_selected;
             s = Selection{};
-            selectionChanged();
+            selectionChanged_();
         }
         updatePossibles();
     }
@@ -46,7 +51,7 @@ void GameState::touchesBegan(NSSet *touches) {
 
             auto sel = std::find_if(begin(sels_), end(sels_), [&](const Selection& s){ return is_touched & s.is_selected; });
             if (sel == end(sels_)) {
-                sel = std::find_if(begin(sels_), end(sels_), [](const Selection& s){ return !s.is_selected; });
+                sel = std::find_if(begin(sels_), end(sels_), [](const Selection& s){ return !s.touch && !s.is_selected; });
                 if (sel != end(sels_))
                     *sel = Selection{};
             }
@@ -74,7 +79,7 @@ void GameState::touchesEnded(NSSet *touches) {
         if (sel != end(sels_)) {
             if (sel->is_selected.count() < 2) {
                 *sel = Selection{};
-                selectionChanged();
+                selectionChanged_();
             } else {
                 sel->touch = nil;
             }
@@ -90,7 +95,7 @@ void GameState::tapped(vec2 p) {
             if (sel.is_selected.count() > 1) {
                 if (!sel.suppressTap) {
                     sel = Selection{};
-                    selectionChanged();
+                    selectionChanged_();
                 }
                 return;
             }
@@ -98,7 +103,7 @@ void GameState::tapped(vec2 p) {
         }
     for (auto& s : sels_)
         s = Selection{};
-    selectionChanged();
+    selectionChanged_();
 }
 
 void GameState::handleTouch(brac::BitBoard is_touched, Selection& sel) {
@@ -109,7 +114,7 @@ void GameState::handleTouch(brac::BitBoard is_touched, Selection& sel) {
         sel.is_selected |= is_touched;
         if (sel.is_selected.count() > 1)
             sel.suppressTap = true;
-        selectionChanged();
+        selectionChanged_();
     }
 }
 
@@ -133,12 +138,12 @@ void GameState::updatePossibles() {
     if (numtests)
         (std::cerr << pairs.size() << " matches found in " << (t2 - t1)/numtests << "ms\n");
 
-    std::vector<std::pair<brac::BitBoard, brac::BitBoard>> biggest;
+    std::vector<std::array<brac::BitBoard, 2>> biggest;
     int biggest_count = 0;
 
     std::map<int, int> histogram;
     for (const auto& p : pairs) {
-        int count = p.first.count();
+        int count = p[0].count();
         ++histogram[count];
         if (biggest_count <= count) {
             if (biggest_count < count) {
@@ -159,24 +164,23 @@ void GameState::updatePossibles() {
 
     std::vector<Match> matches;
     for (const auto& p : pairs) {
-        int score = p.first.count();
+        int score = p[0].count();
 
         // Add the score of every smaller match that this pair clobbers but doesn't contain.
         for (const auto& m : matches) {
-            brac::BitBoard bb = m.first | m.second;
-            brac::BitBoard diff = bb & ~(p.first | p.second);
+            brac::BitBoard bb = m.shape1 | m.shape2;
+            brac::BitBoard diff = bb & ~(p[0] | p[1]);
             if (diff && diff != bb)
-                score += m.first.count();
+                score += m.shape1.count();
         }
 
-        matches.push_back({p.first, p.second, score});
+        matches.push_back({p[0], p[1], score});
     }
 
     typedef std::unordered_map<brac::BitBoard, std::vector<Match>> ShapeMap;
-    typedef std::pair<brac::BitBoard, std::vector<Match>> ShapeMatches;
     ShapeMap shape_histogram;
     for (const auto& m : matches) {
-        auto bb = m.first;
+        auto bb = m.shape1;
         int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
         auto& h = shape_histogram[std::min(bb.shiftWS(wm, sm).bits,
                                            std::min(bb.rotL().shiftWS(nm, wm).bits,
@@ -184,42 +188,24 @@ void GameState::updatePossibles() {
                                                              bb.rotR().shiftWS(sm, em).bits)))];
         h.push_back(m);
     }
-    std::vector<ShapeMatches> shapes(begin(shape_histogram), end(shape_histogram));
-    std::sort(begin(shapes), end(shapes), [](const ShapeMatches& a, const ShapeMatches& b) {
+    shapeMatcheses_.clear(); shapeMatcheses_.reserve(shape_histogram.size());
+    std::transform(begin(shape_histogram), end(shape_histogram), back_inserter(shapeMatcheses_),
+                   [](const std::pair<brac::BitBoard, std::vector<Match>>& sm) { return std::make_shared<ShapeMatches>(ShapeMatches{sm.first, sm.second}); });
+    NSLog(@"%ld shapes", shapeMatcheses_.size());
+
+    // Sort scores.
+    for (auto& sm : shapeMatcheses_)
+        std::sort(begin(sm->matches), end(sm->matches), [](const Match& a, const Match& b) { return a.score > b.score; });
+
+    // Sort by lexicograpically comparing score lists, secondarily on bit-value.
+    std::sort(begin(shapeMatcheses_), end(shapeMatcheses_), [](const std::shared_ptr<ShapeMatches>& a, const std::shared_ptr<ShapeMatches>& b) {
         auto comp = [](const Match& a, const Match& b) { return a.score > b.score; };
-        return (std::lexicographical_compare(begin(a.second), end(a.second), begin(b.second), end(a.second), comp) ||
-                (!std::lexicographical_compare(begin(b.second), end(b.second), begin(a.second), end(a.second), comp) &&
-                 a.first.bits > b.first.bits));
+
+        return (std::lexicographical_compare(begin(a->matches), end(a->matches), begin(b->matches), end(a->matches), comp) ||
+                (!std::lexicographical_compare(begin(b->matches), end(b->matches), begin(a->matches), end(a->matches), comp) &&
+                 a->shape.bits > b->shape.bits));
     });
 
-    // Cull any shapes that are subsets of larger shapes.
-    auto dst = begin(shapes);
-    for (auto i = dst; i != end(shapes); ++i)
-        if (std::find_if(begin(shapes), dst, [&](const ShapeMatches& sm) { return !(i->first & ~sm.first); }) == dst) {
-            if (dst != i)
-                *dst = *i;
-            ++dst;
-        }
-    shapes.erase(dst, end(shapes));
-
-    shapes_.clear();
-    for (auto i = shapes.begin(); i != shapes.end(); ++i) {
-        std::ostringstream shapeText;
-        write(shapeText, habeo::Board<1>{{{0xffffffffffffffffULL}}}, {i->first}, " O", true);
-
-        std::vector<int> scores; scores.reserve(i->second.size());
-        std::ostringstream scoresText;
-        for (const auto& m : i->second)
-            (scoresText << (&m == &i->second[0] ? "" : "\n") << m.score);
-
-        shapes_.emplace_back(
-            i->second,
-            [NSString stringWithFormat:@"%ld ×", i->second.size()],
-            [NSString stringWithUTF8String:shapeText.str().c_str()],
-            [NSString stringWithUTF8String:scoresText.str().c_str()],
-            8 - i->first.marginN()
-        );
-    }
-    if (shapes_.empty())
-        gameOver();
+    if (shapeMatcheses_.empty())
+        gameOver_();
 }

@@ -6,13 +6,15 @@
 //  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
 //
 
+#import "ShapeMatches.h"
+
 #import <UIKit/UIKit.h>
+
+#include <memory>
 
 @interface ShapeCell : UITableViewCell
 
-@property (nonatomic, strong) IBOutlet UILabel     *quantity;
-@property (nonatomic, strong) IBOutlet UIImageView *shape;
-@property (strong, nonatomic) IBOutlet UITextView  *shapeText;
-@property (strong, nonatomic) IBOutlet UILabel *scores;
+- (void)setShapeMatches:(const std::shared_ptr<ShapeMatches>&)shapeMatches;
+- (void)updateScores;
 
 @end

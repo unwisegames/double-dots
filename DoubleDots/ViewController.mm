@@ -28,7 +28,7 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
 - (void)resetGame {
     _renderer.game = _game = std::make_shared<GameState>(iPad);
-    _game->gameOver.connect([=]{ dispatch_async(dispatch_get_main_queue(), ^{ [self resetGame]; }); });
+    _game->onGameOver([=]{ dispatch_async(dispatch_get_main_queue(), ^{ [self resetGame]; }); });
     [self.tableView reloadData];
 }
 
@@ -73,19 +73,23 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return (iPad ? 137 : 130) - (iPad ? 15 : 14)*(8 - _game->shapes()[indexPath.row].height);
+    const auto& sm = _game->shapes()[indexPath.row];
+
+    size_t boardHeight = 8 - sm->shape.marginN();
+    return std::max(iPad ? 15*boardHeight        + 17 : 14*boardHeight        + 18,
+                    iPad ? 21*sm->matches.size() +  5 : 21*sm->matches.size() +  4);
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 40;
+    return 33;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 40)];
+    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 33)];
     headerView.backgroundColor = [UIColor clearColor];
 
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 33)];
-    label.text = @"Best shapes";
+    label.text = @"Can you find…?";
     label.textColor = [UIColor whiteColor];
     label.textAlignment = NSTextAlignmentCenter;
     label.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.7];
@@ -100,21 +104,23 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
     return headerView;
 }
 
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    return [[UIView alloc] init];
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *CellIdentifier = @"shape";
     ShapeCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (!cell)
         cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
 
-    const auto& shape = _game->shapes()[indexPath.row];
-    cell.quantity.text          = shape.count;
-    cell.quantity.hidden        = shape.matches.size() < 2;
-    cell.shape.image            = [UIImage imageNamed:@"appicon57.png"];
-    cell.shapeText.text         = shape.text;
-    cell.scores.numberOfLines   = shape.matches.size();
-    cell.scores.text            = shape.scores;
+    cell.shapeMatches = _game->shapes()[indexPath.row];
 
     return cell;
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    cell.backgroundColor = [UIColor colorWithRed:0.115 green:0.115 blue:0.115 alpha:1];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
