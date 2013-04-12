@@ -138,7 +138,7 @@
             <objects>
                 <glkViewController restorationIdentifier="" storyboardIdentifier="glkView" autoresizesArchivedViewToFullSize="NO" preferredFramesPerSecond="30" id="lu9-LA-aI2" customClass="RenderController" sceneMemberID="viewController">
                     <glkView key="view" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" restorationIdentifier="" id="7Eb-bT-be8">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="320"/>
+                        <rect key="frame" x="0.0" y="0.0" width="400" height="400"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" red="0.14901960784313725" green="0.14901960784313725" blue="0.14901960784313725" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
@@ -146,6 +146,8 @@
                         <connections>
                             <outlet property="delegate" destination="lu9-LA-aI2" id="5E0-yJ-AWf"/>
                             <outletCollection property="gestureRecognizers" destination="tag-l9-W4n" appends="YES" id="Bgl-7b-k1e"/>
+                            <outletCollection property="gestureRecognizers" destination="zBc-uT-Wk4" appends="YES" id="ZPn-tZ-R0R"/>
+                            <outletCollection property="gestureRecognizers" destination="B5T-gi-NmP" appends="YES" id="nSr-cR-tWf"/>
                         </connections>
                     </glkView>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
@@ -157,6 +159,16 @@
                         <action selector="tapGestured:" destination="lu9-LA-aI2" id="1V0-du-a84"/>
                     </connections>
                 </tapGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="2" id="zBc-uT-Wk4">
+                    <connections>
+                        <action selector="panGestured:" destination="lu9-LA-aI2" id="gxW-jT-wmW"/>
+                    </connections>
+                </panGestureRecognizer>
+                <pinchGestureRecognizer id="B5T-gi-NmP">
+                    <connections>
+                        <action selector="pinchGestured:" destination="lu9-LA-aI2" id="bCu-pS-enZ"/>
+                    </connections>
+                </pinchGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="1099" y="-419"/>
         </scene>
@@ -168,6 +180,8 @@
         <class className="RenderController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
             <relationships>
+                <relationship kind="action" name="panGestured:" candidateClass="UIPanGestureRecognizer"/>
+                <relationship kind="action" name="pinchGestured:" candidateClass="UIPinchGestureRecognizer"/>
                 <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
             </relationships>
         </class>

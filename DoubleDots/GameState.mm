@@ -15,12 +15,14 @@
 
 #include <mach/mach_time.h>
 
-using namespace squz;
+using namespace brac;
 
 GameState::GameState(bool iPad) {
-    std::fill(begin(board_.colors), end(board_.colors), 0);
-    for (int i = 0; i < (iPad ? 64 : 56); ++i)
-        board_.colors[rand()%numBallColors].bits |= 1ULL << i;
+    std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
+    int h = iPad ? 16 : 7, w = iPad ? 16 : 8;
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x)
+            board_.colors[rand()%numBallColors].set(x, y);
         //board_.colors[arc4random_uniform(numBallColors)].bits |= 1ULL << i;
 //    board_.colors[0] = { 1     + 16};
 //    board_.colors[1] = { 2     + 32};
@@ -33,7 +35,7 @@ GameState::GameState(bool iPad) {
 void GameState::match() {
     std::array<brac::BitBoard, numBallColors> bbs;
     std::transform(begin(sels_), end(sels_), begin(bbs), [](const Selection& s) { return s.is_selected; });
-    auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard{0});
+    auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard::empty());
     if (finish - begin(bbs) > 1 && bbs[0].count() > 2 && selectionsMatch(board_, begin(bbs), finish)) {
         for (auto& s : sels_) {
             board_ &= ~s.is_selected;
@@ -47,16 +49,14 @@ void GameState::match() {
 void GameState::touchesBegan(NSSet *touches) {
     for (UITouch *touch in touches)
         if (auto p = touchPosition_(touch)) {
-            auto is_touched = brac::BitBoard{1, p->x, p->y};
+            auto is_touched = brac::BitBoard::single(p->x, p->y);
 
             auto sel = std::find_if(begin(sels_), end(sels_), [&](const Selection& s){ return is_touched & s.is_selected; });
-            if (sel == end(sels_)) {
+            if (sel == end(sels_))
                 sel = std::find_if(begin(sels_), end(sels_), [](const Selection& s){ return !s.touch && !s.is_selected; });
-                if (sel != end(sels_))
-                    *sel = Selection{};
-            }
             if (sel != end(sels_)) {
                 sel->touch = touch;
+                sel->was_selected_prior_to_touch = sel->is_selected;
                 //handleTouch(is_touched, *sel);
             }
         }
@@ -67,7 +67,8 @@ void GameState::touchesMoved(NSSet *touches) {
         if (auto p = touchPosition_(touch)) {
             auto sel = std::find_if(begin(sels_), end(sels_), [&](const Selection& s){ return s.touch == touch; });
             if (sel != end(sels_)) {
-                auto is_touched = brac::BitBoard{1, p->x, p->y};
+                sel->moved = true;
+                auto is_touched = brac::BitBoard::single(p->x, p->y);
                 handleTouch(is_touched, *sel);
             }
         }
@@ -88,8 +89,19 @@ void GameState::touchesEnded(NSSet *touches) {
     }
 }
 
+void GameState::touchesCancelled(NSSet *touches) {
+    for (UITouch *touch in touches) {
+        auto sel = std::find_if(begin(sels_), end(sels_), [&](const Selection& s){ return s.touch == touch; });
+        if (sel != end(sels_)) {
+            sel->is_selected = sel->was_selected_prior_to_touch;
+            sel->touch = nil;
+            selectionChanged_();
+        }
+    }
+}
+
 void GameState::tapped(vec2 p) {
-    brac::BitBoard is_touched{1, p.x, p.y};
+    auto is_touched = brac::BitBoard::single(p.x, p.y);
     for (auto& sel : sels_)
         if ((sel.is_selected & is_touched)) {
             if (sel.is_selected.count() > 1) {
@@ -182,10 +194,10 @@ void GameState::updatePossibles() {
     for (const auto& m : matches) {
         auto bb = m.shape1;
         int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
-        auto& h = shape_histogram[std::min(bb.shiftWS(wm, sm).bits,
-                                           std::min(bb.rotL().shiftWS(nm, wm).bits,
-                                                    std::min(bb.reverse().shiftWS(em, nm).bits,
-                                                             bb.rotR().shiftWS(sm, em).bits)))];
+        auto& h = shape_histogram[std::min(bb.shiftWS(wm, sm),
+                                           std::min(bb.rotL().shiftWS(nm, wm),
+                                                    std::min(bb.reverse().shiftWS(em, nm),
+                                                             bb.rotR().shiftWS(sm, em))))];
         h.push_back(m);
     }
     shapeMatcheses_.clear(); shapeMatcheses_.reserve(shape_histogram.size());
@@ -203,9 +215,9 @@ void GameState::updatePossibles() {
 
         return (std::lexicographical_compare(begin(a->matches), end(a->matches), begin(b->matches), end(a->matches), comp) ||
                 (!std::lexicographical_compare(begin(b->matches), end(b->matches), begin(a->matches), end(a->matches), comp) &&
-                 a->shape.bits > b->shape.bits));
+                 a->shape > b->shape));
     });
 
-    if (shapeMatcheses_.empty())
+    if (shapeMatcheses_.empty() && gameOver_)
         gameOver_();
 }

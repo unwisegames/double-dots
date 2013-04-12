@@ -18,6 +18,4 @@
 
 - (void)hint:(const std::shared_ptr<ShapeMatches>&)sm;
 
-- (IBAction)tapGestured:(UITapGestureRecognizer *)sender;
-
 @end

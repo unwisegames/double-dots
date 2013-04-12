@@ -81,6 +81,8 @@
 		9C0307C716E36C4A0087F0FB /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0307C216E36C2D0087F0FB /* QuartzCore.framework */; };
 		9C0307C816E36C4F0087F0FB /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C0307C416E36C330087F0FB /* AudioToolbox.framework */; };
 		9C0307C916E36C700087F0FB /* Matte.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C0307BF16E36BDB0087F0FB /* Matte.shader.h */; };
+		9C134D821712B68300CA0676 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C134D801712B67200CA0676 /* Accelerate.framework */; };
+		9C134D8B1712C41500CA0676 /* test_BspTree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C134D891712C41500CA0676 /* test_BspTree.cpp */; };
 		9C19FC781707C10600B8A7F4 /* atlas.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C19FC751707C10600B8A7F4 /* atlas.png */; };
 		9C19FC7B1707FCAA00B8A7F4 /* Border.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C19FC7A1707C12E00B8A7F4 /* Border.shader.h */; };
 		9C19FC7E1708388100B8A7F4 /* RenderController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C19FC7D1708388100B8A7F4 /* RenderController.mm */; };
@@ -140,7 +142,6 @@
 		9C03070616E36B100087F0FB /* MyOpenALSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MyOpenALSupport.mm; sourceTree = "<group>"; };
 		9C03070816E36B100087F0FB /* bert.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bert.hpp; sourceTree = "<group>"; };
 		9C03070916E36B100087F0FB /* bert.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = bert.mm; sourceTree = "<group>"; };
-		9C03070A16E36B100087F0FB /* CGGeometryExt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGGeometryExt.h; sourceTree = "<group>"; };
 		9C03070C16E36B100087F0FB /* point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = point.h; sourceTree = "<group>"; };
 		9C03070D16E36B100087F0FB /* point.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = point.mm; sourceTree = "<group>"; };
 		9C03070E16E36B100087F0FB /* UIActionSheet+Blocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIActionSheet+Blocks.h"; sourceTree = "<group>"; };
@@ -212,8 +213,6 @@
 		9C03075A16E36B100087F0FB /* mat4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mat4.cpp; sourceTree = "<group>"; };
 		9C03075B16E36B100087F0FB /* mat4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mat4.h; sourceTree = "<group>"; };
 		9C03075C16E36B100087F0FB /* MathUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MathUtil.h; sourceTree = "<group>"; };
-		9C03075D16E36B100087F0FB /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
-		9C03075E16E36B100087F0FB /* Paths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Paths.h; sourceTree = "<group>"; };
 		9C03075F16E36B100087F0FB /* Physics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Physics.h; sourceTree = "<group>"; };
 		9C03076016E36B100087F0FB /* Physics.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Physics.mm; sourceTree = "<group>"; };
 		9C03076316E36B100087F0FB /* triangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = triangle.h; sourceTree = "<group>"; };
@@ -244,6 +243,15 @@
 		9C0307C016E36C260087F0FB /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		9C0307C216E36C2D0087F0FB /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		9C0307C416E36C330087F0FB /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		9C134D801712B67200CA0676 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		9C134D841712C41500CA0676 /* BspTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BspTree.h; sourceTree = "<group>"; };
+		9C134D851712C41500CA0676 /* CGGeometryExt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGGeometryExt.h; sourceTree = "<group>"; };
+		9C134D861712C41500CA0676 /* GeometryUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GeometryUtil.h; sourceTree = "<group>"; };
+		9C134D871712C41500CA0676 /* Lathe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Lathe.h; sourceTree = "<group>"; };
+		9C134D881712C41500CA0676 /* Paths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Paths.h; sourceTree = "<group>"; };
+		9C134D891712C41500CA0676 /* test_BspTree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_BspTree.cpp; sourceTree = "<group>"; };
+		9C134D8A1712C41500CA0676 /* test_BspTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = test_BspTree.h; sourceTree = "<group>"; };
+		9C134D8D1712E1D900CA0676 /* StructMeta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StructMeta.h; sourceTree = "<group>"; };
 		9C19FC751707C10600B8A7F4 /* atlas.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = atlas.png; sourceTree = "<group>"; };
 		9C19FC7A1707C12E00B8A7F4 /* Border.shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Border.shader.h; sourceTree = "<group>"; };
 		9C19FC7C1708388100B8A7F4 /* RenderController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RenderController.h; sourceTree = "<group>"; };
@@ -270,6 +278,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C134D821712B68300CA0676 /* Accelerate.framework in Frameworks */,
 				9C0306C016E36AA20087F0FB /* UIKit.framework in Frameworks */,
 				9C0306C216E36AA20087F0FB /* Foundation.framework in Frameworks */,
 				9C0306C416E36AA20087F0FB /* CoreGraphics.framework in Frameworks */,
@@ -309,6 +318,7 @@
 		9C0306BE16E36AA20087F0FB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9C134D801712B67200CA0676 /* Accelerate.framework */,
 				9C0306BF16E36AA20087F0FB /* UIKit.framework */,
 				9C0306C116E36AA20087F0FB /* Foundation.framework */,
 				9C0306C316E36AA20087F0FB /* CoreGraphics.framework */,
@@ -366,16 +376,17 @@
 				9C0306EE16E36B100087F0FB /* AFNetworking */,
 				9C03070416E36B100087F0FB /* Audio */,
 				9C03070716E36B100087F0FB /* BERT */,
-				9C03070A16E36B100087F0FB /* CGGeometryExt.h */,
 				9C03070B16E36B100087F0FB /* Cocoa */,
 				9C03071416E36B100087F0FB /* Comms */,
 				9C03072016E36B100087F0FB /* Data */,
 				9C03072516E36B100087F0FB /* File */,
+				9C134D831712C41500CA0676 /* Geometry */,
 				9C03072A16E36B100087F0FB /* Intrumentation */,
 				9C03072D16E36B100087F0FB /* LZMASDK */,
 				9C03075316E36B100087F0FB /* Math */,
 				9C03076B16E36B100087F0FB /* Shader */,
 				9C03077016E36B100087F0FB /* Texture */,
+				9C134D8C1712E1D900CA0676 /* Utility */,
 			);
 			path = bricabrac;
 			sourceTree = "<group>";
@@ -560,8 +571,6 @@
 				9C03075A16E36B100087F0FB /* mat4.cpp */,
 				9C03075B16E36B100087F0FB /* mat4.h */,
 				9C03075C16E36B100087F0FB /* MathUtil.h */,
-				9C03075D16E36B100087F0FB /* MersenneTwister.h */,
-				9C03075E16E36B100087F0FB /* Paths.h */,
 				9C03075F16E36B100087F0FB /* Physics.h */,
 				9C03076016E36B100087F0FB /* Physics.mm */,
 				9C03076316E36B100087F0FB /* triangle.h */,
@@ -615,6 +624,28 @@
 				9C19FC7A1707C12E00B8A7F4 /* Border.shader.h */,
 			);
 			path = Shaders;
+			sourceTree = "<group>";
+		};
+		9C134D831712C41500CA0676 /* Geometry */ = {
+			isa = PBXGroup;
+			children = (
+				9C134D841712C41500CA0676 /* BspTree.h */,
+				9C134D851712C41500CA0676 /* CGGeometryExt.h */,
+				9C134D861712C41500CA0676 /* GeometryUtil.h */,
+				9C134D871712C41500CA0676 /* Lathe.h */,
+				9C134D881712C41500CA0676 /* Paths.h */,
+				9C134D891712C41500CA0676 /* test_BspTree.cpp */,
+				9C134D8A1712C41500CA0676 /* test_BspTree.h */,
+			);
+			path = Geometry;
+			sourceTree = "<group>";
+		};
+		9C134D8C1712E1D900CA0676 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				9C134D8D1712E1D900CA0676 /* StructMeta.h */,
+			);
+			path = Utility;
 			sourceTree = "<group>";
 		};
 		9C19FC731707C10600B8A7F4 /* Images */ = {
@@ -764,6 +795,7 @@
 				9C19FC7E1708388100B8A7F4 /* RenderController.mm in Sources */,
 				9C19FC81170842DF00B8A7F4 /* GameState.mm in Sources */,
 				9C35E6B417098102003D2AF1 /* ShapeMatches.cpp in Sources */,
+				9C134D8B1712C41500CA0676 /* test_BspTree.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

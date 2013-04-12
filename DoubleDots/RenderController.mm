@@ -8,19 +8,20 @@
 
 #import "RenderController.h"
 
-#import "ShaderProgram.h"
+#import "GameState.h"
+
 #import "MathUtil.h"
 #import "Texture2D.h"
-#include "Color.h"
-
-#import "GameState.h"
+#import "Physics.h"
+#import "Color.h"
 
 #include <array>
 #include <mutex>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
-using namespace squz;
+using namespace brac;
 
 #define BRICABRAC_SHADER_NAME Matte
 #include "LoadShaders.h"
@@ -35,6 +36,10 @@ enum {
     sph_verts = sph_layers*sph_segments + 1,
     sph_elems = 6*sph_layers*sph_segments,
 };
+
+static constexpr float gBoardHeight = 41;
+static constexpr float gScaleLimit = 2;
+static float gLogScaleLimit = std::log(gScaleLimit);
 
 class VertexBuffer {
 public:
@@ -150,11 +155,13 @@ std::array<GLushort, sph_elems> sphereElements() {
 
     std::unique_ptr<MatteProgram> _matte;
     std::unique_ptr<BorderProgram> _border;
-    mat4 _modelViewProjectionMatrix, _pick;
+    mat4 _mvpMatrix, _pick;
     mat3 _normalMatrix;
     float _rotation;
     GLuint _sphereVerts, _sphereElems;
     Texture2D *_atlas;
+    vec2 _offset;
+    float _scale;
 
     std::array<VertexBuffer, GameState::maxTouches> _sels;
 
@@ -162,6 +169,10 @@ std::array<GLushort, sph_elems> sphereElements() {
     int _nextMatchToHint;
     float _hintIntensity;
     std::array<VertexBuffer, 2> _hints;
+
+    vec2 _pan, _panLimit;
+    float _pinchScale;
+    std::shared_ptr<brac::kinematics::MechanicalSystem> _xReturn, _yReturn, _scaleReturn;
 }
 @end
 
@@ -174,10 +185,10 @@ std::array<GLushort, sph_elems> sphereElements() {
 
     vec2 p = ((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0})*(1/2.5)).xy();
     p = {std::round(p.x), std::round(p.y)};
-    return std::unique_ptr<vec2>{0 <= p.x && p.x < 8 && 0 <= p.y && p.y < 8 ? new vec2{p} : nullptr};
+    return std::unique_ptr<vec2>{0 <= p.x && p.x < 16 && 0 <= p.y && p.y < 16 ? new vec2{p} : nullptr};
 }
 
-- (VertexBuffer)prepareBorderForSelection:(brac::BitBoard)bb {
+- (VertexBuffer)prepareBorderForSelection:(brac::BitBoard const &)bb {
     std::vector<BorderVertex> border;
 
     vec2 Ci{0, 0}, I{0.25, 0.25}, Cs{0.25, 0}, S{0.5, 0.25}, Co{0.5, 0}, O{0.75, 0.25};
@@ -208,21 +219,21 @@ std::array<GLushort, sph_elems> sphereElements() {
         border.insert(end(border), std::begin(vs), std::end(vs));
     };
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 16; ++i) {
         float y = 2.5*i;
-        for (int j = 0; j < 8; ++j) {
+        for (int j = 0; j < 16; ++j) {
             float x = 2.5*j;
             vec2 c{x, y};
-            uint32_t hood = bb.shiftWS(j - 1, i - 1).bits;
-            if (hood & (2<<8)) {
-                bool SW = hood & 1;
-                bool S  = hood & 2;
-                bool SE = hood & 4;
-                bool W  = hood & (1<<8);
-                bool E  = hood & (4<<8);
-                bool NW = hood & (1<<16);
-                bool N  = hood & (2<<16);
-                bool NE = hood & (4<<16);
+            uint64_t hood = bb.shiftWS(j - 1, i - 1).a;
+            if (hood & (2ULL<<16)) {
+                bool SW = hood &  1ULL;
+                bool S  = hood &  2ULL;
+                bool SE = hood &  4ULL;
+                bool W  = hood & (1ULL<<16);
+                bool E  = hood & (4ULL<<16);
+                bool NW = hood & (1ULL<<32);
+                bool N  = hood & (2ULL<<32);
+                bool NE = hood & (4ULL<<32);
                 CornerType SWc = cornerType(W, SW, S);
                 CornerType SEc = cornerType(S, SE, E);
                 CornerType NEc = cornerType(E, NE, N);
@@ -250,7 +261,7 @@ std::array<GLushort, sph_elems> sphereElements() {
 
 - (void)updateBorders {
     for (int i = 0; i < GameState::maxTouches; ++i)
-        _sels[i] = [self prepareBorderForSelection:_game->sels()[i].is_selected];
+        _sels[i] = [self prepareBorderForSelection:_game->sels()[0].is_selected.count() > 1 ? _game->sels()[i].is_selected : brac::BitBoard::empty()];
 }
 
 - (void)setGame:(std::shared_ptr<GameState>)game {
@@ -286,6 +297,12 @@ std::array<GLushort, sph_elems> sphereElements() {
     view.context = _context;
     view.drawableMultisample = GLKViewDrawableMultisample4X;
     self.preferredFramesPerSecond = 60;
+
+    _scale = _pinchScale = 1;
+
+    _xReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
+    _yReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
+    _scaleReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
 
     [self setupGL];
 }
@@ -359,15 +376,34 @@ std::array<GLushort, sph_elems> sphereElements() {
 - (void)update {
     float dt = self.timeSinceLastUpdate;
 
-    float aspect = fabsf(self.view.bounds.size.width / self.view.bounds.size.height);
+    CGSize size = self.view.bounds.size;
+    float aspect = fabsf(size.width / size.height);
 
-    auto proj = mat4::ortho(0, 21*aspect, 0, 21, -2, 2);
-    if (!iPad) proj *= mat4::scale(8/7.0);
+    float s = gBoardHeight / size.height;
+
+    float scale = std::exp(softclamp(std::log(_scale * _pinchScale) + _scaleReturn->x(), 0, gLogScaleLimit, 0.3));
+    float inv_scale = 1 / scale;
+
+    _panLimit = vec2(1, 1) * (std::max(gBoardHeight * (scale - 1), 0.0f) / s);
+
+    vec2 off = (_offset + _pan + vec2{_xReturn->x(), _yReturn->x()});
+    off.x = softclamp(off.x, 0, _panLimit.x, 0.25 * _panLimit.x) * s;
+    off.y = softclamp(off.y, 0, _panLimit.y, 0.25 * _panLimit.y) * s;
+
+    for (int i = 0; i < 4; ++i) {
+        (*_xReturn)(0.25 * dt);
+        (*_yReturn)(0.25 * dt);
+        (*_scaleReturn)(0.25 * dt);
+    }
+
+    auto proj = mat4::ortho(inv_scale * off.x, inv_scale * (off.x + gBoardHeight*aspect), inv_scale * off.y, inv_scale * (off.y + gBoardHeight), -5, 5);
+    if (!iPad) proj *= mat4::scale(16/7.0);
+
     auto mv = mat4::identity()*mat4::translate({1.75, 1.75, 0});
 
-    _modelViewProjectionMatrix = proj*mv;
+    _mvpMatrix = proj*mv;
     _normalMatrix = mv.ToMat3().inverse().transpose();
-    _pick = _modelViewProjectionMatrix.inverse();
+    _pick = _mvpMatrix.inverse();
 
     if (_hintIntensity && (_hintIntensity -= dt) < 0) {
         _hintIntensity = 0;
@@ -385,7 +421,7 @@ std::array<GLushort, sph_elems> sphereElements() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (auto border = (*_border)()) {
-        border.vs.pmvMat = _modelViewProjectionMatrix;
+        border.vs.pmvMat = _mvpMatrix;
 
         border.fs.atlas = 0;
         [_atlas activateAndBind:GL_TEXTURE0];
@@ -401,8 +437,8 @@ std::array<GLushort, sph_elems> sphereElements() {
 
         if (_hintIntensity)
             border.fs.color = vec4{1, 1, 1, 1}*_hintIntensity;
-            for (const auto& hint : _hints)
-                hint.render(border, GL_TRIANGLES);
+        for (const auto& hint : _hints)
+            hint.render(border, GL_TRIANGLES);
     }
 
     if (auto matte = (*_matte)()) {
@@ -410,17 +446,18 @@ std::array<GLushort, sph_elems> sphereElements() {
         matte.vs.enableVBO(_sphereVerts);
         matte.vs.enableElementVBO(_sphereElems);
 
-        for (int c = 0; c < GameState::numBallColors; ++c) {
-            const brac::BitBoard& bb = _game->board().colors[c];
-            matte.vs.color = (vec4)ballColors[c];
+        // Dots
+        for (int c = 0; c < GameState::numBallColors; ++c)
+            if (brac::BitBoard const & bb = _game->board().colors[c]) {
+                matte.vs.color = (vec4)ballColors[c];
 
-            for (int y = 0; y < 8; ++y)
-                for (int x = 0; x < 8; ++x)
-                    if (bb.is_set(x, y)) {
-                        matte.vs.mvpMat = _modelViewProjectionMatrix*mat4::translate({2.5*x, 2.5*y, 0});
-                        glDrawElements(GL_TRIANGLES, sph_elems, GL_UNSIGNED_SHORT, 0);
-                    }
-        }
+                for (int y = 0; y < 16; ++y)
+                    for (int x = 0; x < 16; ++x)
+                        if (bb.isSet(x, y)) {
+                            matte.vs.mvpMat = _mvpMatrix*mat4::translate({2.5*x, 2.5*y, 0});
+                            glDrawElements(GL_TRIANGLES, sph_elems, GL_UNSIGNED_SHORT, 0);
+                        }
+            }
     }
 }
 
@@ -436,11 +473,69 @@ std::array<GLushort, sph_elems> sphereElements() {
     _game->touchesEnded(touches);
 }
 
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    _game->touchesCancelled(touches);
+}
+
 #pragma mark - Actions
 
 - (IBAction)tapGestured:(UITapGestureRecognizer *)sender {
     if (auto pos = [self touchPosition:[sender locationInView:self.view]])
         _game->tapped(*pos);
+}
+
+- (IBAction)panGestured:(UIPanGestureRecognizer *)sender {
+    switch (sender.state) {
+        case UIGestureRecognizerStateBegan:
+        case UIGestureRecognizerStateChanged:
+        {
+            CGPoint pan = [sender translationInView:self.view];
+            _pan = vec2{-pan.x, pan.y};
+            break;
+        }
+        case UIGestureRecognizerStateEnded:
+            _offset += _pan;
+            if (_offset.x < 0) {
+                _xReturn->setX(_offset.x);
+                _offset.x = 0;
+            } else if (_offset.x > _panLimit.x) {
+                _xReturn->setX(_offset.x - _panLimit.x);
+                _offset.x = _panLimit.x;
+            }
+            if (_offset.y < 0) {
+                _yReturn->setX(_offset.y);
+                _offset.y = 0;
+            } else if (_offset.y > _panLimit.y) {
+                _yReturn->setX(_offset.y - _panLimit.y);
+                _offset.y = _panLimit.y;
+            }
+            _pan = {0, 0};
+            break;
+        default:
+            break;
+    }
+}
+
+- (IBAction)pinchGestured:(UIPinchGestureRecognizer *)sender {
+    switch (sender.state) {
+        case UIGestureRecognizerStateBegan:
+        case UIGestureRecognizerStateChanged:
+            _pinchScale = sender.scale;
+            break;
+        case UIGestureRecognizerStateEnded:
+            _scale *= _pinchScale;
+            if (_scale < 1) {
+                _scaleReturn->setX(std::log(_scale));
+                _scale = 1;
+            } else if (_scale > gScaleLimit) {
+                _scaleReturn->setX(std::log(_scale) - gLogScaleLimit);
+                _scale = gScaleLimit;
+            }
+            _pinchScale = 1;
+            break;
+        default:
+            break;
+    }
 }
 
 @end

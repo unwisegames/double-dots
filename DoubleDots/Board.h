@@ -6,10 +6,12 @@
 //  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
 //
 
-#ifndef DoubleDots_Board_h
-#define DoubleDots_Board_h
+#ifndef INCLUDED__DoubleDots__Board_h
+#define INCLUDED__DoubleDots__Board_h
 
+#import "common.h"
 #import "BitBoard.h"
+#import "bert.hpp"
 
 #include <utility>
 #include <algorithm>
@@ -18,15 +20,16 @@
 #include <array>
 #include <unordered_set>
 #include <iostream>
+#include <initializer_list>
 
 namespace std {
 
     template <>
     struct hash<std::array<brac::BitBoard, 2>> {
-        size_t operator()(const std::array<brac::BitBoard, 2>& bb) const {
-            return hash<brac::BitBoard>()(bb[0])*1129803267 + hash<brac::BitBoard>()(bb[1]);
-        }
-    };
+    size_t operator()(const std::array<brac::BitBoard, 2>& bb) const {
+        return hash<brac::BitBoard>()(bb[0])*1129803267 + hash<brac::BitBoard>()(bb[1]);
+    }
+};
 
 }
 
@@ -36,7 +39,7 @@ namespace habeo {
     struct Board {
         std::array<brac::BitBoard, N> colors;
 
-        bool SQUZ_OPERATOR(<)(const Board& b) const {
+        bool BRAC_OPERATOR(<)(const Board& b) const {
             for (int i = 0; i < N; ++i)
                 if (colors[i].bits != b.colors[i].bits)
                     return (colors[i].bits < b.colors[i].bits); // Parens needed due to brain-damaged Xcode formatter.
@@ -55,18 +58,18 @@ namespace habeo {
             return std::accumulate(begin(colors), end(colors), t, f);
         }
 
-        bool SQUZ_OPERATOR(==)(const Board& b) const {
+        bool BRAC_OPERATOR(==)(const Board& b) const {
             return std::equal(begin(colors), end(colors), begin(b.colors));
         }
 
         brac::BitBoard mask() const {
-            return reduce(brac::BitBoard{0}, [](brac::BitBoard b, brac::BitBoard c) { return b | c; });
+            return reduce(brac::BitBoard::empty(), [](brac::BitBoard b, brac::BitBoard c) { return b | c; });
         }
 
-        Board SQUZ_OPERATOR(&)(brac::BitBoard b) const {
+        Board BRAC_OPERATOR(&)(brac::BitBoard b) const {
             return map([=](brac::BitBoard color){ return color & b; });
         }
-        Board& SQUZ_OPERATOR(&=)(brac::BitBoard b) { return *this = *this & b; }
+        Board& BRAC_OPERATOR(&=)(brac::BitBoard b) { return *this = *this & b; }
 
         void clear(int x, int y) {
             for (auto& c : colors)
@@ -75,7 +78,7 @@ namespace habeo {
 
         int color(int x, int y) const {
             for (const auto& c : colors)
-                if (c.is_set(x, y))
+                if (c.isSet(x, y))
                     return &c - &*begin(colors);
             return -1;
         }
@@ -134,9 +137,9 @@ namespace habeo {
                 colors[i][1] =  b.colors[i] & bb2;
 
             if (std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1]          .shiftWS(wm, sm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotL()   .shiftWS(nm, wm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].reverse().shiftWS(em, nm); }) &&
-                std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotR()   .shiftWS(sm, em); }))
+                    std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotL()   .shiftWS(nm, wm); }) &&
+                    std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].reverse().shiftWS(em, nm); }) &&
+                    std::any_of(begin(colors), end(colors), [&](Colors c) { return c[0] != c[1].rotR()   .shiftWS(sm, em); }))
             {
                 return false;
             }
@@ -146,113 +149,121 @@ namespace habeo {
 
     template <size_t N>
     std::unordered_set<std::array<brac::BitBoard, 2>> findMatchingPairs(const Board<N>& b) {
-        std::unordered_set<std::array<brac::BitBoard, 2>> result, discarded;
-        auto mask = b.mask();
-        int analyses = 0, tests = 0, matches = 0, overlaps = 0;
+    std::unordered_set<std::array<brac::BitBoard, 2>> result, discarded;
+    auto mask = b.mask();
+    int analyses = 0, tests = 0, matches = 0, overlaps = 0;
 
-        std::function<bool(const std::array<brac::BitBoard, 2>& bbs, int level)> analysePair;
+    std::function<bool(const std::array<brac::BitBoard, 2>& bbs, int level)> analysePair;
 
-        // Return true iff a match was found directly or recursively (even if it was already in the result or discarded).
-        analysePair = [&](const std::array<brac::BitBoard, 2>& bbs, int level) -> bool {
-            ++analyses;
-            if (!(bbs[0] & bbs[1]) && (bbs[0].bits < bbs[1].bits)) {
-                if (discarded.count(bbs) || result.count(bbs)) {
-                    ++overlaps;
+    // Return true iff a match was found directly or recursively (even if it was already in the result or discarded).
+    analysePair = [&](const std::array<brac::BitBoard, 2>& bbs, int level) -> bool {
+        ++analyses;
+        if (!(bbs[0] & bbs[1]) && bbs[0] < bbs[1]) {
+            if (discarded.count(bbs) || result.count(bbs)) {
+                ++overlaps;
+                return true;
+            } else {
+                ++tests;
+                if (selectionsMatch(b, begin(bbs), end(bbs))) {
+                    ++matches;
+
+                    //std::cerr << "Analyse[" << level << "] " << bbs[0].bits << " <-> " << bbs[1].bits << "\n";
+                    //std::cerr << level;
+
+                    auto neighborhood = [&](brac::BitBoard bb) { return (bb.shiftN(1) | bb.shiftS(1) | bb.shiftE(1) | bb.shiftW(1)) & ~bb & mask; };
+
+                    auto hood2init = neighborhood(bbs[1]);
+
+                    bool foundBigger = false;
+                    for (auto hood1 = neighborhood(bbs[0]); hood1;) {
+                        auto lo1 = hood1.clearAllButLowestSetBit();
+                        brac::BitBoard test1 = bbs[0] | lo1;
+                        hood1 &= ~lo1;
+
+                        for (auto hood2 = hood2init; hood2;) {
+                            auto lo2 = hood2.clearAllButLowestSetBit();
+                            auto test2 = bbs[1] | lo2;
+                            hood2 &= ~lo2;
+
+                            foundBigger |= analysePair({test1, test2}, level + 1);
+                        }
+                    }
+                    if (!foundBigger) {
+                        result.insert(bbs);
+                    } else {
+                        discarded.insert(bbs);
+                    }
                     return true;
-                } else {
-                    ++tests;
-                    if (selectionsMatch(b, begin(bbs), end(bbs))) {
-                        ++matches;
-
-                        //std::cerr << "Analyse[" << level << "] " << bbs[0].bits << " <-> " << bbs[1].bits << "\n";
-                        //std::cerr << level;
-
-                        auto neighborhood = [&](brac::BitBoard bb) { return (bb.shiftN(1) | bb.shiftS(1) | bb.shiftE(1) | bb.shiftW(1)) & ~bb & mask; };
-
-                        auto hood2init = neighborhood(bbs[1]);
-
-                        bool foundBigger = false;
-                        for (auto hood1 = neighborhood(bbs[0]); hood1;) {
-                            brac::BitBoard test1 = {bbs[0].bits | (hood1.bits & -hood1.bits)};
-                            hood1 = {hood1.bits & (hood1.bits - 1)};
-
-                            for (auto hood2 = hood2init; hood2;) {
-                                brac::BitBoard test2 = {bbs[1].bits | (hood2.bits & -hood2.bits)};
-                                hood2 = {hood2.bits & (hood2.bits - 1)};
-
-                                foundBigger |= analysePair({test1, test2}, level + 1);
-                            }
-                        }
-                        if (!foundBigger) {
-                            result.insert(bbs);
-                        } else {
-                            discarded.insert(bbs);
-                        }
-                        return true;
-                    }
                 }
             }
-            return false;
-        };
+        }
+        return false;
+    };
 
-        auto enumeratePairs = [&](brac::BitBoard bb1, brac::BitBoard bb2) {
-            assert(!bb1.marginW());
-            assert(!bb1.marginS());
-            assert(!bb2.marginW());
-            assert(!bb2.marginS());
-            auto bbs1 = brac::BitBoardShifts(8 - bb1.marginE(), 8 - bb1.marginN());
-            auto bbs2 = brac::BitBoardShifts(8 - bb2.marginE(), 8 - bb2.marginN());
-            for (auto s = std::begin(bbs1); s != std::end(bbs1); ++s) {
-                brac::BitBoard bbs = bb1 << *s;
-                if ((bbs & mask) == bbs)
-                    for (auto t = std::begin(bbs2); t != std::end(bbs2); ++t) {
-                        brac::BitBoard bbt = bb2 << *t;
-                        if ((bbt & mask) == bbt)
-                            analysePair({bbs, bbt}, 3);
+    auto enumeratePairs = [&](brac::BitBoard bb0, brac::BitBoard bb1) {
+        assert(!bb0.marginW());
+        assert(!bb0.marginS());
+        assert(!bb1.marginW());
+        assert(!bb1.marginS());
+        size_t w0 = 16 - bb0.marginE(), h0 = 16 - bb0.marginN();
+        size_t w1 = 16 - bb1.marginE(), h1 = 16 - bb1.marginN();
+        for (int y0 = 0; y0 < h0; ++y0) {
+            auto a0_y = bb0.shiftN(y0);
+            for (int x0 = 0; x0 < w0; ++x0) {
+                auto a0 = a0_y.shiftE(x0);
+                if ((a0 & mask) == a0)
+                    for (int y1 = 0; y1 < h1; ++y1) {
+                        auto a1_y = bb1.shiftN(y1);
+                        for (int x1 = 0; x1 < w1; ++x1) {
+                            auto a1 = a1_y.shiftE(x1);
+                            if ((a1 & mask) == a1)
+                                analysePair({a0, a1}, 3);
+                        }
                     }
             }
-        };
+        }
+    };
 
-        auto ep = [&](std::initializer_list<brac::BitBoard> bb) {
-            for (auto bb1 : bb)
-                for (auto bb2 : bb) {
-                    enumeratePairs(bb1, bb2);
-                    if (bb1 != bb2)
-                        enumeratePairs(bb2, bb1);
-                }
-        };
+    auto ep = [&](std::initializer_list<brac::BitBoard> bb) {
+        for (auto bb0 : bb)
+            for (auto bb1 : bb) {
+                enumeratePairs(bb0, bb1);
+                if (bb0 != bb1)
+                    enumeratePairs(bb1, bb0);
+            }
+    };
 
-        uint64_t A = 1<<8, B = 2<<8, C = 1<<16;
-        ep({{1+2+4}, {1+A+C}});
-        ep({{A+1+2}, {1+2+B}, {2+B+A}, {B+A+1}});
+    uint64_t A = 1ULL<<16, B = 2ULL<<16, C = 1ULL<<32;
+    ep({{1+2+4, 0, 0, 0}, {1+A+C, 0, 0, 0}});
+    ep({{A+1+2, 0, 0, 0}, {1+2+B, 0, 0, 0}, {2+B+A, 0, 0, 0}, {B+A+1, 0, 0, 0}});
 
 #if 1
-        std::cerr << analyses << " analyses; " << tests << " tests; " << matches << " matches; " << overlaps << " overlaps; " << result.size() << " returned; " << discarded.size() << " discarded\n";
+    std::cerr << analyses << " analyses; " << tests << " tests; " << matches << " matches; " << overlaps << " overlaps; " << result.size() << " returned; " << discarded.size() << " discarded\n";
 #endif
 
-        return result;
-    }
+    return result;
+}
 
     template <size_t N>
     std::ostream& write(std::ostream& os, const Board<N>& b, std::initializer_list<brac::BitBoard> bbs, const char* colors, bool trimNorth = false) {
-        int mn = 8;
+        int mn = 16;
         for (const auto& bb : bbs)
             mn = std::min(mn, bb.marginN());
 
-        for (int y = 8 - trimNorth*mn; y--;) {
+        for (int y = 16 - trimNorth*mn; y--;) {
             for (const auto& bb : bbs) {
                 if (&bb != &*begin(bbs))
                     os << " |";
-                for (int x = 0; x < 8; ++x) {
+                for (int x = 0; x < 16; ++x) {
                     auto c = b.color(x, y);
-                    (os << " " << (c < 0 ? ' ' : bb.is_set(x, y) ? colors[1 + c] : colors[0]));
+                    (os << " " << (c < 0 ? ' ' : (bb.isSet(x, y)) ? colors[1 + c] : colors[0]));
                 }
             }
             (os << "\n");
         }
         return os;
     }
-    
+
 }
 
-#endif
+#endif // INCLUDED__DoubleDots__Board_h

@@ -29,14 +29,14 @@
     _sm = sm;
 
     std::ostringstream shapeText;
-    write(shapeText, habeo::Board<1>{{{0xffffffffffffffffULL}}}, {sm->shape}, " O", true);
+    write(shapeText, habeo::Board<1>{{{{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}}}}, {sm->shape}, " O", true);
 
     _quantity.hidden        = sm->matches.size() < 2;
     if (!_quantity.hidden)
         _quantity.text      = [NSString stringWithFormat:@"%ld ×", sm->matches.size()];
     _shape.image            = [UIImage imageNamed:@"appicon57.png"];
     _border.text            = [NSString stringWithUTF8String:shapeText.str().c_str()];
-    _border.numberOfLines   = 8 - sm->shape.marginN();
+    _border.numberOfLines   = 16 - sm->shape.marginN();
     _scores.numberOfLines   = sm->matches.size();
 
     [self updateScores];
