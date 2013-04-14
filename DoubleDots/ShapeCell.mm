@@ -1,10 +1,4 @@
-//
-//  ShapeCell.m
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 11/03/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "ShapeCell.h"
 #import "Board.h"

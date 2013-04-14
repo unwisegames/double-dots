@@ -1,10 +1,4 @@
-//
-//  RenderController.mm
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 31/03/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "RenderController.h"
 

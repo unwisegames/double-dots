@@ -1,10 +1,4 @@
-//
-//  Sprite.shader.h
-//  TiltBuggy
-//
-//  Created by Marcelo Cantos on 28/01/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #ifdef BRICABRAC_VERTEX_SHADER
 

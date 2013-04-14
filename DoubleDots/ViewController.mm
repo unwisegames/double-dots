@@ -1,10 +1,4 @@
-//
-//  ViewController.mm
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 1/03/13.
-//  Copyright (c) 2013 Habeo Soft. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "ViewController.h"
 #import "ShapeCell.h"

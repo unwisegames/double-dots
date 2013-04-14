@@ -1,10 +1,4 @@
-//
-//  Board.h
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 28/03/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #ifndef INCLUDED__DoubleDots__Board_h
 #define INCLUDED__DoubleDots__Board_h

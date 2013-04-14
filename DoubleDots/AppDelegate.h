@@ -1,10 +1,4 @@
-//
-//  AppDelegate.h
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 3/03/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import <UIKit/UIKit.h>
 
