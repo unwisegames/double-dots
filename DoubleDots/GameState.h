@@ -10,53 +10,71 @@
 #include "vec2.h"
 
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <functional>
 
-class Selection {
+class GameState {
 public:
-    UITouch *touch = nil;
-    brac::BitBoard is_selected{0, 0, 0, 0};
-    brac::BitBoard was_selected_prior_to_touch{0, 0, 0, 0};
-    bool moved = false;
-    bool suppressTap = false;
-};
+    class Selection {
+    public:
+        void const * key;
+        brac::BitBoard is_selected{0, 0, 0, 0};
+        bool has_moved = false;
+        brac::BitBoard was_touched{0, 0, 0, 0};
+        std::vector<brac::vec2> added;
+        bool has_deleted = false;
 
-struct GameState {
-    enum { numBallColors = 5, minimumSelection = 3, maxTouches = 5 };
+        bool has_border() const { return has_moved && !has_deleted; }
+    };
 
-    GameState(bool iPad);
+    struct Touch {
+        void const * key;
+        brac::vec2 p;
+    };
+    
+    typedef std::vector<std::shared_ptr<ShapeMatches>>  ShapeMatcheses;
+    typedef std::unordered_map<size_t, Selection>       Selections;
+    
+    
+    enum { minimumSelection = 3 };
+
+    GameState(size_t n, bool iPad);
 
     void match();
 
-    const habeo::Board<numBallColors>               & board () { return board_         ; }
-    const std::vector<std::shared_ptr<ShapeMatches>>& shapes() { return shapeMatcheses_; }
-    const std::array<Selection, maxTouches>         & sels  () { return sels_          ; }
+    Board           const & board () { return board_         ; }
+    ShapeMatcheses  const & shapes() { return shapeMatcheses_; }
+    Selections      const & sels  () { return sels_          ; }
 
-    brac::BitBoard isSelected() const {
-        return std::accumulate(begin(sels_), end(sels_), brac::BitBoard{0, 0, 0, 0},
-                               [](brac::BitBoard acc, const Selection& sel) { return acc | sel.is_selected; });
-    }
+    template <typename F> void onSelectionChanged   (F f) { selectionChanged_   = f; }
+    template <typename F> void onGameOver           (F f) { gameOver_           = f; }
+    template <typename F> void onBoardChanged       (F f) { boardChanged_       = f; f(); }
+    template <typename F> void onCancelTapGesture   (F f) { cancelTapGesture_   = f; }
 
-    template <typename F> void onTouchPosition   (F f) { touchPosition_    = f; }
-    template <typename F> void onSelectionChanged(F f) { selectionChanged_ = f; }
-    template <typename F> void onGameOver        (F f) { gameOver_         = f; }
-
-    void touchesBegan    (NSSet *touches);
-    void touchesMoved    (NSSet *touches);
-    void touchesEnded    (NSSet *touches);
-    void touchesCancelled(NSSet *touches);
+    void touchesBegan    (std::vector<Touch> const & touches);
+    void touchesMoved    (std::vector<Touch> const & touches);
+    void touchesEnded    (std::vector<Touch> const & touches);
+    void touchesCancelled(std::vector<Touch> const & touches);
     void tapped(brac::vec2 p);
 
 private:
-    habeo::Board<numBallColors> board_;
-    std::vector<std::shared_ptr<ShapeMatches>> shapeMatcheses_;
-    std::array<Selection, maxTouches> sels_;
-    std::function<std::shared_ptr<brac::vec2>(UITouch *touch)> touchPosition_;
+    Board                       board_;
+    ShapeMatcheses              shapeMatcheses_;
+    Selections                  sels_;
+    std::unordered_set<size_t>  indices_;
+
     std::function<void()> selectionChanged_;
     std::function<void()> gameOver_;
+    std::function<void()> boardChanged_;
+    std::function<void()> cancelTapGesture_;
 
     void handleTouch(brac::BitBoard is_touched, Selection& sel);
     void updatePossibles();
+
+    Selections::iterator findSelection(Touch const & touch) {
+        return std::find_if(begin(sels_), end(sels_), [&](Selections::value_type const & s){ return s.second.key == touch.key; });
+    }
 };
 
 #endif

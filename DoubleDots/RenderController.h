@@ -12,4 +12,6 @@
 
 - (void)hint:(const std::shared_ptr<ShapeMatches>&)sm;
 
+- (void)updateBoardColors:(bool)swap;
+
 @end

@@ -1,17 +1,19 @@
 //  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "RenderController.h"
-
+#import "ChipmunkDebugDrawDoubleDots.h"
 #import "GameState.h"
 
 #import "MathUtil.h"
 #import "Texture2D.h"
-#import "Physics.h"
 #import "Color.h"
+
+#include "chipmunk.h"
 
 #include <array>
 #include <mutex>
 #include <vector>
+#include <unordered_map>
 #include <memory>
 #include <algorithm>
 
@@ -21,168 +23,95 @@ using namespace brac;
 #include "LoadShaders.h"
 #define BRICABRAC_SHADER_NAME Border
 #include "LoadShaders.h"
+#define BRICABRAC_SHADER_NAME Dots
+#include "LoadShaders.h"
+#define BRICABRAC_SHADER_NAME Board
+#include "LoadShaders.h"
 
 static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
-enum {
-    sph_layers = 16,
-    sph_segments = 32,
-    sph_verts = sph_layers*sph_segments + 1,
-    sph_elems = 6*sph_layers*sph_segments,
-};
+static constexpr float gEdgeThickness   = 0.5;
+static constexpr float gScaleLimit      = 2;
+static           float gLogScaleLimit   = std::log(gScaleLimit);
 
-static constexpr float gBoardHeight = 41;
-static constexpr float gScaleLimit = 2;
-static float gLogScaleLimit = std::log(gScaleLimit);
-
-class VertexBuffer {
-public:
-    VertexBuffer() : vbo_{0}, count_{0} { }
-    VertexBuffer(GLuint vbo, GLsizei count) : vbo_{vbo}, count_{count} { }
-    VertexBuffer(VertexBuffer&& b) : vbo_(b.vbo_), count_(b.count_) { b.vbo_ = 0; b.count_ = 0; }
-    ~VertexBuffer() { reset(); }
-
-    VertexBuffer& operator=(VertexBuffer&& b) {
-        glDeleteBuffers(1, &vbo_);
-        vbo_ = b.vbo_;
-        count_ = b.count_;
-        b.vbo_ = 0;
-        b.count_ = 0;
-        return *this;
-    }
-
-    void reset() {
-        glDeleteBuffers(1, &vbo_);
-        vbo_ = 0;
-        count_ = 0;
-    }
-
-    explicit operator bool() const { return vbo_; }
-    bool operator!() const { return !vbo_; }
-
-    template <typename T>
-    void render(const T& shaderContext, GLenum type, GLint first, GLsizei count) const {
-        if (vbo_) {
-            shaderContext.vs.enableVBO(vbo_);
-            glDrawArrays(type, first, count);
-        }
-    }
-    template <typename T>
-    void render(const T& shaderContext, GLenum type) const {
-        render(shaderContext, type, 0, count_);
-    }
-
-private:
-    GLuint vbo_;
-    GLsizei count_;
-
-    VertexBuffer(const VertexBuffer&) = delete;
-    VertexBuffer& operator=(const VertexBuffer&) = delete;
-};
-
-static Color ballColors[] = {
-    Color::red  (),
-    Color::green(),
-    Color::blue (),
-    Color::white(),
-    {0.4, 0.4, 0.4, 1},
-};
-
-static std::array<Color, GameState::numBallColors> selectionColors = {{
+static std::vector<Color> selectionColors = {{
     {1  , 0.7, 0.1},
-    {0.6, 0.6, 1  },
-    {0.9, 0.3, 0.6},
-    {0.4, 0.8, 0.4},
-    {0.6, 0.6, 0.2},
+    {0.5, 0.7, 1  },
+    {0.8, 0.4, 1  },
+    {0.5, 0.8, 0.3},
+    {0.8, 0.3, 0.2},
 }};
 
-static std::array<MatteVertex, sph_verts> gSphereVertices_;
-static std::array<GLushort, sph_elems> gSphereElements_;
+typedef std::unordered_map<size_t, BorderVertexBuffer> Borders;
 
-void prepareSphere() {
-    static std::once_flag once;
-    std::call_once(once, []{
-        auto vi = gSphereVertices_.begin();
-        for (GLushort l = 0; l < sph_layers; ++l) {
-            auto z = sinf(M_PI*l/sph_layers);
-            auto r = sqrtf(1 - z*z);
-            for (GLushort s = 0; s < sph_segments; ++s, ++vi) {
-                float a = 2*M_PI*s/sph_segments;
-                vec3 p{r*cosf(a), r*sinf(a), z};
-                *vi = {p, p};
-            }
-        }
-        *vi = {{0, 0, 1}, {0, 0, 1}};
-
-        auto ei = gSphereElements_.begin();
-        for (GLushort l = 0; l < sph_layers - 1; ++l) {
-            GLushort i = l*sph_segments;
-            for (GLushort s = 0; s < sph_segments; ++s) {
-                GLushort j = i + s;
-                GLushort k = i + (s + 1)%sph_segments;
-                int ii[] = { j, k, j + sph_segments, j + sph_segments, k, k + sph_segments };
-                ei = std::copy(std::begin(ii), std::end(ii), ei);
-            }
-        }
-        GLushort i = (sph_layers - 1)*sph_segments;
-        for (GLushort s = 0; s < sph_segments; ++s) {
-            GLushort j = i + s;
-            GLushort k = i + (s + 1)%sph_segments;
-            int ii[] = { j, k, sph_verts - 1 };
-            ei = std::copy(std::begin(ii), std::end(ii), ei);
-        }
-    });
-}
-
-std::array<MatteVertex, sph_verts> sphereVertices() {
-    prepareSphere();
-    return gSphereVertices_;
-}
-
-std::array<GLushort, sph_elems> sphereElements() {
-    prepareSphere();
-    return gSphereElements_;
-}
+struct RgbaPixel {
+    GLubyte r, g, b, a;
+};
 
 @interface RenderController () {
     EAGLContext *_context;
 
-    std::unique_ptr<MatteProgram> _matte;
-    std::unique_ptr<BorderProgram> _border;
-    mat4 _mvpMatrix, _pick;
+    std::unique_ptr<MatteProgram    > _matte    ;
+    std::unique_ptr<BorderProgram   > _border   ;
+    std::unique_ptr<DotsProgram     > _dots     ;
+    std::unique_ptr<BoardProgram    > _board    ;
+
+    int _nBoardRows, _nBoardCols;
+    float _viewHeight;
+
+    mat4 _pmvMatrix, _pick;
     mat3 _normalMatrix;
     float _rotation;
-    GLuint _sphereVerts, _sphereElems;
-    Texture2D *_atlas;
-    vec2 _offset;
-    float _scale;
+    Texture2D * _atlas, * _dotStates, * _surface, * _dimple, * _edging;
+    RgbaPixel _dotsData[16 * 16];
+    std::vector<DotsVertex> _dotsVertsData;
+    DotsVertexBuffer _vboDots;
+    ElementBuffer<> _eboDots;
+    BoardVertexBuffer _vboBoardInterior, _vboBoardEdge;
+    size_t _colorSet;
 
-    std::array<VertexBuffer, GameState::maxTouches> _sels;
+    Borders _borders;
 
     std::weak_ptr<ShapeMatches> _shapeMatchesToHint;
     int _nextMatchToHint;
     float _hintIntensity;
-    std::array<VertexBuffer, 2> _hints;
+    std::array<BorderVertexBuffer, 2> _hints;
 
-    vec2 _pan, _panLimit;
-    float _pinchScale;
-    std::shared_ptr<brac::kinematics::MechanicalSystem> _xReturn, _yReturn, _scaleReturn;
+    std::unique_ptr<ChipmunkDebugDrawDoubleDots> _debugDraw;
+
+    // Zoom/pan
+    cpSpace *_space;
+    cpBody *_anchor;
+    cpBody *_clamps[4];
+    cpBody *_finger;
+    cpConstraint *_drag;
+    cpVect _dragStart;
+    std::vector<cpShape *> reportables;
 }
+@property (nonatomic, strong) IBOutlet UITapGestureRecognizer * tapGestureRecognizer;
 @end
 
 @implementation RenderController
 
-@synthesize game = _game;
+@synthesize game = _game, tapGestureRecognizer = _tapGestureRecognizer;
 
 - (std::unique_ptr<vec2>)touchPosition:(CGPoint)loc {
     auto size = self.view.bounds.size;
 
-    vec2 p = ((_pick*vec3{2*loc.x/size.width - 1, 1 - 2*loc.y/size.height, 0})*(1/2.5)).xy();
-    p = {std::round(p.x), std::round(p.y)};
-    return std::unique_ptr<vec2>{0 <= p.x && p.x < 16 && 0 <= p.y && p.y < 16 ? new vec2{p} : nullptr};
+    vec2 p = (_pick * vec3{2 * loc.x/size.width - 1, 1 - 2 * loc.y/size.height, 0}).xy();
+    p = {std::floor(p.x), std::floor(p.y)};
+    return std::unique_ptr<vec2>{0 <= p.x && p.x < _nBoardCols && 0 <= p.y && p.y < _nBoardRows ? new vec2{p} : nullptr};
 }
 
-- (VertexBuffer)prepareBorderForSelection:(brac::BitBoard const &)bb {
+- (std::vector<GameState::Touch>)touchPositions:(NSSet *)touches {
+    std::vector<GameState::Touch> result; result.reserve(touches.count);
+    for (UITouch * touch in touches)
+        if (auto p = [self touchPosition:[touch locationInView:self.view]])
+            result.push_back(GameState::Touch{(__bridge void const *)touch, *p});
+    return result;
+}
+
+- (std::vector<BorderVertex>)prepareSelectionBorder:(brac::BitBoard const &)bb {
     std::vector<BorderVertex> border;
 
     vec2 Ci{0, 0}, I{0.25, 0.25}, Cs{0.25, 0}, S{0.5, 0.25}, Co{0.5, 0}, O{0.75, 0.25};
@@ -213,12 +142,10 @@ std::array<GLushort, sph_elems> sphereElements() {
         border.insert(end(border), std::begin(vs), std::end(vs));
     };
 
-    for (int i = 0; i < 16; ++i) {
-        float y = 2.5*i;
-        for (int j = 0; j < 16; ++j) {
-            float x = 2.5*j;
-            vec2 c{x, y};
-            uint64_t hood = bb.shiftWS(j - 1, i - 1).a;
+    for (int y = 0; y < _nBoardRows; ++y)
+        for (int x = 0; x < _nBoardCols; ++x) {
+            vec2 c{0.5 + x, 0.5 + y};
+            uint64_t hood = bb.shiftWS(x - 1, y - 1).a;
             if (hood & (2ULL<<16)) {
                 bool SW = hood &  1ULL;
                 bool S  = hood &  2ULL;
@@ -239,33 +166,102 @@ std::array<GLushort, sph_elems> sphereElements() {
                 CornerType Ee = E ? none : straight;
                 CornerType We = W ? none : straight;
 
-                triangle(c, c + vec2{-1.25,  0   }, c + vec2{-1.25, -1.25}, We, SWc);
-                triangle(c, c + vec2{-1.25,  0   }, c + vec2{-1.25,  1.25}, We, NWc);
-                triangle(c, c + vec2{ 0   , -1.25}, c + vec2{ 1.25, -1.25}, Se, SEc);
-                triangle(c, c + vec2{ 0   , -1.25}, c + vec2{-1.25, -1.25}, Se, SWc);
-                triangle(c, c + vec2{ 1.25,  0   }, c + vec2{ 1.25, -1.25}, Ee, SEc);
-                triangle(c, c + vec2{ 1.25,  0   }, c + vec2{ 1.25,  1.25}, Ee, NEc);
-                triangle(c, c + vec2{ 0   ,  1.25}, c + vec2{ 1.25,  1.25}, Ne, NEc);
-                triangle(c, c + vec2{ 0   ,  1.25}, c + vec2{-1.25,  1.25}, Ne, NWc);
+                triangle(c, c + vec2{-0.5,  0   }, c + vec2{-0.5, -0.5}, We, SWc);
+                triangle(c, c + vec2{-0.5,  0   }, c + vec2{-0.5,  0.5}, We, NWc);
+                triangle(c, c + vec2{ 0   , -0.5}, c + vec2{ 0.5, -0.5}, Se, SEc);
+                triangle(c, c + vec2{ 0   , -0.5}, c + vec2{-0.5, -0.5}, Se, SWc);
+                triangle(c, c + vec2{ 0.5,  0   }, c + vec2{ 0.5, -0.5}, Ee, SEc);
+                triangle(c, c + vec2{ 0.5,  0   }, c + vec2{ 0.5,  0.5}, Ee, NEc);
+                triangle(c, c + vec2{ 0   ,  0.5}, c + vec2{ 0.5,  0.5}, Ne, NEc);
+                triangle(c, c + vec2{ 0   ,  0.5}, c + vec2{-0.5,  0.5}, Ne, NWc);
             }
         }
+    if (border.empty()) {
+        NSLog(@"Huh?");
     }
-    return {border.size() ? BorderVertex::makeBuffer(border.data(), border.size()) : 0, border.size()};
+    return border;
 }
 
-- (void)updateBorders {
-    for (int i = 0; i < GameState::maxTouches; ++i)
-        _sels[i] = [self prepareBorderForSelection:_game->sels()[0].is_selected.count() > 1 ? _game->sels()[i].is_selected : brac::BitBoard::empty()];
+- (void)updateBoardColors:(bool)swap {
+    _colorSet ^= swap;
+
+    vec2 blue   {0.25, 0.25};
+    vec2 red    {0.5 , 0.25};
+    vec2 purple {0.75, 0.25};
+    vec2 green  {0.5 , 0.5 };
+    vec2 dkblue {0.75, 0.5 };
+    vec2 white  {0.5 , 0.75};
+    vec2 yellow {0.75, 0.75};
+
+    vec2 spheres[2][5] = {
+        {red, green,   blue, purple, yellow},
+        {red, green, dkblue, purple, white },
+    };
+
+    auto vi = begin(_dotsVertsData);
+    auto const & board = _game->board();
+    for (size_t y = 0; y < _nBoardRows; ++y)
+        for (size_t x = 0; x < _nBoardCols; ++x) {
+            int c = board.color(x, y);
+            float s = 0.25;
+            if (c == -1) { c = 0; s = 0; }
+            vec2 tc = spheres[_colorSet][c];
+            vi++->texcoord = tc + vec2{0, s};
+            vi++->texcoord = tc + vec2{s, s};
+            vi++->texcoord = tc + vec2{s, 0};
+            vi++->texcoord = tc;
+        }
+    assert(vi == std::end(_dotsVertsData));
+    _vboDots.subData(_dotsVertsData);
 }
 
 - (void)setGame:(std::shared_ptr<GameState>)game {
     _game = game;
-    _game->onTouchPosition([=](UITouch *touch){
-        return [self touchPosition:[touch locationInView:self.view]];
-    });
+
     _game->onSelectionChanged([=]{
-        [self updateBorders];
+        auto const & sels = _game->sels();
+
+        // Remove deselected borders.
+        for (auto i = begin(_borders); i != end(_borders);) {
+            auto s = sels.find(i->first);
+            if (s != end(sels) && s->second.has_border()) {
+                ++i;
+            } else {
+                i = _borders.erase(i);
+            }
+        }
+
+        // Update modified borders and create new borders.
+        for (auto const & sel : sels)
+            if (sel.second.has_border()) {
+                auto verts = [self prepareSelectionBorder:sel.second.is_selected];
+                auto i = _borders.find(sel.first);
+                if (i == end(_borders)) {
+                    _borders.emplace(sel.first, BorderVertexBuffer{verts});
+                } else {
+                    i->second.data(verts);
+                }
+            }
     });
+
+    _game->onBoardChanged([=]{
+        auto mask = _game->board().computeMask();
+        for (size_t y = 0; y < 16; ++y)
+            for (size_t x = 0; x < 16; ++x) {
+                GLubyte v = mask.isSet(x, y) * 0xff;
+                _dotsData[16 * y + x] = {v, v, v, v};
+            }
+
+        Texture2DData data{_dotsData, kTexture2DPixelFormat_RGBA8888, 16, 16, {16, 16}};
+        [Texture2D pasteIntoTexture:_dotStates.name data:data atXOffset:0 atYOffset:0];
+    });
+
+    _game->onCancelTapGesture([=]{
+        _tapGestureRecognizer.enabled = NO;
+        _tapGestureRecognizer.enabled = YES;
+    });
+
+    [self updateBoardColors:false];
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -281,6 +277,10 @@ std::array<GLushort, sph_elems> sphereElements() {
 
     [self becomeFirstResponder];
 
+    _nBoardRows = iPad ? 16 : 7;
+    _nBoardCols = iPad ? 16 : 8;
+    _viewHeight = _nBoardRows + 2 * gEdgeThickness;
+
     _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
     if (!_context) {
@@ -292,11 +292,70 @@ std::array<GLushort, sph_elems> sphereElements() {
     view.drawableMultisample = GLKViewDrawableMultisample4X;
     self.preferredFramesPerSecond = 60;
 
-    _scale = _pinchScale = 1;
+    // Prepare zoom/pan clamps.
 
-    _xReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
-    _yReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
-    _scaleReturn = std::make_shared<brac::kinematics::MechanicalSystem>(brac::kinematics::harmonicOscillator(5000));
+    auto cpRectShapeNew = [](cpBody *body, float halfW, float halfH, cpVect offset) {
+        cpVect verts[4] = { {-halfW, -halfH}, {-halfW, halfH}, {halfW, halfH}, {halfW, -halfH} };
+        return cpPolyShapeNew(body, 4, verts, offset);
+    };
+
+    cpInitChipmunk();
+
+    _debugDraw.reset(new ChipmunkDebugDrawDoubleDots);
+
+    _space = cpSpaceNew();
+    auto world = cpSpaceGetStaticBody(_space);
+
+    _anchor = cpBodyNew(0.1, 1);
+    cpSpaceAddBody(_space, _anchor);
+
+    _finger = cpBodyNewStatic();
+
+//    auto clamp = [&](cpVect const & pos) {
+//        auto body = cpBodyNew(1, 1);
+//        cpBodySetPos(body, pos);
+//        auto disk = cpCircleShapeNew(body, 1, {0, 0});
+//        cpSpaceAddBody (_space, body);
+//        cpSpaceAddShape(_space, disk);
+//        cpSpaceAddConstraint(_space, cpDampedSpringNew(_anchor, body, {0, 0}, {0, 0}, cpvlength(pos), 1, 1));
+//        cpSpaceAddConstraint(_space, cpGrooveJointNew(_anchor, body, {0, 0}, pos * 3, {0, 0}));
+//        return body;
+//    };
+//
+//    _clamps[0] = clamp({ 21,   0});
+//    _clamps[1] = clamp({-21,   0});
+//    _clamps[2] = clamp({  0,  21});
+//    _clamps[3] = clamp({  0, -21});
+
+    cpSpaceAddShape(_space, cpRectShapeNew(_anchor, 20, 20, {0, 0}));
+
+    cpSpaceAddConstraint(_space, cpRotaryLimitJointNew(world, _anchor, 0, 0));
+    //cpSpaceAddConstraint(_space, cpSlideJointNew(world, _anchor, {0, 0}, {0, 0}, 0, 30));
+
+    auto brake = [&](float halfW, float halfH, cpVect offset) {
+        auto brake = cpBodyNew(0.01, 1);
+        cpBodySetPos(brake, offset);
+        cpSpaceAddBody(_space, brake);
+
+        auto brakePad = cpRectShapeNew(brake, halfW, halfH, {0, 0});
+        cpShapeSetGroup(brakePad, 1);
+        cpShapeSetFriction(brakePad, 1000);
+        cpSpaceAddShape(_space, brakePad);
+
+        cpSpaceAddConstraint(_space, cpRotaryLimitJointNew(world, brake, 0, 0));
+        cpSpaceAddConstraint(_space, cpGrooveJointNew(world, brake, offset * -10, offset * 10, {0, 0}));
+
+        return brake;
+    };
+    assert(&brake);
+
+//    auto brakeN = brake(40,   4, {  0,  25}); assert(brakeN);
+//    auto brakeS = brake(40,   4, {  0, -25}); assert(brakeS);
+//    auto brakeE = brake(  4, 40, { 25,   0}); assert(brakeE);
+//    auto brakeW = brake(  4, 40, {-25,   0}); assert(brakeW);
+//
+//    cpSpaceAddConstraint(_space, cpDampedSpringNew(brakeN, brakeS, {0, 0}, {0, 0}, 0, 1, 0));
+//    cpSpaceAddConstraint(_space, cpDampedSpringNew(brakeE, brakeW, {0, 0}, {0, 0}, 0, 100, 0));
 
     [self setupGL];
 }
@@ -333,33 +392,127 @@ std::array<GLushort, sph_elems> sphereElements() {
             _nextMatchToHint = 0;
         }
     const auto& match = sm->matches[_nextMatchToHint++%sm->matches.size()];
-    _hints[0] = [self prepareBorderForSelection:match.shape1];
-    _hints[1] = [self prepareBorderForSelection:match.shape2];
+    _hints[0] = [self prepareSelectionBorder:match.shape1];
+    _hints[1] = [self prepareSelectionBorder:match.shape2];
     _hintIntensity = 1;
 }
 
 - (void)setupGL {
     [EAGLContext setCurrentContext:_context];
 
-    _matte.reset(new MatteProgram);
-    _border.reset(new BorderProgram);
+    _matte  .reset(new  MatteProgram);
+    _border .reset(new BorderProgram);
+    _dots   .reset(new   DotsProgram);
+    _board  .reset(new  BoardProgram);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    _sphereVerts = MatteVertex::makeBuffer(sphereVertices().data(), sphereVertices().size());
-    glGenBuffers(1, &_sphereElems);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _sphereElems);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*sphereElements().size(), sphereElements().data(), GL_STATIC_DRAW);
+    {
+        float r, g, b, a;
+        [self.view.backgroundColor getRed:&r green:&g blue:&b alpha:&a];
+        glClearColor(r, g, b, a);
+    }
 
-    _atlas = [[Texture2D alloc] initWithImage:[UIImage imageNamed:@"atlas.png"]];
+    auto loadImage = [](NSString *filename, bool repeat) {
+        Texture2D * image = [[Texture2D alloc] initWithImage:[UIImage imageNamed:filename]];
+        glGenerateMipmapOES(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        if (repeat) {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        }
+        return image;
+    };
+
+    _atlas   = loadImage(@"atlas.png"  , false);
+    _surface = loadImage(@"surface.png", true ); // http://seamless-pixels.blogspot.com.au/2012/09/seamless-floor-concrete-stone-pavement.html
+    _dimple  = loadImage(@"dimple.png" , true );
+    _edging  = loadImage(@"edging.png" , false);
+
+    _dotStates = [[Texture2D alloc] initWithTexData:Texture2DData{_dotsData, kTexture2DPixelFormat_RGBA8888, 16, 16, {16, 16}}];
+
+    int nCells = _nBoardRows * _nBoardCols;
+    _dotsVertsData.reserve(4 * nCells);
+    auto vi = back_inserter(_dotsVertsData);
+    for (size_t y = 0; y < _nBoardRows; ++y)
+        for (size_t x = 0; x < _nBoardCols; ++x) {
+            vec2 position{ x            ,  y            };
+            vec2 dotcoord{(x + 0.5) / 16, (y + 0.5) / 16};
+            *vi++ = {position             , {0, 0}, dotcoord};
+            *vi++ = {position + vec2{1, 0}, {0, 0}, dotcoord};
+            *vi++ = {position + vec2{1, 1}, {0, 0}, dotcoord};
+            *vi++ = {position + vec2{0, 1}, {0, 0}, dotcoord};
+        }
+    assert(_dotsVertsData.size() == 4 * nCells);
+    _vboDots = DotsVertexBuffer{_dotsVertsData};
+
+    std::vector<GLushort> dotsElemsData; dotsElemsData.reserve(6 * nCells);
+    auto ei = back_inserter(dotsElemsData);
+    for (size_t i = 0, y = 0; y < _nBoardRows; ++y)
+        for (size_t x = 0; x < _nBoardCols; ++x, i += 4) {
+            size_t elems[] = { i, i + 1, i + 2, i, i + 2, i + 3 };
+            ei = std::copy(std::begin(elems), std::end(elems), ei);
+        }
+    assert(dotsElemsData.size() == 6 * nCells);
+    _eboDots = ElementBuffer<>{dotsElemsData};
+
+    float s = 4.7 / 16;
+    float sx = s * _nBoardCols, sy = s * _nBoardRows;
+    _vboBoardInterior = BoardVertexBuffer{
+        { {0          , 0          }, {0 , 0 }, {0          , 0          } },
+        { {_nBoardCols, 0          }, {sx, 0 }, {_nBoardCols, 0          } },
+        { {_nBoardCols, _nBoardRows}, {sx, sy}, {_nBoardCols, _nBoardRows} },
+        { {0          , _nBoardRows}, {0 , sy}, {0          , _nBoardRows} },
+    };
+
+    constexpr float e = gEdgeThickness;
+    float E = e * s;
+    auto edge = [&](int x, int y, int ox, int oy) {
+        return BoardVertex{ {_nBoardCols * x + e * ox, _nBoardRows * y + e * oy}, {sx * x + E * ox, sy * y + E * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)} };
+    };
+    auto a00 = edge(0, 0, -1, -1);
+    auto a01 = edge(0, 0,  0, -1);
+    auto a02 = edge(1, 0,  0, -1);
+    auto a03 = edge(1, 0,  1, -1);
+    auto a04 = edge(0, 0, -1,  0);
+    auto a05 = edge(0, 0,  0,  0);
+    auto a06 = edge(1, 0,  0,  0);
+    auto a07 = edge(1, 0,  1,  0);
+    auto a08 = edge(0, 1, -1,  0);
+    auto a09 = edge(0, 1,  0,  0);
+    auto a10 = edge(1, 1,  0,  0);
+    auto a11 = edge(1, 1,  1,  0);
+    auto a12 = edge(0, 1, -1,  1);
+    auto a13 = edge(0, 1,  0,  1);
+    auto a14 = edge(1, 1,  0,  1);
+    auto a15 = edge(1, 1,  1,  1);
+
+    _vboBoardEdge = BoardVertexBuffer{
+        a00, a01, a05, a02, a06, a03, // Bottom edge
+        a03, a07, a06, a11, a10, a15, // Right edge
+        a15, a14, a10, a13, a09, a12, // Top edge
+        a12, a08, a09, a04, a05, a00, // Left edge
+    };
+
+    if (auto border = (*_border)()) {
+        border.fs.atlas = 0;
+    }
+
+    if (auto dots = (*_dots)()) {
+        dots.fs.atlas = 0;
+        dots.fs.dots  = 1;
+    }
+
+    if (auto board = (*_board)()) {
+        board.fs.texture = 0;
+        board.fs.light   = 1;
+    }
 }
 
 - (void)tearDownGL {
     [EAGLContext setCurrentContext:_context];
-
-    glDeleteBuffers(1, &_sphereVerts);
-    glDeleteBuffers(1, &_sphereElems);
 
     _matte.reset();
     _border.reset();
@@ -370,105 +523,113 @@ std::array<GLushort, sph_elems> sphereElements() {
 - (void)update {
     float dt = self.timeSinceLastUpdate;
 
+    for (int i = 0; i < 4; ++i)
+        cpSpaceStep(_space, (1 / 4.0) * dt);
+
     CGSize size = self.view.bounds.size;
     float aspect = fabsf(size.width / size.height);
 
-    float s = gBoardHeight / size.height;
+    auto proj = mat4::ortho(0, _viewHeight*aspect, 0, _viewHeight, -5, 5);
+    //proj *= mat4::scale(0.2) * mat4::translate({40, 40, 0});
 
-    float scale = std::exp(softclamp(std::log(_scale * _pinchScale) + _scaleReturn->x(), 0, gLogScaleLimit, 0.3));
-    float inv_scale = 1 / scale;
+    auto offset = cpBodyGetPos(_anchor);
+    auto mv = mat4::translate({gEdgeThickness + offset.x, gEdgeThickness + offset.y, 0});
 
-    _panLimit = vec2(1, 1) * (std::max(gBoardHeight * (scale - 1), 0.0f) / s);
-
-    vec2 off = (_offset + _pan + vec2{_xReturn->x(), _yReturn->x()});
-    off.x = softclamp(off.x, 0, _panLimit.x, 0.25 * _panLimit.x) * s;
-    off.y = softclamp(off.y, 0, _panLimit.y, 0.25 * _panLimit.y) * s;
-
-    for (int i = 0; i < 4; ++i) {
-        (*_xReturn)(0.25 * dt);
-        (*_yReturn)(0.25 * dt);
-        (*_scaleReturn)(0.25 * dt);
-    }
-
-    auto proj = mat4::ortho(inv_scale * off.x, inv_scale * (off.x + gBoardHeight*aspect), inv_scale * off.y, inv_scale * (off.y + gBoardHeight), -5, 5);
-    if (!iPad) proj *= mat4::scale(16/7.0);
-
-    auto mv = mat4::identity()*mat4::translate({1.75, 1.75, 0});
-
-    _mvpMatrix = proj*mv;
+    _pmvMatrix = proj*mv;
     _normalMatrix = mv.ToMat3().inverse().transpose();
-    _pick = _mvpMatrix.inverse();
+    _pick = _pmvMatrix.inverse();
 
     if (_hintIntensity && (_hintIntensity -= dt) < 0) {
         _hintIntensity = 0;
         for (int i = 0; i < 2; ++i)
-            _hints[i].reset();
+            _hints[i] = BorderVertexBuffer{};
     }
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-    {
-        float r, g, b, a;
-        [self.view.backgroundColor getRed:&r green:&g blue:&b alpha:&a];
-        glClearColor(r, g, b, a);
-    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (auto border = (*_border)()) {
-        border.vs.pmvMat = _mvpMatrix;
+    if (auto board = (*_board)()) {
+        [_surface activateAndBind:GL_TEXTURE0];
+        [_dimple  activateAndBind:GL_TEXTURE1];
 
-        border.fs.atlas = 0;
-        [_atlas activateAndBind:GL_TEXTURE0];
+        board.vs.pmvMat = _pmvMatrix;
+        board.fs.color = {1, 1, 1, 1};
 
-        for (int i = 0; i != _game->sels().size(); ++i) {
-            const auto& sel = _game->sels()[i];
-            if (_sels[i]) {
-                border.fs.color = vec4{(vec3)selectionColors[i]*(1 - 0.5*(sel.is_selected.count() < GameState::minimumSelection)), 1};
+        _vboBoardInterior.render(board, GL_TRIANGLE_FAN);
 
-                _sels[i].render(border, GL_TRIANGLES);
+        [_edging activateAndBind:GL_TEXTURE1];
+
+        _vboBoardEdge.render(board, GL_TRIANGLE_STRIP);
+    }
+    
+    [_atlas activateAndBind:GL_TEXTURE0];
+    [_dotStates activateAndBind:GL_TEXTURE1];
+
+    if (std::any_of(begin(_borders), end(_borders), [](Borders::value_type const & sel) { return !!sel.second; }))
+        if (auto border = (*_border)()) {
+            border.vs.pmvMat = _pmvMatrix;
+
+            for (auto const & sel : _game->sels()) {
+                auto b = _borders.find(sel.first);
+                if (b != _borders.end() && b->second) {
+                    border.fs.color = vec4{(vec3)selectionColors[sel.first] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
+
+                    b->second.render(border, GL_TRIANGLES);
+                }
             }
+
+            if (_hintIntensity)
+                border.fs.color = vec4{1, 1, 1, 1}*_hintIntensity;
+            for (const auto& hint : _hints)
+                hint.render(border, GL_TRIANGLES);
         }
 
-        if (_hintIntensity)
-            border.fs.color = vec4{1, 1, 1, 1}*_hintIntensity;
-        for (const auto& hint : _hints)
-            hint.render(border, GL_TRIANGLES);
+    if (auto dots = (*_dots)()) {
+        dots.vs.pmvMat = _pmvMatrix;
+
+        _eboDots.render(dots, _vboDots, GL_TRIANGLES);
     }
 
-    if (auto matte = (*_matte)()) {
+    if (_drag)
+        if (auto matte = (*_matte)()) {
+            matte.vs.pmvMat  = _pmvMatrix;
+            matte.vs.normalMat = _normalMatrix;
+
+            auto p = cpBodyGetPos(_finger) - cpBodyGetPos(_anchor);
+            matte.vs.color = {1, 1, 0, 1};
+            matte.vs.pmvMat = _pmvMatrix*mat4::translate({p.x, p.y, 0});//*mat4::scale(3);
+            // TODO
+            //glDrawElements(GL_TRIANGLES, sph_elems, GL_UNSIGNED_SHORT, 0);
+        }
+
+    if(0)if (auto matte = (*_matte)()) {
+        matte.vs.pmvMat  = _pmvMatrix;
         matte.vs.normalMat = _normalMatrix;
-        matte.vs.enableVBO(_sphereVerts);
-        matte.vs.enableElementVBO(_sphereElems);
 
-        // Dots
-        for (int c = 0; c < GameState::numBallColors; ++c)
-            if (brac::BitBoard const & bb = _game->board().colors[c]) {
-                matte.vs.color = (vec4)ballColors[c];
-
-                for (int y = 0; y < 16; ++y)
-                    for (int x = 0; x < 16; ++x)
-                        if (bb.isSet(x, y)) {
-                            matte.vs.mvpMat = _mvpMatrix*mat4::translate({2.5*x, 2.5*y, 0});
-                            glDrawElements(GL_TRIANGLES, sph_elems, GL_UNSIGNED_SHORT, 0);
-                        }
-            }
+        _debugDraw->setShaderContext(matte);
+        glLineWidth(3);
+        _debugDraw->space(_space);
     }
+
+    [Texture2D activateAndUnbind:GL_TEXTURE0];
+    [Texture2D activateAndUnbind:GL_TEXTURE1];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    _game->touchesBegan(touches);
+    _game->touchesBegan([self touchPositions:touches]);
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    _game->touchesMoved(touches);
+    _game->touchesMoved([self touchPositions:touches]);
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    _game->touchesEnded(touches);
+    _game->touchesEnded([self touchPositions:touches]);
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    _game->touchesCancelled(touches);
+    _game->touchesCancelled([self touchPositions:touches]);
 }
 
 #pragma mark - Actions
@@ -479,32 +640,35 @@ std::array<GLushort, sph_elems> sphereElements() {
 }
 
 - (IBAction)panGestured:(UIPanGestureRecognizer *)sender {
+    auto p = [sender locationInView:self.view] * (_viewHeight / self.view.bounds.size.height);
+    p.y = -p.y;
+
     switch (sender.state) {
         case UIGestureRecognizerStateBegan:
+            cpBodySetPos(_finger, p);
+            cpBodySetVel(_anchor, {0, 0});
+            _drag = cpPivotJointNew(_anchor, _finger, p);
+            //cpConstraintSetMaxForce(_drag, 100);
+            cpConstraintSetErrorBias(_drag, powf(0.7, 60));
+            cpSpaceAddConstraint(_space, _drag);
+            break;
         case UIGestureRecognizerStateChanged:
         {
-            CGPoint pan = [sender translationInView:self.view];
-            _pan = vec2{-pan.x, pan.y};
+            if (sender.numberOfTouches == 2)
+                cpBodySetPos(_finger, p);
+            //cpBodySetVel(_finger, {0, 0});
             break;
         }
         case UIGestureRecognizerStateEnded:
-            _offset += _pan;
-            if (_offset.x < 0) {
-                _xReturn->setX(_offset.x);
-                _offset.x = 0;
-            } else if (_offset.x > _panLimit.x) {
-                _xReturn->setX(_offset.x - _panLimit.x);
-                _offset.x = _panLimit.x;
-            }
-            if (_offset.y < 0) {
-                _yReturn->setX(_offset.y);
-                _offset.y = 0;
-            } else if (_offset.y > _panLimit.y) {
-                _yReturn->setX(_offset.y - _panLimit.y);
-                _offset.y = _panLimit.y;
-            }
-            _pan = {0, 0};
+        {
+            auto v = [sender velocityInView:self.view] * (_viewHeight / self.view.bounds.size.height);
+            v.y *= -1;
+            cpBodySetVel(_anchor, v);
+            cpSpaceRemoveConstraint(_space, _drag);
+            cpConstraintFree(_drag);
+            _drag = nullptr;
             break;
+        }
         default:
             break;
     }
@@ -514,19 +678,15 @@ std::array<GLushort, sph_elems> sphereElements() {
     switch (sender.state) {
         case UIGestureRecognizerStateBegan:
         case UIGestureRecognizerStateChanged:
-            _pinchScale = sender.scale;
+        {
+
             break;
+        }
         case UIGestureRecognizerStateEnded:
-            _scale *= _pinchScale;
-            if (_scale < 1) {
-                _scaleReturn->setX(std::log(_scale));
-                _scale = 1;
-            } else if (_scale > gScaleLimit) {
-                _scaleReturn->setX(std::log(_scale) - gLogScaleLimit);
-                _scale = gScaleLimit;
-            }
-            _pinchScale = 1;
+        {
+
             break;
+        }
         default:
             break;
     }

@@ -23,7 +23,9 @@
     _sm = sm;
 
     std::ostringstream shapeText;
-    write(shapeText, habeo::Board<1>{{{{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}}}}, {sm->shape}, " O", true);
+    Board b{1};
+    b.colors[0] = {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+    write(shapeText, b, {sm->shape}, " O", true);
 
     _quantity.hidden        = sm->matches.size() < 2;
     if (!_quantity.hidden)

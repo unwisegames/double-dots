@@ -9,5 +9,4 @@
 @property (nonatomic, strong) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) IBOutlet RenderController *renderer;
 
-- (IBAction)tappedMatch;
 @end

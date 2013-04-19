@@ -5,7 +5,7 @@
 BRICABRAC_ATTRIBUTE(vec3, position)
 BRICABRAC_ATTRIBUTE(vec3, normal)
 
-BRICABRAC_UNIFORM(mat4, mvpMat)
+BRICABRAC_UNIFORM(mat4, pmvMat)
 BRICABRAC_UNIFORM(mat3, normalMat)
 BRICABRAC_UNIFORM(vec4, color)
 
@@ -22,7 +22,8 @@ void main()
 
     v_color = color*nDotVP;
 
-    gl_Position = mvpMat*vec4(position, 1.0);
+    gl_Position = pmvMat*vec4(position, 1.0);
+    gl_PointSize = 5.0;
 }
 
 #endif // BRICABRAC_HOSTED

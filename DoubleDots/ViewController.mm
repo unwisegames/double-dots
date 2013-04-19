@@ -7,8 +7,6 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-using namespace habeo;
-
 static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
 @interface ViewController () {
@@ -21,7 +19,7 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 @synthesize tableView = _tableView, renderer = _renderer;
 
 - (void)resetGame {
-    _renderer.game = _game = std::make_shared<GameState>(iPad);
+    _renderer.game = _game = std::make_shared<GameState>(5, iPad);
     _game->onGameOver([=]{ dispatch_async(dispatch_get_main_queue(), ^{ [self resetGame]; }); });
     [self.tableView reloadData];
 }
@@ -126,6 +124,10 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 - (IBAction)tappedMatch {
     _game->match();
     [self.tableView reloadData];
+}
+
+- (IBAction)tappedColorBlind {
+    [_renderer updateBoardColors:true];
 }
 
 @end
