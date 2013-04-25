@@ -134,6 +134,8 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
     [self.tableView reloadData];
     [self calculatePossibles];
+
+    _renderer.paused = NO;
 }
 
 - (BOOL)canBecomeFirstResponder {
@@ -172,6 +174,11 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 -(void)viewDidLayoutSubviews {
     _renderer.view.frame = CGRectMake(0, 0, iPad ? 768 : std::ceil(320*8/7.0), iPad ? 768 : 320);
+    _renderer.paused = NO;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    _renderer.paused = NO;
 }
 
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
@@ -294,6 +301,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 - (IBAction)tappedColorBlind {
     [_renderer updateBoardColors:true];
     [self.tableView reloadData];
+    _renderer.paused = NO;
 }
 
 @end

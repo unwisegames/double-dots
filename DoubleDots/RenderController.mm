@@ -198,6 +198,7 @@ struct RgbaPixel {
         }
     assert(vi == std::end(_dotsVertsData));
     _vboDots.subData(_dotsVertsData);
+    self.paused = NO;
 }
 
 - (void)setGame:(std::shared_ptr<GameState>)game {
@@ -227,6 +228,7 @@ struct RgbaPixel {
                     i->second.data(verts);
                 }
             }
+        self.paused = NO;
     });
 
     _game->onBoardChanged([=]{
@@ -239,6 +241,7 @@ struct RgbaPixel {
 
         Texture2DData data{_dotsData, kTexture2DPixelFormat_RGBA8888, 16, 16, {16, 16}};
         [Texture2D pasteIntoTexture:_dotStates.name data:data atXOffset:0 atYOffset:0];
+        self.paused = NO;
     });
 
     _game->onCancelTapGesture([=]{
@@ -380,12 +383,15 @@ struct RgbaPixel {
         _shapeMatchesToHint = sm;
         _nextMatchToHint = 0;
     }
+
     if (sm) {
         const auto& match = sm->matches[_nextMatchToHint++ % sm->matches.size()];
         _vboHints[0].data([self prepareSelectionBorder:match.shape1]);
         _vboHints[1].data([self prepareSelectionBorder:match.shape2]);
         _hintIntensity = 1;
     }
+
+    self.paused = NO;
 }
 
 - (void)setupGL {
@@ -503,6 +509,8 @@ struct RgbaPixel {
         board.fs.texture = 0;
         board.fs.light   = 1;
     }
+
+    self.paused = NO;
 }
 
 - (void)tearDownGL {
@@ -605,6 +613,8 @@ struct RgbaPixel {
 
     [Texture2D activateAndUnbind:GL_TEXTURE0];
     [Texture2D activateAndUnbind:GL_TEXTURE1];
+
+    self.paused = !_hintIntensity;
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
