@@ -8,7 +8,8 @@
 
 @interface ShapeCell : UITableViewCell
 
-- (void)setShapeMatches:(const std::shared_ptr<ShapeMatches>&)shapeMatches;
-- (void)updateScores;
+@property (nonatomic, strong) IBOutlet UIImageView  * shape;
+
+- (void)setShapeMatches:(ShapeMatches const &)sm image:(UIImage *)shape;
 
 @end

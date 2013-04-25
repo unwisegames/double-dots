@@ -36,19 +36,17 @@ public:
     typedef std::vector<std::shared_ptr<ShapeMatches>>  ShapeMatcheses;
     typedef std::unordered_map<size_t, Selection>       Selections;
     
-    
     enum { minimumSelection = 3 };
 
     GameState(size_t n, bool iPad);
 
     void match();
 
-    Board           const & board () { return board_         ; }
-    ShapeMatcheses  const & shapes() { return shapeMatcheses_; }
-    Selections      const & sels  () { return sels_          ; }
+    size_t                  seed  () { return seed_     ; }
+    Board           const & board () { return board_    ; }
+    Selections      const & sels  () { return sels_     ; }
 
     template <typename F> void onSelectionChanged   (F f) { selectionChanged_   = f; }
-    template <typename F> void onGameOver           (F f) { gameOver_           = f; }
     template <typename F> void onBoardChanged       (F f) { boardChanged_       = f; f(); }
     template <typename F> void onCancelTapGesture   (F f) { cancelTapGesture_   = f; }
 
@@ -58,19 +56,22 @@ public:
     void touchesCancelled(std::vector<Touch> const & touches);
     void tapped(brac::vec2 p);
 
+    static std::function<brac::BitBoard(brac::BitBoard const &)> canonicaliser(brac::BitBoard const & bb);
+
+    static ShapeMatcheses possibleMoves(Board const & board);
+    void filterMatcheses(ShapeMatcheses & matcheses);
+
 private:
+    size_t                      seed_;
     Board                       board_;
-    ShapeMatcheses              shapeMatcheses_;
     Selections                  sels_;
     std::unordered_set<size_t>  indices_;
 
     std::function<void()> selectionChanged_;
-    std::function<void()> gameOver_;
     std::function<void()> boardChanged_;
     std::function<void()> cancelTapGesture_;
 
     void handleTouch(brac::BitBoard is_touched, Selection& sel);
-    void updatePossibles();
 
     Selections::iterator findSelection(Touch const & touch) {
         return std::find_if(begin(sels_), end(sels_), [&](Selections::value_type const & s){ return s.second.key == touch.key; });

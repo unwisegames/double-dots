@@ -15,6 +15,7 @@ struct Match {
 struct ShapeMatches {
     brac::BitBoard shape;
     std::vector<Match> matches;
+    uint8_t hinted;
 };
 
 #endif /* defined(__DoubleDots__ShapeMatches__) */

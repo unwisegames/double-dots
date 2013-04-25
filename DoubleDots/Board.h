@@ -100,35 +100,17 @@ struct Board {
         return map([=](brac::BitBoard const & b) { return b.shiftEN(e, n); });
     }
 
-    template <typename I>
-    bool selectionsMatch(I startBBs, I finishBBs, bool report = false) const;
+    static bool selectionsMatch(Board const (&prerotated)[4], brac::BitBoard const & a, brac::BitBoard const & b);
 
     template <typename I>
-    static bool selectionsMatch(std::initializer_list<Board const &> rots, I startBBs, I finishBBs, bool report = false);
+    bool selectionsMatch(I startBBs, I finishBBs) const {
+        Board const prerotated[4] = {*this, rotL(), reverse(), rotR()};
+        brac::BitBoard const & a = *startBBs;
+        return std::all_of(++startBBs, finishBBs, [&](brac::BitBoard const & b) { return selectionsMatch(prerotated, a, b); });
+    }
 
     std::unordered_set<std::array<brac::BitBoard, 2>> findMatchingPairs() const;
 };
-
-template <typename I>
-bool Board::selectionsMatch(I startBBs, I finishBBs, bool report) const {
-    if (std::distance(startBBs, finishBBs) < 2)
-        return true;
-
-    const auto& bb1 = *startBBs;
-    int sm1 = bb1.marginS(), wm1 = bb1.marginW();
-
-    Board first = (*this & bb1).shiftWS(wm1, sm1);
-    std::vector<size_t> ii(nColors());
-    std::iota(begin(ii), end(ii), 0);
-    return std::all_of(++startBBs, finishBBs, [&](brac::BitBoard const & bb) {
-        int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
-        std::vector<brac::BitBoard> cc(nColors());
-        return (std::all_of(begin(ii), end(ii), [&](size_t i) { return first.colors[i] == (cc[i] = (colors[i] & bb))          .shiftWS(wm, sm); }) ||
-                std::all_of(begin(ii), end(ii), [&](size_t i) { return first.colors[i] == (cc[i]                   ).rotL   ().shiftWS(nm, wm); }) ||
-                std::all_of(begin(ii), end(ii), [&](size_t i) { return first.colors[i] == (cc[i]                   ).reverse().shiftWS(em, nm); }) ||
-                std::all_of(begin(ii), end(ii), [&](size_t i) { return first.colors[i] == (cc[i]                   ).rotR   ().shiftWS(sm, em); }) );
-    });
-}
 
 std::ostream& write(std::ostream& os, Board const & b, std::initializer_list<brac::BitBoard> bbs, const char* colors, bool trimNorth = false);
 

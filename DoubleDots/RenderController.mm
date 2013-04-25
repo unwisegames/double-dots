@@ -34,7 +34,7 @@ static constexpr float gEdgeThickness   = 0.5;
 static constexpr float gScaleLimit      = 2;
 static           float gLogScaleLimit   = std::log(gScaleLimit);
 
-static std::vector<Color> selectionColors = {{
+static std::array<Color, 5> selectionColors = {{
     {1  , 0.7, 0.1},
     {0.5, 0.7, 1  },
     {0.8, 0.4, 1  },
@@ -75,16 +75,14 @@ struct RgbaPixel {
     std::weak_ptr<ShapeMatches> _shapeMatchesToHint;
     int _nextMatchToHint;
     float _hintIntensity;
-    std::array<BorderVertexBuffer, 2> _hints;
+    std::array<BorderVertexBuffer, 2> _vboHints;
 
     std::unique_ptr<ChipmunkDebugDrawDoubleDots> _debugDraw;
 
     // Zoom/pan
-    cpSpace *_space;
-    cpBody *_anchor;
-    cpBody *_clamps[4];
-    cpBody *_finger;
-    cpConstraint *_drag;
+    cpSpace         * _space;
+    cpBody          * _anchor, * _clamps[4], * _finger;
+    cpConstraint    * _drag;
     cpVect _dragStart;
     std::vector<cpShape *> reportables;
 }
@@ -93,7 +91,7 @@ struct RgbaPixel {
 
 @implementation RenderController
 
-@synthesize game = _game, tapGestureRecognizer = _tapGestureRecognizer;
+@synthesize game = _game, colorSet = _colorSet, tapGestureRecognizer = _tapGestureRecognizer;
 
 - (std::unique_ptr<vec2>)touchPosition:(CGPoint)loc {
     auto size = self.view.bounds.size;
@@ -185,19 +183,6 @@ struct RgbaPixel {
 - (void)updateBoardColors:(bool)swap {
     _colorSet ^= swap;
 
-    vec2 blue   {0.25, 0.25};
-    vec2 red    {0.5 , 0.25};
-    vec2 purple {0.75, 0.25};
-    vec2 green  {0.5 , 0.5 };
-    vec2 dkblue {0.75, 0.5 };
-    vec2 white  {0.5 , 0.75};
-    vec2 yellow {0.75, 0.75};
-
-    vec2 spheres[2][5] = {
-        {red, green,   blue, purple, yellow},
-        {red, green, dkblue, purple, white },
-    };
-
     auto vi = begin(_dotsVertsData);
     auto const & board = _game->board();
     for (size_t y = 0; y < _nBoardRows; ++y)
@@ -205,7 +190,7 @@ struct RgbaPixel {
             int c = board.color(x, y);
             float s = 0.25;
             if (c == -1) { c = 0; s = 0; }
-            vec2 tc = spheres[_colorSet][c];
+            vec2 tc = DotTexCoords::dots[_colorSet][c];
             vi++->texcoord = tc + vec2{0, s};
             vi++->texcoord = tc + vec2{s, s};
             vi++->texcoord = tc + vec2{s, 0};
@@ -386,15 +371,21 @@ struct RgbaPixel {
 }
 
 - (void)hint:(const std::shared_ptr<ShapeMatches>&)sm {
-    if (auto hinted = _shapeMatchesToHint.lock())
+    if (auto hinted = _shapeMatchesToHint.lock()) {
         if (hinted != sm) {
             _shapeMatchesToHint = sm;
             _nextMatchToHint = 0;
         }
-    const auto& match = sm->matches[_nextMatchToHint++%sm->matches.size()];
-    _hints[0] = [self prepareSelectionBorder:match.shape1];
-    _hints[1] = [self prepareSelectionBorder:match.shape2];
-    _hintIntensity = 1;
+    } else {
+        _shapeMatchesToHint = sm;
+        _nextMatchToHint = 0;
+    }
+    if (sm) {
+        const auto& match = sm->matches[_nextMatchToHint++ % sm->matches.size()];
+        _vboHints[0].data([self prepareSelectionBorder:match.shape1]);
+        _vboHints[1].data([self prepareSelectionBorder:match.shape2]);
+        _hintIntensity = 1;
+    }
 }
 
 - (void)setupGL {
@@ -496,6 +487,9 @@ struct RgbaPixel {
         a12, a08, a09, a04, a05, a00, // Left edge
     };
 
+    _vboHints[0] = BorderVertexBuffer::empty();
+    _vboHints[1] = BorderVertexBuffer::empty();
+
     if (auto border = (*_border)()) {
         border.fs.atlas = 0;
     }
@@ -539,11 +533,8 @@ struct RgbaPixel {
     _normalMatrix = mv.ToMat3().inverse().transpose();
     _pick = _pmvMatrix.inverse();
 
-    if (_hintIntensity && (_hintIntensity -= dt) < 0) {
+    if (_hintIntensity && (_hintIntensity -= dt) < 0)
         _hintIntensity = 0;
-        for (int i = 0; i < 2; ++i)
-            _hints[i] = BorderVertexBuffer{};
-    }
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
@@ -566,24 +557,24 @@ struct RgbaPixel {
     [_atlas activateAndBind:GL_TEXTURE0];
     [_dotStates activateAndBind:GL_TEXTURE1];
 
-    if (std::any_of(begin(_borders), end(_borders), [](Borders::value_type const & sel) { return !!sel.second; }))
-        if (auto border = (*_border)()) {
-            border.vs.pmvMat = _pmvMatrix;
+    if (auto border = (*_border)()) {
+        border.vs.pmvMat = _pmvMatrix;
 
-            for (auto const & sel : _game->sels()) {
-                auto b = _borders.find(sel.first);
-                if (b != _borders.end() && b->second) {
-                    border.fs.color = vec4{(vec3)selectionColors[sel.first] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
+        for (auto const & sel : _game->sels()) {
+            auto b = _borders.find(sel.first);
+            if (b != _borders.end() && b->second) {
+                border.fs.color = vec4{(vec3)selectionColors[sel.first % selectionColors.size()] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
 
-                    b->second.render(border, GL_TRIANGLES);
-                }
+                b->second.render(border, GL_TRIANGLES);
             }
+        }
 
-            if (_hintIntensity)
-                border.fs.color = vec4{1, 1, 1, 1}*_hintIntensity;
-            for (const auto& hint : _hints)
+        if (_hintIntensity) {
+            border.fs.color = vec4{1, 1, 1, 1} * _hintIntensity;
+            for (const auto& hint : _vboHints)
                 hint.render(border, GL_TRIANGLES);
         }
+    }
 
     if (auto dots = (*_dots)()) {
         dots.vs.pmvMat = _pmvMatrix;

@@ -5,26 +5,38 @@
 #include "vec2.h"
 
 #include <unordered_map>
+#include <iostream>
 #include <sstream>
+#include <algorithm>
+#include <random>
 
 #include <mach/mach_time.h>
 
 using namespace brac;
 
-GameState::GameState(size_t n, bool iPad) : board_(n), indices_({0, 1, 2, 3, 4}) {
+GameState::GameState(size_t n, bool iPad) : board_(n) {
+    for (size_t i = 0; i < 256 / 3 + 1; ++i) {
+        indices_.insert(i);
+    }
+
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
     int h = iPad ? 16 : 7, w = iPad ? 16 : 8;
+
+    seed_ = arc4random();
+    //seed_ = 0x7d268d40;
+    std::mt19937 gen(seed_);
+    std::uniform_int_distribution<> dist(0, board_.nColors() - 1);
+
     for (int y = 0; y < h; ++y)
         for (int x = 0; x < w; ++x)
             if (x < 16 && y < 16)
                 //board_.colors[rand() % board_.nColors()].set(x, y);
-                board_.colors[arc4random_uniform(board_.nColors())].set(x, y);
+                board_.colors[dist(gen)].set(x, y);
     //    board_.colors[0] = { 1     + 16};
     //    board_.colors[1] = { 2     + 32};
     //    board_.colors[2] = {(2<< 8)+(32<< 8)};
     //    board_.colors[3] = {(4<< 8)+(64<< 8)};
     //    board_.colors[4] = {(4<<16)+(64<<16)};
-    updatePossibles();
 }
 
 void GameState::match() {
@@ -39,7 +51,6 @@ void GameState::match() {
         sels_.clear();
         boardChanged_();
         selectionChanged_();
-        updatePossibles();
     }
 }
 
@@ -102,7 +113,7 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
 
                 // Moved from an unextended selection into another selection. Erase?
                 brac::BitBoard erased = csel.is_selected & ~is_touched;
-                if (floodFill(erased.clearAllButLowestSetBit(), erased) == erased)
+                if (floodFill(erased.ls1b(), erased) == erased)
                     csel.is_selected = erased;
 
                 sel.is_selected = is_touched;
@@ -164,8 +175,29 @@ void GameState::tapped(vec2 p) {
     selectionChanged_();
 }
 
-void GameState::updatePossibles() {
-    auto pairs = board_.findMatchingPairs();
+std::function<BitBoard(BitBoard const &)> GameState::canonicaliser(BitBoard const & bb) {
+    int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
+    std::function<BitBoard(BitBoard const &)> bbs[4] = {
+        [=](BitBoard const & bb) { return bb          .shiftWS(wm, sm); },
+        [=](BitBoard const & bb) { return bb.rotL   ().shiftWS(nm, wm); },
+        [=](BitBoard const & bb) { return bb.reverse().shiftWS(em, nm); },
+        [=](BitBoard const & bb) { return bb.rotR   ().shiftWS(sm, em); },
+    };
+
+    // Deskew symmetric patterns.
+    std::mt19937 rng{std::hash<BitBoard>()(bb)};
+    std::shuffle(begin(bbs), end(bbs), rng);
+
+    return *std::min_element(std::begin(bbs), std::end(bbs),
+                             [&](std::function<BitBoard(BitBoard const &)> const & a,
+                                 std::function<BitBoard(BitBoard const &)> const & b)
+                             {
+                                 return a(bb) < b(bb);
+                             });
+}
+
+GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
+    auto pairs = board.findMatchingPairs();
 
 #if 0
     static mach_timebase_info_data_t tbi;
@@ -174,7 +206,7 @@ void GameState::updatePossibles() {
         mach_timebase_info(&tbi);
     });
 
-    auto at = []{ return mach_absolute_time()*tbi.numer/tbi.denom/1000000; };
+    auto at = []{ return mach_absolute_time() * tbi.numer / tbi.denom / 1000000; };
     auto t1 = at();
     constexpr int numtests = 1;
     for (int i = 0; i < numtests; ++i)
@@ -208,6 +240,8 @@ void GameState::updatePossibles() {
     }
 #endif
 
+    ShapeMatcheses matcheses;
+
     std::vector<Match> matches;
     for (const auto& p : pairs) {
         int score = p[0].count();
@@ -226,32 +260,48 @@ void GameState::updatePossibles() {
     typedef std::unordered_map<brac::BitBoard, std::vector<Match>> ShapeMap;
     ShapeMap shape_histogram;
     for (const auto& m : matches) {
-        auto bb = m.shape1;
-        int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
-        auto& h = shape_histogram[std::min(bb.shiftWS(wm, sm),
-                                           std::min(bb.rotL().shiftWS(nm, wm),
-                                                    std::min(bb.reverse().shiftWS(em, nm),
-                                                             bb.rotR().shiftWS(sm, em))))];
-        h.push_back(m);
+        shape_histogram[canonicaliser(m.shape1)(m.shape1)].push_back(m);
     }
-    shapeMatcheses_.clear(); shapeMatcheses_.reserve(shape_histogram.size());
-    std::transform(begin(shape_histogram), end(shape_histogram), back_inserter(shapeMatcheses_),
+    matcheses.clear(); matcheses.reserve(shape_histogram.size());
+    std::transform(begin(shape_histogram), end(shape_histogram), back_inserter(matcheses),
                    [](ShapeMap::value_type const & sm) { return std::make_shared<ShapeMatches>(ShapeMatches{sm.first, sm.second}); });
 
-    for (auto& sm : shapeMatcheses_) {
+    for (auto& sm : matcheses) {
         // Sort matches by score.
         std::sort(begin(sm->matches), end(sm->matches), [](Match const & a, Match const & b) { return a.score > b.score; });
     }
 
     // Sort by lexicograpically comparing score lists, secondarily on bit-value.
-    std::sort(begin(shapeMatcheses_), end(shapeMatcheses_), [](const std::shared_ptr<ShapeMatches>& a, const std::shared_ptr<ShapeMatches>& b) {
+    std::sort(begin(matcheses), end(matcheses), [](const std::shared_ptr<ShapeMatches>& a, const std::shared_ptr<ShapeMatches>& b) {
         auto comp = [](Match const & a, Match const & b) { return a.score > b.score; };
 
         return (std::lexicographical_compare(begin(a->matches), end(a->matches), begin(b->matches), end(a->matches), comp) ||
                 (!std::lexicographical_compare(begin(b->matches), end(b->matches), begin(a->matches), end(a->matches), comp) &&
                  a->shape > b->shape));
     });
+
+    return matcheses;
+}
+
+void GameState::filterMatcheses(ShapeMatcheses & matcheses) {
+    auto was_removed = ~board_.computeMask();
+    std::for_each(begin(matcheses), end(matcheses), [&](std::shared_ptr<ShapeMatches> & matches) {
+        auto & m = matches->matches;
+        auto new_end = std::remove_if(begin(m), end(m), [&](Match const & match) {
+            return !!(was_removed & (match.shape1 | match.shape2));
+        });
+        if (new_end != m.end())
+            matches->hinted = 0;
+        m.erase(new_end, m.end());
+    });
     
-    if (shapeMatcheses_.empty() && gameOver_)
-        gameOver_();
+    matcheses.erase(std::remove_if(begin(matcheses), end(matcheses), [](std::shared_ptr<ShapeMatches> const & matches) {
+        return matches->matches.empty();
+    }), matcheses.end());
+
+    size_t n = std::accumulate(begin(matcheses), end(matcheses), 0, [](size_t acc, std::shared_ptr<ShapeMatches> const & matches) {
+        return acc + matches->matches.size();
+    });
+
+    std::cerr << "Filtered down to " << n << " matches in " << matcheses.size() << " distinct patterns.\n";
 }

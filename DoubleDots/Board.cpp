@@ -7,6 +7,59 @@
 
 using namespace brac;
 
+bool Board::selectionsMatch(Board const (&prerotated)[4], BitBoard const & a, BitBoard const & b)
+{
+    size_t nColors = prerotated[0].nColors();
+
+    assert(std::all_of(std::begin(prerotated) + 1, std::end(prerotated),
+                       [&](Board const & b) { return b.nColors() == nColors; }));
+
+    int sm1 = a.marginS(), wm1 = a.marginW();
+
+    BitBoard * cc = new (alloca(nColors * sizeof(BitBoard))) BitBoard[nColors];
+    uint32_t cc_set = 0;
+
+    auto lazyColorA = [&](size_t i) -> BitBoard const & {
+        uint32_t m = 1 << i;
+        if (!(cc_set & m)) {
+            cc[i] = (prerotated[0].colors[i] & a).shiftWS(wm1, sm1);
+            cc_set |= m;
+        }
+        return cc[i];
+    };
+
+    int nm = b.marginN(), sm = b.marginS(), em = b.marginE(), wm = b.marginW();
+
+    for (size_t i = 0; i < nColors; ++i)
+        if (lazyColorA(i) != (prerotated[0].colors[i] & b).shiftWS(wm, sm))
+            goto b1;
+    return true;
+
+b1:
+    auto b1 = b.rotL();
+    for (size_t i = 0; i < nColors; ++i)
+        if (lazyColorA(i) != (prerotated[1].colors[i] & b1).shiftWS(nm, wm))
+            goto b2;
+    return true;
+
+b2:
+    auto b2 = b.reverse();
+    for (size_t i = 0; i < nColors; ++i)
+        if (lazyColorA(i) != (prerotated[2].colors[i] & b2).shiftWS(em, nm))
+            goto b3;
+    return true;
+
+b3:
+    auto b3 = b.rotR();
+    for (size_t i = 0; i < nColors; ++i)
+        if (lazyColorA(i) != (prerotated[3].colors[i] & b3).shiftWS(sm, em))
+            goto b4;
+    return true;
+
+b4:
+    return false;
+}
+
 std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
     std::unordered_set<std::array<BitBoard, 2>> result, discarded;
     auto mask = computeMask();
@@ -15,13 +68,12 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
     std::function<bool(const std::array<BitBoard, 2>& bbs, int level)> analysePair;
 
     // Build an array of colors in each orientation.
-    Board rots_[3] = { rotL(), rotR(), reverse() };
-    Board const * rots[4] = { this, &rots_[0], &rots_[1], &rots_[2] };
+    Board const rots[4] = { *this, rotL(), reverse(), rotR() };
     char cc[4][16][16];
     for (size_t r = 0; r < 4; ++r)
         for (size_t y = 0; y < 16; ++y)
             for (size_t x = 0; x < 16; ++x)
-                cc[r][y][x] = rots[r]->color(x, y);
+                cc[r][y][x] = rots[r].color(x, y);
 
     // Return true iff a match was found directly or recursively (even if it was already in the result or discarded).
     analysePair = [&](const std::array<BitBoard, 2>& bbs, int level) -> bool {
@@ -32,7 +84,7 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 return true;
             } else {
                 ++tests;
-                if (selectionsMatch(begin(bbs), end(bbs))) {
+                if (selectionsMatch(rots, bbs[0], bbs[1])) {
                     ++matches;
 
                     //fprintf(stderr, "Analyse[%3d] %016llx:%016llx:%016llx:%016llx <-> %016llx:%016llx:%016llx:%016llx\n",
@@ -44,12 +96,12 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
 
                     bool foundBigger = false;
                     for (auto hood1 = neighborhood(bbs[0]); hood1;) {
-                        auto lo1 = hood1.clearAllButLowestSetBit();
+                        auto lo1 = hood1.ls1b();
                         BitBoard test1 = bbs[0] | lo1;
                         hood1 &= ~lo1;
 
                         for (auto hood2 = hood2init; hood2;) {
-                            auto lo2 = hood2.clearAllButLowestSetBit();
+                            auto lo2 = hood2.ls1b();
                             auto test2 = bbs[1] | lo2;
                             hood2 &= ~lo2;
 
@@ -57,6 +109,9 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                         }
                     }
                     if (!foundBigger) {
+                        if (level == 22) {
+                            std::cerr << "level 22! " << selectionsMatch(rots, bbs[0], bbs[1]);
+                        }
                         result.insert(bbs);
                     } else {
                         discarded.insert(bbs);
@@ -141,7 +196,7 @@ std::ostream& write(std::ostream& os, Board const & b, std::initializer_list<Bit
                 os << " |";
             for (int x = 0; x < 16; ++x) {
                 auto c = b.color(x, y);
-                (os << " " << (c < 0 ? ' ' : (bb.isSet(x, y)) ? colors[1 + c] : colors[0]));
+                (os << (c < 0 ? ' ' : (bb.isSet(x, y)) ? colors[1 + c] : colors[0]));
             }
         }
         (os << "\n");
