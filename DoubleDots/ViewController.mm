@@ -208,13 +208,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return std::max<size_t>(_matcheses->size(), 1);
+    return _matcheses->size();
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (_matcheses->empty())
-        return 70;
-
     auto const & sm = *(*_matcheses)[indexPath.row];
     auto bb = GameState::canonicaliser(sm.shape)(sm.shape);
 
@@ -229,25 +226,15 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (_matcheses->empty()) {
-        static NSString * CellIdentifier = @"analysis_in_progress";
+    static NSString * CellIdentifier = @"shape";
+    ShapeCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (!cell)
+        cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
 
-        UITableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-        if (!cell)
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+    auto const & sm = *(*_matcheses)[indexPath.row];
+    [cell setShapeMatches:sm image:(*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.colorSet))];
 
-        return cell;
-    } else {
-        static NSString * CellIdentifier = @"shape";
-        ShapeCell * cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-        if (!cell)
-            cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-
-        auto const & sm = *(*_matcheses)[indexPath.row];
-        [cell setShapeMatches:sm image:(*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.colorSet))];
-
-        return cell;
-    }
+    return cell;
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {

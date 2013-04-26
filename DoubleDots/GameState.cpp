@@ -80,7 +80,7 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
             sel.has_moved = true;
             auto is_touched = brac::BitBoard::single(t.p);
 
-            auto adjoins_touch = is_touched.shiftN(1) | is_touched.shiftS(1) | is_touched.shiftE(1) | is_touched.shiftW(1);
+            auto adjoins_touch = is_touched.nhood4();
             auto is_occupied = board_.computeMask();
 
             auto container = std::find_if(begin(sels_), end(sels_), [&](Selections::value_type const & s) { return !!(s.second.is_selected & is_touched); });

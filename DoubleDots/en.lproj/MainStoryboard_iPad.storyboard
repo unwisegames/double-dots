@@ -19,27 +19,8 @@
                                 </constraints>
                                 <color key="separatorColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
-                                    <tableViewCell opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="blue" indentationWidth="10" reuseIdentifier="analysis_in_progress" rowHeight="57" id="as2-ZL-gpX">
-                                        <rect key="frame" x="0.0" y="22" width="236" height="57"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="236" height="56"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <subviews>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="x27-zp-H5s">
-                                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                                </activityIndicatorView>
-                                            </subviews>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        </view>
-                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                        <constraints>
-                                            <constraint firstItem="x27-zp-H5s" firstAttribute="centerX" secondItem="as2-ZL-gpX" secondAttribute="centerX" type="default" id="LPs-9D-oCG"/>
-                                            <constraint firstItem="x27-zp-H5s" firstAttribute="top" secondItem="as2-ZL-gpX" secondAttribute="top" constant="9" id="NxB-8g-Zuf"/>
-                                        </constraints>
-                                    </tableViewCell>
                                     <tableViewCell opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="shape" rowHeight="137" id="EEN-PP-QUM" customClass="ShapeCell">
-                                        <rect key="frame" x="0.0" y="79" width="236" height="137"/>
+                                        <rect key="frame" x="0.0" y="22" width="236" height="137"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
                                             <rect key="frame" x="0.0" y="0.0" width="236" height="136"/>
@@ -203,23 +184,6 @@
         <image name="colorblind1.png" width="100" height="130"/>
         <image name="match.png" width="256" height="256"/>
     </resources>
-    <classes>
-        <class className="NSLayoutConstraint" superclassName="NSObject">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
-        </class>
-        <class className="RenderController" superclassName="GLKViewController">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
-        </class>
-        <class className="ShapeCell" superclassName="UITableViewCell">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
-            <relationships>
-                <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
-            </relationships>
-        </class>
-        <class className="ViewController" superclassName="UIViewController">
-            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
-        </class>
-    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <nil key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>
