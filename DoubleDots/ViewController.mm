@@ -83,37 +83,56 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         CGContextFillRect(ctx, CGRectMake(0, 0, W, H));
 #endif
 
-        auto uncolored = bb;
-
-        auto drawDots = [&](brac::BitBoard const & col, std::function<void(size_t, size_t)> drawDot) {
-            auto color = col & uncolored;
-            uncolored &= ~color;
-
-            for (size_t y = 0; y < h; ++y)
-                for (size_t x = 0; x < w; ++x)
-                    if (color.isSet(x, y)) {
-                        drawDot(x, y);
-                    }
-        };
-
-        for (size_t c = 0; c <= board.nColors(); ++c) {
-            if (hint & (1 << c)) {
-                drawDots(canonicalise(board.colors[c]) & bb, [&](size_t x, size_t y) {
-                    [_dots[colorSet][c] drawInRect:CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid)];
-                });
-            }
-        }
-
-        [[[UIColor blackColor] colorWithAlphaComponent:0.3] setFill  ];
+        float lineWidth = 1.5;
+        // Shape
+        [[[UIColor blackColor] colorWithAlphaComponent:0.15] setFill  ];
+        for (size_t y = 0; y < h; ++y)
+            for (size_t x = 0; x < w; ++x)
+                if (bb.isSet(x, y)) {
+                    auto cell = CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid);
+                    CGContextFillRect(ctx, cell);
+                }
         [[UIColor blackColor] setStroke];
-        CGContextSetLineWidth(ctx, 1);
+        CGContextSetLineCap(ctx, kCGLineCapRound);
+        CGContextSetLineWidth(ctx, lineWidth);
+        for (int y = 0; y <= h; ++y)
+            for (int x = 0; x <= w; ++x) {
+                auto p = CGPointMake(gBorder + gGrid * x, H - (gBorder + gGrid * y));
+                uint32_t bits = bb.shiftWS(x - 1, y - 1).a;
+                bool west   = bits & (1 << 16);
+                bool center = bits & (2 << 16);
+                bool south  = bits & 2;
+                if (south ^ center) CGContextStrokeLineSegments(ctx, begin(std::initializer_list<CGPoint>{p, {p.x + gGrid, p.y        }}), 2);
+                if (west  ^ center) CGContextStrokeLineSegments(ctx, begin(std::initializer_list<CGPoint>{p, {p.x        , p.y - gGrid}}), 2);
+            }
+        [[[UIColor blackColor] colorWithAlphaComponent:0.6] setStroke];
+        CGContextSetLineWidth(ctx, 0.5 * lineWidth);
+        for (int y = 0; y <= h; ++y)
+            for (int x = 0; x <= w; ++x) {
+                auto p = CGPointMake(gBorder + gGrid * x, H - (gBorder + gGrid * y));
+                uint32_t bits = bb.shiftWS(x - 1, y - 1).a;
+                bool west   = bits & (1 << 16);
+                bool center = bits & (2 << 16);
+                bool south  = bits & 2;
+                if (south & center) CGContextStrokeLineSegments(ctx, begin(std::initializer_list<CGPoint>{
+                    {p.x + 0.2f * gGrid, p.y                },
+                    {p.x + 0.8f * gGrid, p.y                }
+                }), 2);
+                if (west  & center) CGContextStrokeLineSegments(ctx, begin(std::initializer_list<CGPoint>{
+                    {p.x                , p.y - 0.2f * gGrid},
+                    {p.x                , p.y - 0.8f * gGrid}
+                }), 2);
+            }
 
-        drawDots(uncolored, [&](size_t x, size_t y) {
-            auto cell = CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid);
-            auto dot = CGRectInset(cell, gGrid / 8, gGrid / 8);
-            CGContextFillEllipseInRect(ctx, dot);
-            CGContextStrokeEllipseInRect(ctx, dot);
-        });
+        // Hint dots
+        for (size_t c = 0; c <= board.nColors(); ++c)
+            if (hint & (1 << c)) {
+                auto color = canonicalise(board.colors[c]) & bb;
+                for (size_t y = 0; y < h; ++y)
+                    for (size_t x = 0; x < w; ++x)
+                        if (color.isSet(x, y))
+                            [_dots[colorSet][c] drawInRect:CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid)];
+            }
 
         auto image = UIGraphicsGetImageFromCurrentImageContext();
 

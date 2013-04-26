@@ -514,6 +514,7 @@ struct RgbaPixel {
         float gr = 0.2;
         float r1 = 0.5;
         float r2 = 1.25;
+        size_t stitchSite = 0;
 
         std::vector<BoardVertex> verts; verts.reserve(100);
         auto joint = [&](vec2 p, float angle, float u) {
@@ -529,14 +530,28 @@ struct RgbaPixel {
                 joint(center + (r * vec2{s, -c}), a1, 0);
             }
         };
+        auto stitch = [&](bool final) {
+            if (stitchSite) {
+                verts[stitchSite    ] = verts[stitchSite - 1];
+                verts[stitchSite + 1] = verts[stitchSite + 2];
+            }
+            stitchSite = verts.size();
+            if (!final)
+                verts.resize(verts.size() + 2);
+        };
 
 #if 1
+        joint({x2 - r2               , y1     }, 0, 0);
+        joint({_nBoardCols + ext     , y1     }, 0, 0);
+        joint({_nBoardCols + ext + gr, y1     }, 0, 1);
+        stitch(false);
         joint({x0     , y0 + gr},      -M_PI/2         , -1);
         joint({x0     , y0     },      -M_PI/2         ,  0);
         arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
         arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
         joint({x2     , y2     },               -M_PI/2,  0);
         joint({x2     , y2 - gr},               -M_PI/2,  1);
+        stitch(true);
 #else
         arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
         arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
