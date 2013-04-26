@@ -156,6 +156,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
     [self becomeFirstResponder];
 
+#ifndef DEBUG
+    _seed.hidden = YES;
+#endif
+
     _renderer = [self.storyboard instantiateViewControllerWithIdentifier:@"glkView"];
 
     _matcheses = std::make_shared<GameState::ShapeMatcheses>();
