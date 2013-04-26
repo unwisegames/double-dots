@@ -14,7 +14,7 @@
 
 using namespace brac;
 
-GameState::GameState(size_t n, bool iPad) : board_(n) {
+GameState::GameState(size_t n, bool iPad, size_t * seed) : board_(n) {
     for (size_t i = 0; i < 256 / 3 + 1; ++i) {
         indices_.insert(i);
     }
@@ -22,8 +22,7 @@ GameState::GameState(size_t n, bool iPad) : board_(n) {
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
     int h = iPad ? 16 : 7, w = iPad ? 16 : 8;
 
-    seed_ = arc4random();
-    //seed_ = 0x7d268d40;
+    seed_ = seed ? *seed : arc4random();
     std::mt19937 gen(seed_);
     std::uniform_int_distribution<> dist(0, board_.nColors() - 1);
 

@@ -5,6 +5,7 @@
 #import "Board.h"
 #import "GameState.h"
 #import "LruCache.h"
+#import "UIAlertView+Blocks.h"
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -26,10 +27,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 @property (nonatomic, strong) IBOutlet UITableView      * tableView;
-@property (nonatomic, strong) IBOutlet UILabel          * seed;
+@property (nonatomic, strong) IBOutlet UIButton         * seed;
 @property (nonatomic, strong) IBOutlet RenderController * renderer;
 
-- (void)resetGame;
+- (void)resetGame:(size_t *)seed;
 
 @end
 
@@ -47,7 +48,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         dispatch_async(dispatch_get_main_queue(), ^{
             if (iUpdate == _nUpdates) {
                 if (matcheses->empty()) {
-                    [self resetGame];
+                    [self resetGame:nullptr];
                 } else {
                     _matcheses = matcheses;
                     [self.tableView reloadData];
@@ -57,9 +58,11 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     });
 }
 
-- (void)resetGame {
-    _renderer.game = _game = std::make_shared<GameState>(5, iPad);
-    _seed.text = [NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)];
+- (void)resetGame:(size_t *)seed {
+    _renderer.game = _game = std::make_shared<GameState>(5, iPad, seed);
+    for (auto state : std::initializer_list<UIControlState>{UIControlStateNormal, UIControlStateHighlighted})
+        [_seed setTitle:[NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)]
+               forState:state];
     _matcheses->clear();
 
     _shapeImages = std::make_shared<ShapeImageCache>([self](std::tuple<brac::BitBoard, uint8_t, size_t> const & bbcols) {
@@ -180,7 +183,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [self.view addSubview:_renderer.view];
     [self.view sendSubviewToBack:_renderer.view];
     [_renderer didMoveToParentViewController:self];
-    [self resetGame];
+    [self resetGame:nullptr];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -194,7 +197,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 - (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
     if (motion == UIEventSubtypeMotionShake) {
-        [self resetGame];
+        [self resetGame:nullptr];
     }
 }
 
@@ -278,7 +281,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     _game->filterMatcheses(*_matcheses);
     [_renderer hint:nullptr];
     if (_matcheses->empty()) {
-        [self resetGame];
+        [self resetGame:nullptr];
     } else {
         [self.tableView reloadData];
     }
@@ -288,6 +291,25 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [_renderer updateBoardColors:true];
     [self.tableView reloadData];
     _renderer.paused = NO;
+}
+
+- (IBAction)tappedSeed {
+    UIAlertView * av = [UIAlertView alertViewWithTitle:@"Seed"
+                                               message:@"Enter a 32-bit seed in hex."
+                                     cancelButtonTitle:nil
+                                   cancelButtonPressed:nil
+                                          otherButtons:nil];
+
+    av.alertViewStyle = UIAlertViewStylePlainTextInput;
+
+    UIAlertView * __weak weakAv = av;
+    [av addButtonWithTitle:@"Start" whenDidDismiss:^{
+        size_t seed;
+        sscanf([weakAv textFieldAtIndex:0].text.UTF8String, "%lx", &seed);
+        [self resetGame:&seed];
+    }];
+
+    [av show];
 }
 
 @end

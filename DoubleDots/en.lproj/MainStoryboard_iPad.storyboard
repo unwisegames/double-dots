@@ -100,15 +100,6 @@
                                     <action selector="tappedColorBlind" destination="2" eventType="touchUpInside" id="Pqt-8P-Rvt"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="deadbeef" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BqJ-fa-Ntl">
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="152" id="6CC-db-hQs"/>
-                                    <constraint firstAttribute="height" constant="17" id="lhd-YQ-o8Y"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Can you find...?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YJz-2S-rTi">
                                 <color key="backgroundColor" white="0.0" alpha="0.70000000000000007" colorSpace="calibratedWhite"/>
                                 <constraints>
@@ -119,28 +110,45 @@
                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eQm-0j-1HB">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="102" id="2Ds-5G-hX5"/>
+                                    <constraint firstAttribute="height" constant="20" id="x36-8m-cPd"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <state key="normal" title="DEAD:BEEF">
+                                    <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedSeed" destination="2" eventType="touchUpInside" id="i7s-xl-ibm"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.14901960784313725" green="0.14901960784313725" blue="0.14901960784313725" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
                         <constraints>
-                            <constraint firstItem="BqJ-fa-Ntl" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" type="default" id="1qB-yl-3qG"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="leading" secondItem="7PZ-Jj-N0u" secondAttribute="leading" type="default" id="7pa-iD-Ysg"/>
+                            <constraint firstItem="eQm-0j-1HB" firstAttribute="bottom" secondItem="5" secondAttribute="bottom" type="default" id="80q-kA-y1O"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="top" secondItem="5" secondAttribute="top" constant="20" symbolic="YES" type="default" id="DWt-zy-od5"/>
+                            <constraint firstItem="eQm-0j-1HB" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" type="default" id="F0M-fB-mfP"/>
                             <constraint firstAttribute="trailing" secondItem="YJz-2S-rTi" secondAttribute="trailing" constant="12" id="FGg-op-XFl"/>
                             <constraint firstAttribute="trailing" secondItem="RYG-zX-G78" secondAttribute="trailing" constant="170" id="IPT-67-rGa"/>
                             <constraint firstAttribute="bottom" secondItem="RYG-zX-G78" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="JZ5-01-Ppf"/>
                             <constraint firstItem="7PZ-Jj-N0u" firstAttribute="top" secondItem="5" secondAttribute="top" constant="55" id="NSz-Qn-Wmt"/>
                             <constraint firstAttribute="trailing" secondItem="J24-cX-DSB" secondAttribute="trailing" constant="7" id="P36-cj-aML"/>
                             <constraint firstAttribute="bottom" secondItem="J24-cX-DSB" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="RIb-jH-oOg"/>
-                            <constraint firstAttribute="bottom" secondItem="BqJ-fa-Ntl" secondAttribute="bottom" constant="2" id="t69-0q-tvw"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="trailing" secondItem="7PZ-Jj-N0u" secondAttribute="trailing" type="default" id="yB6-Xm-AjE"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
-                        <outlet property="seed" destination="BqJ-fa-Ntl" id="vbQ-72-e5z"/>
-                        <outlet property="tableView" destination="7PZ-Jj-N0u" id="C15-vY-MoM"/>
+                        <outlet property="seed" destination="eQm-0j-1HB" id="aqS-GY-XF9"/>
+                        <outlet property="tableView" destination="7PZ-Jj-N0u" id="U0a-Yt-bNt"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>

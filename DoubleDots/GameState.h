@@ -38,7 +38,7 @@ public:
     
     enum { minimumSelection = 3 };
 
-    GameState(size_t n, bool iPad);
+    GameState(size_t n, bool iPad, size_t * seed = nullptr);
 
     void match();
 
