@@ -67,7 +67,7 @@ struct RgbaPixel {
     std::vector<DotsVertex> _dotsVertsData;
     DotsVertexBuffer _vboDots;
     ElementBuffer<> _eboDots;
-    BoardVertexBuffer _vboBoardInterior, _vboBoardEdge;
+    BoardVertexBuffer _vboBoardInterior, _vboBoardEdge, _vboSeparator;
     size_t _colorSet;
 
     Borders _borders;
@@ -455,43 +455,94 @@ struct RgbaPixel {
     assert(dotsElemsData.size() == 6 * nCells);
     _eboDots = ElementBuffer<>{dotsElemsData};
 
-    float s = 4.7 / 16;
-    float sx = s * _nBoardCols, sy = s * _nBoardRows;
-    _vboBoardInterior = BoardVertexBuffer{
-        { {0          , 0          }, {0 , 0 }, {0          , 0          } },
-        { {_nBoardCols, 0          }, {sx, 0 }, {_nBoardCols, 0          } },
-        { {_nBoardCols, _nBoardRows}, {sx, sy}, {_nBoardCols, _nBoardRows} },
-        { {0          , _nBoardRows}, {0 , sy}, {0          , _nBoardRows} },
+    float s = 2.7 / 16;
+
+    auto bvert = [&](vec2 p, vec2 l) {
+        return BoardVertex{p, p * s, l};
     };
 
-    constexpr float e = gEdgeThickness;
-    float E = e * s;
-    auto edge = [&](int x, int y, int ox, int oy) {
-        return BoardVertex{ {_nBoardCols * x + e * ox, _nBoardRows * y + e * oy}, {sx * x + E * ox, sy * y + E * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)} };
+    _vboBoardInterior = BoardVertexBuffer{
+        bvert({0          , _nBoardRows}, {0          , _nBoardRows}),
+        bvert({0          , 0          }, {0          , 0          }),
+        bvert({_nBoardCols, _nBoardRows}, {_nBoardCols, _nBoardRows}),
+        bvert({_nBoardCols, 0          }, {_nBoardCols, 0          }),
     };
-    auto a00 = edge(0, 0, -1, -1);
-    auto a01 = edge(0, 0,  0, -1);
-    auto a02 = edge(1, 0,  0, -1);
-    auto a03 = edge(1, 0,  1, -1);
-    auto a04 = edge(0, 0, -1,  0);
-    auto a05 = edge(0, 0,  0,  0);
-    auto a06 = edge(1, 0,  0,  0);
-    auto a07 = edge(1, 0,  1,  0);
-    auto a08 = edge(0, 1, -1,  0);
-    auto a09 = edge(0, 1,  0,  0);
-    auto a10 = edge(1, 1,  0,  0);
-    auto a11 = edge(1, 1,  1,  0);
-    auto a12 = edge(0, 1, -1,  1);
-    auto a13 = edge(0, 1,  0,  1);
-    auto a14 = edge(1, 1,  0,  1);
-    auto a15 = edge(1, 1,  1,  1);
+
+    constexpr float ext = 5.7;
+    constexpr float e = gEdgeThickness;
+
+    auto edge = [&](int x, int y, int ox, int oy) {
+        return bvert({(_nBoardCols + ext) * x + e * ox, _nBoardRows * y + e * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)});
+    };
+
+    auto e00 = edge(0, 0, -1, -1);
+    auto e01 = edge(0, 0,  0, -1);
+    auto e02 = edge(1, 0,  0, -1);
+    auto e03 = edge(1, 0,  1, -1);
+    auto e04 = edge(0, 0, -1,  0);
+    auto e05 = edge(0, 0,  0,  0);
+    auto e06 = edge(1, 0,  0,  0);
+    auto e07 = edge(1, 0,  1,  0);
+    auto e08 = edge(0, 1, -1,  0);
+    auto e09 = edge(0, 1,  0,  0);
+    auto e10 = edge(1, 1,  0,  0);
+    auto e11 = edge(1, 1,  1,  0);
+    auto e12 = edge(0, 1, -1,  1);
+    auto e13 = edge(0, 1,  0,  1);
+    auto e14 = edge(1, 1,  0,  1);
+    auto e15 = edge(1, 1,  1,  1);
+
+    auto i0 = bvert({_nBoardCols      , 0          }, {0.5, 0.5});
+    auto i1 = bvert({_nBoardCols + ext, 0          }, {0.5, 0.5});
+    auto i2 = bvert({_nBoardCols      , _nBoardRows}, {0.5, 0.5});
+    auto i3 = bvert({_nBoardCols + ext, _nBoardRows}, {0.5, 0.5});
 
     _vboBoardEdge = BoardVertexBuffer{
-        a00, a01, a05, a02, a06, a03, // Bottom edge
-        a03, a07, a06, a11, a10, a15, // Right edge
-        a15, a14, a10, a13, a09, a12, // Top edge
-        a12, a08, a09, a04, a05, a00, // Left edge
+        i0 , i1 , i2 , i3 , i3 , e00,   // Sidebar
+        e00, e01, e05, e02, e06, e03,   // Bottom edge
+        e03, e07, e06, e11, e10, e15,   // Right edge
+        e15, e14, e10, e13, e09, e12,   // Top edge
+        e12, e08, e09, e04, e05, e00,   // Left edge
     };
+
+    {
+        float x0 = _nBoardCols + 0.35;
+        float y0 = _nBoardRows;
+        float y1 = 2.25;
+        float x2 = x0 + 2.25;
+        float y2 = 0;
+        float gr = 0.2;
+        float r1 = 0.5;
+        float r2 = 1.25;
+
+        std::vector<BoardVertex> verts; verts.reserve(100);
+        auto joint = [&](vec2 p, float angle, float u) {
+            float c = std::cos(angle), s = std::sin(angle);
+            verts.push_back(bvert({p.x - gr * s, p.y + gr * c}, {0.5 * (1 - s + c * u), 0.5 * (1 + c + s * u)}));
+            verts.push_back(bvert({p.x + gr * s, p.y - gr * c}, {0.5 * (1 + s + c * u), 0.5 * (1 - c + s * u)}));
+        };
+        auto arc = [&](vec2 center, float r, float a1, float a2) {
+            size_t n = 24 / M_PI * std::fabs(a2 - a1);
+            float delta = (a2 - a1) / n;
+            for (size_t i = 0; i <= n; ++i, a1 += delta) {
+                float c = std::cos(a1), s = std::sin(a1);
+                joint(center + (r * vec2{s, -c}), a1, 0);
+            }
+        };
+
+#if 1
+        joint({x0     , y0 + gr},      -M_PI/2         , -1);
+        joint({x0     , y0     },      -M_PI/2         ,  0);
+        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
+        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
+        joint({x2     , y2     },               -M_PI/2,  0);
+        joint({x2     , y2 - gr},               -M_PI/2,  1);
+#else
+        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
+        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
+#endif
+        _vboSeparator = verts;
+    }
 
     _vboHints[0] = BorderVertexBuffer::empty();
     _vboHints[1] = BorderVertexBuffer::empty();
@@ -549,17 +600,17 @@ struct RgbaPixel {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (auto board = (*_board)()) {
-        [_surface activateAndBind:GL_TEXTURE0];
-        [_dimple  activateAndBind:GL_TEXTURE1];
-
         board.vs.pmvMat = _pmvMatrix;
         board.fs.color = {1, 1, 1, 1};
 
-        _vboBoardInterior.render(board, GL_TRIANGLE_FAN);
+        [_surface activateAndBind:GL_TEXTURE0];
 
         [_edging activateAndBind:GL_TEXTURE1];
-
         _vboBoardEdge.render(board, GL_TRIANGLE_STRIP);
+
+        [_dimple  activateAndBind:GL_TEXTURE1];
+        _vboBoardInterior.render(board, GL_TRIANGLE_STRIP);
+        _vboSeparator.render(board, GL_TRIANGLE_STRIP);
     }
     
     [_atlas activateAndBind:GL_TEXTURE0];

@@ -83,16 +83,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         CGContextFillRect(ctx, CGRectMake(0, 0, W, H));
 #endif
 
-        CGContextSetLineWidth(ctx, 2);
-
-        static UIColor * colors[] = {
-            [UIColor    redColor],
-            [UIColor  greenColor],
-            [UIColor   blueColor],
-            [UIColor purpleColor],
-            [UIColor yellowColor],
-        };
-
         auto uncolored = bb;
 
         auto drawDots = [&](brac::BitBoard const & col, std::function<void(size_t, size_t)> drawDot) {
@@ -108,16 +98,16 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
         for (size_t c = 0; c <= board.nColors(); ++c) {
             if (hint & (1 << c)) {
-                [ colors[c]                              setStroke];
-                [[colors[c] colorWithAlphaComponent:0.5] setFill  ];
                 drawDots(canonicalise(board.colors[c]) & bb, [&](size_t x, size_t y) {
                     [_dots[colorSet][c] drawInRect:CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid)];
                 });
             }
         }
 
-        [[UIColor     grayColor] setStroke];
-        [[UIColor darkGrayColor] setFill  ];
+        [[[UIColor blackColor] colorWithAlphaComponent:0.3] setFill  ];
+        [[UIColor blackColor] setStroke];
+        CGContextSetLineWidth(ctx, 1);
+
         drawDots(uncolored, [&](size_t x, size_t y) {
             auto cell = CGRectMake(gBorder + gGrid * x, H - (gBorder + gGrid * (y + 1)), gGrid, gGrid);
             auto dot = CGRectInset(cell, gGrid / 8, gGrid / 8);
@@ -147,9 +137,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
     [self becomeFirstResponder];
 
-    _tableView.layer.borderColor = [UIColor grayColor].CGColor;
-    _tableView.layer.borderWidth = 1;
-
     _renderer = [self.storyboard instantiateViewControllerWithIdentifier:@"glkView"];
 
     _matcheses = std::make_shared<GameState::ShapeMatcheses>();
@@ -168,12 +155,13 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
     [self addChildViewController:_renderer];
     [self.view addSubview:_renderer.view];
+    [self.view sendSubviewToBack:_renderer.view];
     [_renderer didMoveToParentViewController:self];
     [self resetGame];
 }
 
 -(void)viewDidLayoutSubviews {
-    _renderer.view.frame = CGRectMake(0, 0, iPad ? 768 : std::ceil(320*8/7.0), iPad ? 768 : 320);
+    _renderer.view.frame = CGRectMake(0, 0, iPad ? 1024 : std::ceil(480), iPad ? 768 : 320);
     _renderer.paused = NO;
 }
 
@@ -210,30 +198,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     return H;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 33;
-}
-
-- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 33)];
-    headerView.backgroundColor = [UIColor clearColor];
-
-    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, 33)];
-    label.text = @"Can you find…?";
-    label.textColor = [UIColor whiteColor];
-    label.textAlignment = NSTextAlignmentCenter;
-    label.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.7];
-    label.layer.borderColor = [UIColor redColor].CGColor;
-    [headerView addSubview:label];
-
-    CALayer *line = [CALayer layer];
-    line.frame = CGRectMake(0, 33, tableView.bounds.size.width, 1);
-    line.backgroundColor = [UIColor grayColor].CGColor;
-    [headerView.layer addSublayer:line];
-
-    return headerView;
-}
-
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
     return [[UIView alloc] init];
 }
@@ -261,7 +225,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    cell.backgroundColor = [UIColor colorWithRed:0.115 green:0.115 blue:0.115 alpha:1];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
