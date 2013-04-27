@@ -107,6 +107,13 @@
 		9C4FF2F9171EB452002CB60F /* edging.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C4FF2F7171EB452002CB60F /* edging.png */; };
 		9C4FF2FB171EC9BE002CB60F /* Board.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C4FF2FA171EB64A002CB60F /* Board.shader.h */; };
 		9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */; };
+		9CABC7F7172AB2BE0024D31C /* gear.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7F6172AB2BE0024D31C /* gear.png */; };
+		9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9CABC7F9172AB7F40024D31C /* SettingsController.mm */; };
+		9CABC801172B2FCD0024D31C /* button-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7FD172B2FCD0024D31C /* button-blue.png */; };
+		9CABC802172B2FCD0024D31C /* button-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7FE172B2FCD0024D31C /* button-green.png */; };
+		9CABC803172B2FCD0024D31C /* button-orange.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7FF172B2FCD0024D31C /* button-orange.png */; };
+		9CABC804172B2FCD0024D31C /* button-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC800172B2FCD0024D31C /* button-red.png */; };
+		9CABC806172B33AD0024D31C /* settings-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC805172B33AD0024D31C /* settings-background.png */; };
 		9CCAACDD1703D63600C495CA /* quat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACDB1703D63600C495CA /* quat.cpp */; };
 		9CCAACE317044DA700C495CA /* BitBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACE217044DA700C495CA /* BitBoard.cpp */; };
 /* End PBXBuildFile section */
@@ -323,6 +330,14 @@
 		9C5A93611726923F002E93F2 /* LruCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LruCache.h; sourceTree = "<group>"; };
 		9C90732C16EDD05B00BC8A1B /* ShapeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShapeCell.h; sourceTree = "<group>"; };
 		9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShapeCell.mm; sourceTree = "<group>"; };
+		9CABC7F6172AB2BE0024D31C /* gear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gear.png; sourceTree = "<group>"; };
+		9CABC7F8172AB7F40024D31C /* SettingsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsController.h; sourceTree = "<group>"; };
+		9CABC7F9172AB7F40024D31C /* SettingsController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SettingsController.mm; sourceTree = "<group>"; };
+		9CABC7FD172B2FCD0024D31C /* button-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button-blue.png"; sourceTree = "<group>"; };
+		9CABC7FE172B2FCD0024D31C /* button-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button-green.png"; sourceTree = "<group>"; };
+		9CABC7FF172B2FCD0024D31C /* button-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button-orange.png"; sourceTree = "<group>"; };
+		9CABC800172B2FCD0024D31C /* button-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "button-red.png"; sourceTree = "<group>"; };
+		9CABC805172B33AD0024D31C /* settings-background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settings-background.png"; sourceTree = "<group>"; };
 		9CCAACDB1703D63600C495CA /* quat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quat.cpp; sourceTree = "<group>"; };
 		9CCAACDC1703D63600C495CA /* quat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = quat.h; sourceTree = "<group>"; };
 		9CCAACDF1703FEB700C495CA /* BitBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitBoard.h; sourceTree = "<group>"; };
@@ -418,6 +433,8 @@
 				9C21A146171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.h */,
 				9C21A14A171A5D1F007E643C /* BoardRenderer.cpp */,
 				9C21A14B171A5D1F007E643C /* BoardRenderer.h */,
+				9CABC7F8172AB7F40024D31C /* SettingsController.h */,
+				9CABC7F9172AB7F40024D31C /* SettingsController.mm */,
 			);
 			path = DoubleDots;
 			sourceTree = "<group>";
@@ -721,6 +738,12 @@
 		9C19FC731707C10600B8A7F4 /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				9CABC805172B33AD0024D31C /* settings-background.png */,
+				9CABC7FD172B2FCD0024D31C /* button-blue.png */,
+				9CABC7FE172B2FCD0024D31C /* button-green.png */,
+				9CABC7FF172B2FCD0024D31C /* button-orange.png */,
+				9CABC800172B2FCD0024D31C /* button-red.png */,
+				9CABC7F6172AB2BE0024D31C /* gear.png */,
 				9C4FF2F6171EB452002CB60F /* dimple.png */,
 				9C4FF2F7171EB452002CB60F /* edging.png */,
 				9C4FF2F4171D7351002CB60F /* surface.png */,
@@ -846,6 +869,12 @@
 				9C4FF2F5171D7351002CB60F /* surface.png in Resources */,
 				9C4FF2F8171EB452002CB60F /* dimple.png in Resources */,
 				9C4FF2F9171EB452002CB60F /* edging.png in Resources */,
+				9CABC7F7172AB2BE0024D31C /* gear.png in Resources */,
+				9CABC801172B2FCD0024D31C /* button-blue.png in Resources */,
+				9CABC802172B2FCD0024D31C /* button-green.png in Resources */,
+				9CABC803172B2FCD0024D31C /* button-orange.png in Resources */,
+				9CABC804172B2FCD0024D31C /* button-red.png in Resources */,
+				9CABC806172B33AD0024D31C /* settings-background.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -926,6 +955,7 @@
 				9C21A149171A0E2F007E643C /* ShaderProgram.mm in Sources */,
 				9C21A14C171A5D20007E643C /* BoardRenderer.cpp in Sources */,
 				9C21A14E171A6ED5007E643C /* Board.cpp in Sources */,
+				9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

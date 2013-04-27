@@ -4,5 +4,13 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
+@interface ViewController : UIViewController<UITableViewDataSource, UITableViewDelegate, UIPopoverControllerDelegate>
+
+@property (nonatomic, strong) IBOutlet UITableView      * tableView;
+@property (nonatomic, strong) IBOutlet UIButton         * seed;
+@property (nonatomic, strong) IBOutlet UIButton         * gear;
+
+- (IBAction)tappedMatch;
+- (IBAction)tappedSeed;
+
 @end

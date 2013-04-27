@@ -6,12 +6,15 @@
 #import "GameState.h"
 #import "LruCache.h"
 #import "UIAlertView+Blocks.h"
+#import "SettingsController.h"
 
 #import <QuartzCore/QuartzCore.h>
 
 static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 
-static constexpr size_t gGrid = 16, gBorder = gGrid / 2;
+static constexpr size_t gGrid = 16;
+static constexpr size_t gBorder = 12;
+static constexpr float gGearHz = 0.2;
 
 
 typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> ShapeImageCache;
@@ -26,8 +29,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     uint64_t _nUpdates;
 }
 
-@property (nonatomic, strong) IBOutlet UITableView      * tableView;
-@property (nonatomic, strong) IBOutlet UIButton         * seed;
 @property (nonatomic, strong) IBOutlet RenderController * renderer;
 
 - (void)resetGame:(size_t *)seed;
@@ -36,7 +37,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 @implementation ViewController
 
-@synthesize tableView = _tableView, seed = _seed, renderer = _renderer;
+@synthesize tableView = _tableView, seed = _seed, gear = _gear, renderer = _renderer;
 
 - (void)calculatePossibles {
     auto iUpdate = ++_nUpdates;
@@ -195,10 +196,18 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     _renderer.paused = NO;
 }
 
-- (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
-    if (motion == UIEventSubtypeMotionShake) {
-        [self resetGame:nullptr];
-    }
+- (void)stopGear {
+    [_gear.layer removeAllAnimations];
+
+    float currentAngle = ((NSNumber *)[_gear.layer.presentationLayer valueForKeyPath:@"transform.rotation.z"]).floatValue;
+    float finishAngle = std::ceil(1 / (0.5 * M_PI) * currentAngle) * (0.5 * M_PI);
+
+    CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    rotateGear.fromValue = @(currentAngle);
+    rotateGear.toValue = @(finishAngle);
+    rotateGear.duration = 1 / (2 * M_PI * gGearHz) * (finishAngle - currentAngle);
+    rotateGear.repeatCount = 1;
+    [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
 }
 
 #pragma mark - UITableViewDataSource
@@ -274,12 +283,6 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     }
 }
 
-- (IBAction)tappedColorBlind {
-    [_renderer updateBoardColors:true];
-    [self.tableView reloadData];
-    _renderer.paused = NO;
-}
-
 - (IBAction)tappedSeed {
     UIAlertView * av = [UIAlertView alertViewWithTitle:@"Seed"
                                                message:@"Enter a 32-bit seed in hex."
@@ -297,6 +300,54 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     }];
 
     [av show];
+}
+
+#pragma mark - Segues
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    __weak SettingsController * settings = segue.destinationViewController;
+    __weak UIPopoverController * popover = [(UIStoryboardPopoverSegue *)segue popoverController];
+
+    popover.delegate = self;
+
+    CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+    rotateGear.toValue = @(2*M_PI);
+    rotateGear.duration = 1 / gGearHz;
+    rotateGear.cumulative = NO;
+    rotateGear.repeatCount = 1e20;
+
+    [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
+
+    settings.colorBlind = _renderer.colorSet;
+    settings.toggleColorBlind = [=]() {
+        [_renderer updateBoardColors:true];
+        [self.tableView reloadData];
+        settings.colorBlind = _renderer.colorSet;
+        _renderer.paused = NO;
+    };
+
+    settings.newGame = [=](int level) {
+        [self resetGame:nullptr];
+        [popover dismissPopoverAnimated:YES];
+        [self stopGear];
+    };
+
+    settings.tutorial = [=]{
+        [[UIAlertView alertViewWithTitle:@"Not implemented"
+                                 message:@"Tutorial mode coming soon..."
+                       cancelButtonTitle:@"Close"
+                     cancelButtonPressed:^{
+                         [popover dismissPopoverAnimated:YES];
+                         [self stopGear];
+                     }
+                            otherButtons:nil] show];
+    };
+}
+
+#pragma mark - UIPopoverControllerDelegate
+
+- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController {
+    [self stopGear];
 }
 
 @end

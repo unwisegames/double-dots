@@ -68,17 +68,19 @@
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="J24-cX-DSB" userLabel="Button - Color-blind">
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="65" id="BZ4-iD-FgV"/>
-                                    <constraint firstAttribute="width" constant="50" id="Ob6-Qc-Qfz"/>
+                                    <constraint firstAttribute="width" constant="64" id="0QB-2I-MJr"/>
+                                    <constraint firstAttribute="height" constant="64" id="lky-fs-C1O"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="12"/>
-                                <state key="normal" image="colorblind0.png">
+                                <state key="normal" image="gear.png">
                                     <color key="titleColor" red="0.19607843137254902" green="0.30980392156862746" blue="0.52156862745098043" alpha="1" colorSpace="calibratedRGB"/>
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <state key="selected" image="colorblind1.png"/>
                                 <connections>
-                                    <action selector="tappedColorBlind" destination="2" eventType="touchUpInside" id="Pqt-8P-Rvt"/>
+                                    <segue destination="yCD-3R-P83" kind="popover" popoverAnchorView="J24-cX-DSB" id="1SJ-ND-tf4">
+                                        <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                    </segue>
                                 </connections>
                             </button>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Can you find...?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YJz-2S-rTi">
@@ -116,18 +118,19 @@
                             <constraint firstItem="eQm-0j-1HB" firstAttribute="bottom" secondItem="5" secondAttribute="bottom" type="default" id="80q-kA-y1O"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="top" secondItem="5" secondAttribute="top" constant="20" symbolic="YES" type="default" id="DWt-zy-od5"/>
                             <constraint firstItem="eQm-0j-1HB" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" type="default" id="F0M-fB-mfP"/>
-                            <constraint firstAttribute="trailing" secondItem="YJz-2S-rTi" secondAttribute="trailing" constant="12" id="FGg-op-XFl"/>
                             <constraint firstAttribute="trailing" secondItem="RYG-zX-G78" secondAttribute="trailing" constant="170" id="IPT-67-rGa"/>
                             <constraint firstAttribute="bottom" secondItem="RYG-zX-G78" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="JZ5-01-Ppf"/>
                             <constraint firstItem="7PZ-Jj-N0u" firstAttribute="top" secondItem="5" secondAttribute="top" constant="55" id="NSz-Qn-Wmt"/>
-                            <constraint firstAttribute="trailing" secondItem="J24-cX-DSB" secondAttribute="trailing" constant="7" id="P36-cj-aML"/>
-                            <constraint firstAttribute="bottom" secondItem="J24-cX-DSB" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="RIb-jH-oOg"/>
+                            <constraint firstItem="J24-cX-DSB" firstAttribute="trailing" secondItem="7PZ-Jj-N0u" secondAttribute="trailing" type="default" id="reD-Rs-xRC"/>
+                            <constraint firstAttribute="trailing" secondItem="J24-cX-DSB" secondAttribute="trailing" constant="12" id="w2C-Rt-fFK"/>
+                            <constraint firstAttribute="bottom" secondItem="J24-cX-DSB" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="xrq-R6-Nfl"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="trailing" secondItem="7PZ-Jj-N0u" secondAttribute="trailing" type="default" id="yB6-Xm-AjE"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
+                        <outlet property="gear" destination="J24-cX-DSB" id="vdV-Oh-kUp"/>
                         <outlet property="seed" destination="eQm-0j-1HB" id="aqS-GY-XF9"/>
                         <outlet property="tableView" destination="7PZ-Jj-N0u" id="U0a-Yt-bNt"/>
                     </connections>
@@ -176,13 +179,163 @@
                     </connections>
                 </pinchGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="1099" y="-419"/>
+            <point key="canvasLocation" x="1200" y="-488"/>
+        </scene>
+        <!--Settings Controller-->
+        <scene sceneID="05q-RN-3UP">
+            <objects>
+                <viewController id="yCD-3R-P83" customClass="SettingsController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="7uz-8h-iZH">
+                        <rect key="frame" x="0.0" y="0.0" width="250" height="375"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="settings-background.png" translatesAutoresizingMaskIntoConstraints="NO" id="S3T-fO-qva"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i3f-Yf-y2a">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="gQr-KJ-h7h"/>
+                                    <constraint firstAttribute="width" constant="58" id="qf7-7L-M5I"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal" title="Button" image="colorblind0.png">
+                                    <color key="titleColor" red="0.19607843459999999" green="0.30980393290000002" blue="0.52156865600000002" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <state key="selected" image="colorblind1.png"/>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedColorBlind:" destination="yCD-3R-P83" eventType="touchUpInside" id="EdZ-bj-pjg"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Color-blind mode" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yC4-bM-tV6">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="172" id="SMd-xo-uzv"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="New game" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Y9W-yL-iaC">
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aZ0-C9-8qQ">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="Ug4-Zl-cZZ"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                <size key="titleShadowOffset" width="-0.5" height="0.69999999999999996"/>
+                                <state key="normal" title="Breezy" backgroundImage="button-blue.png">
+                                    <color key="titleColor" red="0.0" green="0.07040857514384076" blue="0.24104110054347827" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" red="0.591322139112191" green="0.66387209095682009" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="Dbg-rb-0oX"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nE7-01-62a">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="ocZ-Gq-hdm"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                <size key="titleShadowOffset" width="-0.5" height="0.69999999999999996"/>
+                                <state key="normal" title="Challenge" backgroundImage="button-orange.png">
+                                    <color key="titleColor" red="0.25318444293478259" green="0.15477810017351204" blue="0.080791748267794283" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" red="1" green="0.77113387886501972" blue="0.51538398032628852" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="KEm-O2-Axm"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IPQ-dG-U1c">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="o6S-8t-Ido"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                <size key="titleShadowOffset" width="-0.5" height="0.69999999999999996"/>
+                                <state key="normal" title="Time trial ⌚" backgroundImage="button-red.png">
+                                    <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" red="1" green="0.56109931725408102" blue="0.5743903608605565" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="FH0-8N-668"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aTB-Q8-dUg">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="l4O-hl-vv9"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
+                                <size key="titleShadowOffset" width="-0.69999999999999996" height="1"/>
+                                <state key="normal" title="How to play" backgroundImage="button-green.png">
+                                    <color key="titleColor" red="0.0075685452393724631" green="0.21688179347826086" blue="0.016851283323601241" alpha="1" colorSpace="calibratedRGB"/>
+                                    <color key="titleShadowColor" red="0.23772918338408933" green="1" blue="0.18209445500854293" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <state key="highlighted">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="tappedTutorial:" destination="yCD-3R-P83" eventType="touchUpInside" id="dtJ-wB-enj"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.75" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="S3T-fO-qva" firstAttribute="top" secondItem="7uz-8h-iZH" secondAttribute="top" type="default" id="1oe-0x-Fyi"/>
+                            <constraint firstItem="nE7-01-62a" firstAttribute="top" secondItem="aZ0-C9-8qQ" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="233-y9-lFk"/>
+                            <constraint firstAttribute="trailing" secondItem="aTB-Q8-dUg" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="3VC-sq-NF6"/>
+                            <constraint firstItem="nE7-01-62a" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="Ebz-OM-Htc"/>
+                            <constraint firstItem="Y9W-yL-iaC" firstAttribute="top" secondItem="7uz-8h-iZH" secondAttribute="top" constant="20" symbolic="YES" type="default" id="ILm-WA-YQ5"/>
+                            <constraint firstAttribute="trailing" secondItem="nE7-01-62a" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="NtN-LD-eGT"/>
+                            <constraint firstItem="yC4-bM-tV6" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="SBp-bx-B5P"/>
+                            <constraint firstAttribute="trailing" secondItem="i3f-Yf-y2a" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="W6T-Jd-xf2"/>
+                            <constraint firstAttribute="bottom" secondItem="i3f-Yf-y2a" secondAttribute="bottom" constant="100" id="c11-0a-Cdc"/>
+                            <constraint firstAttribute="trailing" secondItem="aZ0-C9-8qQ" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="d2y-GA-ZXS"/>
+                            <constraint firstAttribute="trailing" secondItem="Y9W-yL-iaC" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="epP-Cf-2zZ"/>
+                            <constraint firstAttribute="bottom" secondItem="yC4-bM-tV6" secondAttribute="bottom" constant="110" id="igL-go-JFt"/>
+                            <constraint firstItem="Y9W-yL-iaC" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="pB3-6R-krA"/>
+                            <constraint firstItem="aZ0-C9-8qQ" firstAttribute="top" secondItem="Y9W-yL-iaC" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="sMO-7k-n7P"/>
+                            <constraint firstItem="aTB-Q8-dUg" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="tLa-jW-jwj"/>
+                            <constraint firstItem="IPQ-dG-U1c" firstAttribute="top" secondItem="nE7-01-62a" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="u5N-co-za9"/>
+                            <constraint firstItem="IPQ-dG-U1c" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="vdi-qT-RKw"/>
+                            <constraint firstItem="aZ0-C9-8qQ" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="veu-Qf-PyK"/>
+                            <constraint firstAttribute="bottom" secondItem="aTB-Q8-dUg" secondAttribute="bottom" constant="19" id="yLG-1H-o6d"/>
+                            <constraint firstItem="S3T-fO-qva" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" type="default" id="yd3-NC-F6k"/>
+                            <constraint firstAttribute="trailing" secondItem="IPQ-dG-U1c" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="zzQ-uR-QBD"/>
+                        </constraints>
+                        <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    </view>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="colorBlindButton" destination="i3f-Yf-y2a" id="S8X-ix-A6T"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="yz9-ph-y37" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1200" y="40"/>
         </scene>
     </scenes>
     <resources>
-        <image name="colorblind0.png" width="100" height="130"/>
-        <image name="colorblind1.png" width="100" height="130"/>
+        <image name="button-blue.png" width="416" height="88"/>
+        <image name="button-green.png" width="416" height="88"/>
+        <image name="button-orange.png" width="416" height="88"/>
+        <image name="button-red.png" width="416" height="88"/>
+        <image name="colorblind0.png" width="116" height="80"/>
+        <image name="colorblind1.png" width="116" height="80"/>
+        <image name="gear.png" width="256" height="256"/>
         <image name="match.png" width="256" height="256"/>
+        <image name="settings-background.png" width="500" height="750"/>
     </resources>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <nil key="statusBar"/>
