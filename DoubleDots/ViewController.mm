@@ -283,7 +283,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 - (IBAction)tappedSeed {
     UIAlertView * av = [UIAlertView alertViewWithTitle:@"Seed"
                                                message:@"Enter a 32-bit seed in hex."
-                                     cancelButtonTitle:nil
+                                     cancelButtonTitle:@"Cancel"
                                    cancelButtonPressed:nil
                                           otherButtons:nil];
 
