@@ -14,28 +14,21 @@
 
 using namespace brac;
 
-GameState::GameState(size_t n, bool iPad, size_t * seed) : board_(n) {
+GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed) : board_(nColors), width_(width), height_(height) {
     for (size_t i = 0; i < 256 / 3 + 1; ++i) {
         indices_.insert(i);
     }
 
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
-    int h = iPad ? 16 : 7, w = iPad ? 16 : 8;
 
     seed_ = seed ? *seed : arc4random();
+    //seed_ = 0x024e4967;
     std::mt19937 gen(seed_);
     std::uniform_int_distribution<> dist(0, board_.nColors() - 1);
 
-    for (int y = 0; y < h; ++y)
-        for (int x = 0; x < w; ++x)
-            if (x < 16 && y < 16)
-                //board_.colors[rand() % board_.nColors()].set(x, y);
-                board_.colors[dist(gen)].set(x, y);
-    //    board_.colors[0] = { 1     + 16};
-    //    board_.colors[1] = { 2     + 32};
-    //    board_.colors[2] = {(2<< 8)+(32<< 8)};
-    //    board_.colors[3] = {(4<< 8)+(64<< 8)};
-    //    board_.colors[4] = {(4<<16)+(64<<16)};
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            board_.colors[dist(gen)].set(x, y);
 }
 
 void GameState::match() {

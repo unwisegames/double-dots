@@ -20,6 +20,7 @@ static constexpr float gGearHz = 0.2;
 typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> ShapeImageCache;
 
 @interface ViewController () {
+    int _level;
     std::shared_ptr<GameState> _game;
     std::shared_ptr<GameState::ShapeMatcheses> _matcheses;
 
@@ -31,7 +32,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 @property (nonatomic, strong) IBOutlet RenderController * renderer;
 
-- (void)resetGame:(size_t *)seed;
+- (void)restartGame:(size_t *)seed;
 
 @end
 
@@ -49,7 +50,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         dispatch_async(dispatch_get_main_queue(), ^{
             if (iUpdate == _nUpdates) {
                 if (matcheses->empty()) {
-                    [self resetGame:nullptr];
+                    [self restartGame:nullptr];
                 } else {
                     _matcheses = matcheses;
                     [self.tableView reloadData];
@@ -59,11 +60,15 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     });
 }
 
-- (void)resetGame:(size_t *)seed {
-    _renderer.game = _game = std::make_shared<GameState>(5, iPad, seed);
+- (void)restartGame:(size_t *)seed {
+    _renderer.game = _game = (_level == 1 ? std::make_shared<GameState>(4, 10, 10, seed) :
+                              /* else */    std::make_shared<GameState>(5, 16, 16, seed));
+
+    // Report game seed.
     for (auto state : std::initializer_list<UIControlState>{UIControlStateNormal, UIControlStateHighlighted})
         [_seed setTitle:[NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)]
                forState:state];
+
     _matcheses->clear();
 
     _shapeImages = std::make_shared<ShapeImageCache>([self](std::tuple<brac::BitBoard, uint8_t, size_t> const & bbcols) {
@@ -184,7 +189,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [self.view addSubview:_renderer.view];
     [self.view sendSubviewToBack:_renderer.view];
     [_renderer didMoveToParentViewController:self];
-    [self resetGame:nullptr];
+
+    _level = [[NSUserDefaults standardUserDefaults] integerForKey:@"GameLevel"];
+    if (!_level) _level = 2;
+    [self restartGame:nullptr];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -277,7 +285,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     _game->filterMatcheses(*_matcheses);
     [_renderer hint:nullptr];
     if (_matcheses->empty()) {
-        [self resetGame:nullptr];
+        [self restartGame:nullptr];
     } else {
         [self.tableView reloadData];
     }
@@ -296,7 +304,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [av addButtonWithTitle:@"Start" whenDidDismiss:^{
         size_t seed;
         sscanf([weakAv textFieldAtIndex:0].text.UTF8String, "%lx", &seed);
-        [self resetGame:&seed];
+        [self restartGame:&seed];
     }];
 
     [av show];
@@ -327,7 +335,13 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     };
 
     settings.newGame = [=](int level) {
-        [self resetGame:nullptr];
+        _level = level;
+
+        auto ud = [NSUserDefaults standardUserDefaults];
+        [ud setInteger:_level forKey:@"GameLevel"];
+        [ud synchronize];
+
+        [self restartGame:nullptr];
         [popover dismissPopoverAnimated:YES];
         [self stopGear];
     };

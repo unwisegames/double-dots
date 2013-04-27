@@ -38,11 +38,13 @@ public:
     
     enum { minimumSelection = 3 };
 
-    GameState(size_t n, bool iPad, size_t * seed = nullptr);
+    GameState(size_t nColors, size_t width, size_t height, size_t * seed = nullptr);
 
     void match();
 
     size_t                  seed  () { return seed_     ; }
+    size_t                  width () { return width_    ; }
+    size_t                  height() { return height_   ; }
     Board           const & board () { return board_    ; }
     Selections      const & sels  () { return sels_     ; }
 
@@ -63,6 +65,7 @@ public:
 
 private:
     size_t                      seed_;
+    size_t                      width_, height_;
     Board                       board_;
     Selections                  sels_;
     std::unordered_set<size_t>  indices_;

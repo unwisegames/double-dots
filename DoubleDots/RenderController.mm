@@ -64,7 +64,6 @@ struct RgbaPixel {
     float _rotation;
     Texture2D * _atlas, * _dotStates, * _surface, * _dimple, * _edging;
     RgbaPixel _dotsData[16 * 16];
-    std::vector<DotsVertex> _dotsVertsData;
     DotsVertexBuffer _vboDots;
     ElementBuffer<> _eboDots;
     BoardVertexBuffer _vboBoardInterior, _vboBoardEdge, _vboSeparator;
@@ -183,26 +182,44 @@ struct RgbaPixel {
 - (void)updateBoardColors:(bool)swap {
     _colorSet ^= swap;
 
-    auto vi = begin(_dotsVertsData);
+    int nCells = _nBoardRows * _nBoardCols;
+    std::vector<DotsVertex> dotsVertsData; dotsVertsData.reserve(4 * nCells);
     auto const & board = _game->board();
+    auto vi = back_inserter(dotsVertsData);
     for (size_t y = 0; y < _nBoardRows; ++y)
         for (size_t x = 0; x < _nBoardCols; ++x) {
+            vec2 position{ x            ,  y            };
+            vec2 dotcoord{(x + 0.5) / 16, (y + 0.5) / 16};
+            constexpr float s = 0.25;
             int c = board.color(x, y);
-            float s = 0.25;
-            if (c == -1) { c = 0; s = 0; }
             vec2 tc = DotTexCoords::dots[_colorSet][c];
-            vi++->texcoord = tc + vec2{0, s};
-            vi++->texcoord = tc + vec2{s, s};
-            vi++->texcoord = tc + vec2{s, 0};
-            vi++->texcoord = tc;
+            *vi++ = {position             , tc + vec2{0, s}, dotcoord};
+            *vi++ = {position + vec2{1, 0}, tc + vec2{s, s}, dotcoord};
+            *vi++ = {position + vec2{1, 1}, tc + vec2{s, 0}, dotcoord};
+            *vi++ = {position + vec2{0, 1}, tc             , dotcoord};
         }
-    assert(vi == std::end(_dotsVertsData));
-    _vboDots.subData(_dotsVertsData);
+    assert(dotsVertsData.size() == 4 * nCells);
+    _vboDots.data(dotsVertsData);
+
+    std::vector<GLushort> dotsElemsData; dotsElemsData.reserve(6 * nCells);
+    auto ei = back_inserter(dotsElemsData);
+    for (size_t i = 0, y = 0; y < _nBoardRows; ++y)
+        for (size_t x = 0; x < _nBoardCols; ++x, i += 4) {
+            size_t elems[] = { i, i + 1, i + 2, i, i + 2, i + 3 };
+            ei = std::copy(std::begin(elems), std::end(elems), ei);
+        }
+    assert(dotsElemsData.size() == 6 * nCells);
+    _eboDots.data(dotsElemsData);
+
     self.paused = NO;
 }
 
 - (void)setGame:(std::shared_ptr<GameState>)game {
     _game = game;
+
+    _nBoardCols = game->width();
+    _nBoardRows = game->height();
+    _viewHeight = _nBoardRows + 2 * gEdgeThickness;
 
     _game->onSelectionChanged([=]{
         auto const & sels = _game->sels();
@@ -249,6 +266,111 @@ struct RgbaPixel {
         _tapGestureRecognizer.enabled = YES;
     });
 
+
+    float s = 2.7 / 16;
+
+    auto bvert = [&](vec2 p, vec2 l) {
+        return BoardVertex{p, p * s, l};
+    };
+
+    _vboBoardInterior = BoardVertexBuffer{
+        bvert({0          , _nBoardRows}, {0          , _nBoardRows}),
+        bvert({0          , 0          }, {0          , 0          }),
+        bvert({_nBoardCols, _nBoardRows}, {_nBoardCols, _nBoardRows}),
+        bvert({_nBoardCols, 0          }, {_nBoardCols, 0          }),
+    };
+
+    constexpr float ext = 5.7;
+    constexpr float e = gEdgeThickness;
+
+    auto edge = [&](int x, int y, int ox, int oy) {
+        return bvert({(_nBoardCols + ext) * x + e * ox, _nBoardRows * y + e * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)});
+    };
+
+    auto e00 = edge(0, 0, -1, -1);
+    auto e01 = edge(0, 0,  0, -1);
+    auto e02 = edge(1, 0,  0, -1);
+    auto e03 = edge(1, 0,  1, -1);
+    auto e04 = edge(0, 0, -1,  0);
+    auto e05 = edge(0, 0,  0,  0);
+    auto e06 = edge(1, 0,  0,  0);
+    auto e07 = edge(1, 0,  1,  0);
+    auto e08 = edge(0, 1, -1,  0);
+    auto e09 = edge(0, 1,  0,  0);
+    auto e10 = edge(1, 1,  0,  0);
+    auto e11 = edge(1, 1,  1,  0);
+    auto e12 = edge(0, 1, -1,  1);
+    auto e13 = edge(0, 1,  0,  1);
+    auto e14 = edge(1, 1,  0,  1);
+    auto e15 = edge(1, 1,  1,  1);
+
+    auto i0 = bvert({_nBoardCols      , 0          }, {0.5, 0.5});
+    auto i1 = bvert({_nBoardCols + ext, 0          }, {0.5, 0.5});
+    auto i2 = bvert({_nBoardCols      , _nBoardRows}, {0.5, 0.5});
+    auto i3 = bvert({_nBoardCols + ext, _nBoardRows}, {0.5, 0.5});
+
+    _vboBoardEdge = BoardVertexBuffer{
+        i0 , i1 , i2 , i3 , i3 , e00,   // Sidebar
+        e00, e01, e05, e02, e06, e03,   // Bottom edge
+        e03, e07, e06, e11, e10, e15,   // Right edge
+        e15, e14, e10, e13, e09, e12,   // Top edge
+        e12, e08, e09, e04, e05, e00,   // Left edge
+    };
+
+    {
+        float x0 = _nBoardCols + 0.35;
+        float y0 = _nBoardRows;
+        float y1 = 2.25;
+        float x2 = x0 + 2.25;
+        float y2 = 0;
+        float gr = 0.2;
+        float r1 = 0.5;
+        float r2 = 1.25;
+        size_t stitchSite = 0;
+
+        std::vector<BoardVertex> verts; verts.reserve(100);
+        auto joint = [&](vec2 p, float angle, float u) {
+            float c = std::cos(angle), s = std::sin(angle);
+            verts.push_back(bvert({p.x - gr * s, p.y + gr * c}, {0.5 * (1 - s + c * u), 0.5 * (1 + c + s * u)}));
+            verts.push_back(bvert({p.x + gr * s, p.y - gr * c}, {0.5 * (1 + s + c * u), 0.5 * (1 - c + s * u)}));
+        };
+        auto arc = [&](vec2 center, float r, float a1, float a2) {
+            size_t n = 24 / M_PI * std::fabs(a2 - a1);
+            float delta = (a2 - a1) / n;
+            for (size_t i = 0; i <= n; ++i, a1 += delta) {
+                float c = std::cos(a1), s = std::sin(a1);
+                joint(center + (r * vec2{s, -c}), a1, 0);
+            }
+        };
+        auto stitch = [&](bool final) {
+            if (stitchSite) {
+                verts[stitchSite    ] = verts[stitchSite - 1];
+                verts[stitchSite + 1] = verts[stitchSite + 2];
+            }
+            stitchSite = verts.size();
+            if (!final)
+                verts.resize(verts.size() + 2);
+        };
+
+#if 1
+        joint({x2 - r2               , y1     }, 0, 0);
+        joint({_nBoardCols + ext     , y1     }, 0, 0);
+        joint({_nBoardCols + ext + gr, y1     }, 0, 1);
+        stitch(false);
+        joint({x0     , y0 + gr},      -M_PI/2         , -1);
+        joint({x0     , y0     },      -M_PI/2         ,  0);
+        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
+        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
+        joint({x2     , y2     },               -M_PI/2,  0);
+        joint({x2     , y2 - gr},               -M_PI/2,  1);
+        stitch(true);
+#else
+        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
+        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
+#endif
+        _vboSeparator = verts;
+    }
+    
     [self updateBoardColors:false];
 }
 
@@ -264,10 +386,6 @@ struct RgbaPixel {
     [super viewDidLoad];
 
     [self becomeFirstResponder];
-
-    _nBoardRows = iPad ? 16 : 7;
-    _nBoardCols = iPad ? 16 : 8;
-    _viewHeight = _nBoardRows + 2 * gEdgeThickness;
 
     _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 
@@ -430,137 +548,12 @@ struct RgbaPixel {
 
     _dotStates = [[Texture2D alloc] initWithTexData:Texture2DData{_dotsData, kTexture2DPixelFormat_RGBA8888, 16, 16, {16, 16}}];
 
-    int nCells = _nBoardRows * _nBoardCols;
-    _dotsVertsData.reserve(4 * nCells);
-    auto vi = back_inserter(_dotsVertsData);
-    for (size_t y = 0; y < _nBoardRows; ++y)
-        for (size_t x = 0; x < _nBoardCols; ++x) {
-            vec2 position{ x            ,  y            };
-            vec2 dotcoord{(x + 0.5) / 16, (y + 0.5) / 16};
-            *vi++ = {position             , {0, 0}, dotcoord};
-            *vi++ = {position + vec2{1, 0}, {0, 0}, dotcoord};
-            *vi++ = {position + vec2{1, 1}, {0, 0}, dotcoord};
-            *vi++ = {position + vec2{0, 1}, {0, 0}, dotcoord};
-        }
-    assert(_dotsVertsData.size() == 4 * nCells);
-    _vboDots = DotsVertexBuffer{_dotsVertsData};
+    _vboDots        = _vboDots      .empty();
+    _eboDots        = _eboDots      .empty();
+    _vboBoardEdge   = _vboBoardEdge .empty();
 
-    std::vector<GLushort> dotsElemsData; dotsElemsData.reserve(6 * nCells);
-    auto ei = back_inserter(dotsElemsData);
-    for (size_t i = 0, y = 0; y < _nBoardRows; ++y)
-        for (size_t x = 0; x < _nBoardCols; ++x, i += 4) {
-            size_t elems[] = { i, i + 1, i + 2, i, i + 2, i + 3 };
-            ei = std::copy(std::begin(elems), std::end(elems), ei);
-        }
-    assert(dotsElemsData.size() == 6 * nCells);
-    _eboDots = ElementBuffer<>{dotsElemsData};
-
-    float s = 2.7 / 16;
-
-    auto bvert = [&](vec2 p, vec2 l) {
-        return BoardVertex{p, p * s, l};
-    };
-
-    _vboBoardInterior = BoardVertexBuffer{
-        bvert({0          , _nBoardRows}, {0          , _nBoardRows}),
-        bvert({0          , 0          }, {0          , 0          }),
-        bvert({_nBoardCols, _nBoardRows}, {_nBoardCols, _nBoardRows}),
-        bvert({_nBoardCols, 0          }, {_nBoardCols, 0          }),
-    };
-
-    constexpr float ext = 5.7;
-    constexpr float e = gEdgeThickness;
-
-    auto edge = [&](int x, int y, int ox, int oy) {
-        return bvert({(_nBoardCols + ext) * x + e * ox, _nBoardRows * y + e * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)});
-    };
-
-    auto e00 = edge(0, 0, -1, -1);
-    auto e01 = edge(0, 0,  0, -1);
-    auto e02 = edge(1, 0,  0, -1);
-    auto e03 = edge(1, 0,  1, -1);
-    auto e04 = edge(0, 0, -1,  0);
-    auto e05 = edge(0, 0,  0,  0);
-    auto e06 = edge(1, 0,  0,  0);
-    auto e07 = edge(1, 0,  1,  0);
-    auto e08 = edge(0, 1, -1,  0);
-    auto e09 = edge(0, 1,  0,  0);
-    auto e10 = edge(1, 1,  0,  0);
-    auto e11 = edge(1, 1,  1,  0);
-    auto e12 = edge(0, 1, -1,  1);
-    auto e13 = edge(0, 1,  0,  1);
-    auto e14 = edge(1, 1,  0,  1);
-    auto e15 = edge(1, 1,  1,  1);
-
-    auto i0 = bvert({_nBoardCols      , 0          }, {0.5, 0.5});
-    auto i1 = bvert({_nBoardCols + ext, 0          }, {0.5, 0.5});
-    auto i2 = bvert({_nBoardCols      , _nBoardRows}, {0.5, 0.5});
-    auto i3 = bvert({_nBoardCols + ext, _nBoardRows}, {0.5, 0.5});
-
-    _vboBoardEdge = BoardVertexBuffer{
-        i0 , i1 , i2 , i3 , i3 , e00,   // Sidebar
-        e00, e01, e05, e02, e06, e03,   // Bottom edge
-        e03, e07, e06, e11, e10, e15,   // Right edge
-        e15, e14, e10, e13, e09, e12,   // Top edge
-        e12, e08, e09, e04, e05, e00,   // Left edge
-    };
-
-    {
-        float x0 = _nBoardCols + 0.35;
-        float y0 = _nBoardRows;
-        float y1 = 2.25;
-        float x2 = x0 + 2.25;
-        float y2 = 0;
-        float gr = 0.2;
-        float r1 = 0.5;
-        float r2 = 1.25;
-        size_t stitchSite = 0;
-
-        std::vector<BoardVertex> verts; verts.reserve(100);
-        auto joint = [&](vec2 p, float angle, float u) {
-            float c = std::cos(angle), s = std::sin(angle);
-            verts.push_back(bvert({p.x - gr * s, p.y + gr * c}, {0.5 * (1 - s + c * u), 0.5 * (1 + c + s * u)}));
-            verts.push_back(bvert({p.x + gr * s, p.y - gr * c}, {0.5 * (1 + s + c * u), 0.5 * (1 - c + s * u)}));
-        };
-        auto arc = [&](vec2 center, float r, float a1, float a2) {
-            size_t n = 24 / M_PI * std::fabs(a2 - a1);
-            float delta = (a2 - a1) / n;
-            for (size_t i = 0; i <= n; ++i, a1 += delta) {
-                float c = std::cos(a1), s = std::sin(a1);
-                joint(center + (r * vec2{s, -c}), a1, 0);
-            }
-        };
-        auto stitch = [&](bool final) {
-            if (stitchSite) {
-                verts[stitchSite    ] = verts[stitchSite - 1];
-                verts[stitchSite + 1] = verts[stitchSite + 2];
-            }
-            stitchSite = verts.size();
-            if (!final)
-                verts.resize(verts.size() + 2);
-        };
-
-#if 1
-        joint({x2 - r2               , y1     }, 0, 0);
-        joint({_nBoardCols + ext     , y1     }, 0, 0);
-        joint({_nBoardCols + ext + gr, y1     }, 0, 1);
-        stitch(false);
-        joint({x0     , y0 + gr},      -M_PI/2         , -1);
-        joint({x0     , y0     },      -M_PI/2         ,  0);
-        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
-        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
-        joint({x2     , y2     },               -M_PI/2,  0);
-        joint({x2     , y2 - gr},               -M_PI/2,  1);
-        stitch(true);
-#else
-        arc  ({x0 + r1, y1 + r1},  r1, -M_PI/2,  0         );
-        arc  ({x2 - r2, y1 - r2}, -r2,  0     , -M_PI/2    );
-#endif
-        _vboSeparator = verts;
-    }
-
-    _vboHints[0] = BorderVertexBuffer::empty();
-    _vboHints[1] = BorderVertexBuffer::empty();
+    for (size_t i = 0; i < 2; ++i)
+        _vboHints[i] = _vboHints[i].empty();
 
     if (auto border = (*_border)()) {
         border.fs.atlas = 0;
@@ -589,6 +582,8 @@ struct RgbaPixel {
 #pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update {
+    if (!_game) return;
+
     float dt = self.timeSinceLastUpdate;
 
     for (int i = 0; i < 4; ++i)
@@ -612,6 +607,8 @@ struct RgbaPixel {
 }
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
+    if (!_game) return;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (auto board = (*_board)()) {

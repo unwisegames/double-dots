@@ -238,7 +238,7 @@
                                     <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="Dbg-rb-0oX"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nE7-01-62a">
+                            <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nE7-01-62a">
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="ocZ-Gq-hdm"/>
                                 </constraints>
@@ -255,7 +255,7 @@
                                     <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="KEm-O2-Axm"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IPQ-dG-U1c">
+                            <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IPQ-dG-U1c">
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="o6S-8t-Ido"/>
                                 </constraints>
@@ -299,7 +299,9 @@
                             <constraint firstItem="Y9W-yL-iaC" firstAttribute="top" secondItem="7uz-8h-iZH" secondAttribute="top" constant="20" symbolic="YES" type="default" id="ILm-WA-YQ5"/>
                             <constraint firstAttribute="trailing" secondItem="nE7-01-62a" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="NtN-LD-eGT"/>
                             <constraint firstItem="yC4-bM-tV6" firstAttribute="leading" secondItem="7uz-8h-iZH" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="SBp-bx-B5P"/>
+                            <constraint firstItem="S3T-fO-qva" firstAttribute="trailing" secondItem="7uz-8h-iZH" secondAttribute="trailing" type="default" id="TMF-AU-I0Y"/>
                             <constraint firstAttribute="trailing" secondItem="i3f-Yf-y2a" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="W6T-Jd-xf2"/>
+                            <constraint firstItem="S3T-fO-qva" firstAttribute="bottom" secondItem="7uz-8h-iZH" secondAttribute="bottom" type="default" id="YMy-FT-j7j"/>
                             <constraint firstAttribute="bottom" secondItem="i3f-Yf-y2a" secondAttribute="bottom" constant="100" id="c11-0a-Cdc"/>
                             <constraint firstAttribute="trailing" secondItem="aZ0-C9-8qQ" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="d2y-GA-ZXS"/>
                             <constraint firstAttribute="trailing" secondItem="Y9W-yL-iaC" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="epP-Cf-2zZ"/>
@@ -337,6 +339,39 @@
         <image name="match.png" width="256" height="256"/>
         <image name="settings-background.png" width="500" height="750"/>
     </resources>
+    <classes>
+        <class className="NSLayoutConstraint" superclassName="NSObject">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
+        </class>
+        <class className="RenderController" superclassName="GLKViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
+        </class>
+        <class className="SettingsController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/SettingsController.h"/>
+            <relationships>
+                <relationship kind="action" name="tappedColorBlind:" candidateClass="UIButton"/>
+                <relationship kind="action" name="tappedNewGame:" candidateClass="UIButton"/>
+                <relationship kind="action" name="tappedTutorial:" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="colorBlindButton" candidateClass="UIButton"/>
+            </relationships>
+        </class>
+        <class className="ShapeCell" superclassName="UITableViewCell">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ShapeCell.h"/>
+            <relationships>
+                <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
+            </relationships>
+        </class>
+        <class className="ViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/ViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="tappedMatch"/>
+                <relationship kind="action" name="tappedSeed"/>
+                <relationship kind="outlet" name="gear" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="seed" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
+            </relationships>
+        </class>
+    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <nil key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>
