@@ -268,7 +268,7 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
     std::sort(begin(matcheses), end(matcheses), [](const std::shared_ptr<ShapeMatches>& a, const std::shared_ptr<ShapeMatches>& b) {
         auto comp = [](Match const & a, Match const & b) { return a.score > b.score; };
 
-        return (std::lexicographical_compare(begin(a->matches), end(a->matches), begin(b->matches), end(a->matches), comp) ||
+        return (std::lexicographical_compare(begin(a->matches), end(a->matches), begin(b->matches), end(b->matches), comp) ||
                 (!std::lexicographical_compare(begin(b->matches), end(b->matches), begin(a->matches), end(a->matches), comp) &&
                  a->shape > b->shape));
     });
