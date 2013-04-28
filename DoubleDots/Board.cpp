@@ -117,19 +117,14 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
         return false;
     };
 
-    typedef std::unordered_multimap<size_t, BitBoard::WithOrientation> TripleMap;
+    typedef std::vector<BitBoard::WithOrientation> TripleSet;
+    typedef std::unordered_map<size_t, TripleSet> TripleMap;
 
     auto enumerateTriples = [&](TripleMap const & m) {
-        for (auto i = begin(m); i != end(m);) {
-            auto j = m.equal_range(i->first).second;
-            for (auto bb0 = i; bb0 != j; ++bb0)
-                for (auto bb1 = bb0; ++bb1 != j;) {
-                    auto const & a = bb0->second;
-                    auto const & b = bb1->second;
-                    analysePair({a.bb, b.bb}, b.sr * a.sr.inverse(), 3);
-                }
-            i = j;
-        }
+        for (auto const & i : m)
+            for (auto bb0 = std::begin(i.second); bb0 != end(i.second); ++bb0)
+                for (auto bb1 = bb0; ++bb1 != end(i.second);)
+                    analysePair({bb0->bb, bb1->bb}, bb1->sr * bb0->sr.inverse(), 3);
     };
 
     // Straight triples
@@ -144,7 +139,7 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 if (~c0 && ~c1 && ~c2 &&    // no missing dots and ...
                     c0 <= c2)               //   not greater of asymmetric pair
                 {
-                    s_triples.emplace(c0 + 5 * c1 + 25 * c2, BitBoard::ShiftRotate{{x, y}, -r}(s3));
+                    s_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, -r}(s3));
                 }
             }
     enumerateTriples(s_triples);
@@ -158,10 +153,15 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 int (&c)[16][16] = rotcolors[r];
                 char c0 = c[y + 1][x], c1 = c[y][x], c2 = c[y][x + 1];
                 if (~c0 && ~c1 && ~c2)
-                    l_triples.emplace(c0 + 5 * c1 + 25 * c2, BitBoard::ShiftRotate{{x, y}, -r}(l3));
+                    l_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, -r}(l3));
             }
     enumerateTriples(l_triples);
 
+    auto smaller = [](TripleMap::value_type const & a, TripleMap::value_type const & b) { return a.second.size() < b.second.size(); };
+    auto const & largest = std::max(*std::max_element(begin(s_triples), end(s_triples), smaller),
+                                    *std::max_element(begin(l_triples), end(l_triples), smaller),
+                                    smaller);
+    std::cerr << "Largest triple set " << "RGBPY"[largest.first % 5] << "RGBPY"[(largest.first / 5) % 5] << "RGBPY"[largest.first / 25] << " has " << largest.second.size() << " elements\n";
 #if 0
     std::cerr << analyses << " analyses; " << tests << " tests; " << matches << " matches; " << overlaps << " overlaps; " << result.size() << " returned; " << discarded.size() << " discarded\n";
 #endif
