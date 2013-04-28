@@ -92,6 +92,13 @@ struct RgbaPixel {
 
 @synthesize game = _game, colorSet = _colorSet, tapGestureRecognizer = _tapGestureRecognizer;
 
+- (void)setColorSet:(size_t)colorSet {
+    _colorSet = colorSet;
+    auto ud = [NSUserDefaults standardUserDefaults];
+    [ud setInteger:_colorSet forKey:@"ColorBlind"];
+    [ud synchronize];
+}
+
 - (std::unique_ptr<vec2>)touchPosition:(CGPoint)loc {
     auto size = self.view.bounds.size;
 
@@ -179,9 +186,7 @@ struct RgbaPixel {
     return border;
 }
 
-- (void)updateBoardColors:(bool)swap {
-    _colorSet ^= swap;
-
+- (void)updateBoardColors {
     int nCells = _nBoardRows * _nBoardCols;
     std::vector<DotsVertex> dotsVertsData; dotsVertsData.reserve(4 * nCells);
     auto const & board = _game->board();
@@ -371,7 +376,7 @@ struct RgbaPixel {
         _vboSeparator = verts;
     }
     
-    [self updateBoardColors:false];
+    [self updateBoardColors];
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -386,6 +391,8 @@ struct RgbaPixel {
     [super viewDidLoad];
 
     [self becomeFirstResponder];
+
+    _colorSet = [[NSUserDefaults standardUserDefaults] integerForKey:@"ColorBlind"];
 
     _context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 

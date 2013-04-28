@@ -329,7 +329,8 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
     settings.colorBlind = _renderer.colorSet;
     settings.toggleColorBlind = [=]() {
-        [_renderer updateBoardColors:true];
+        _renderer.colorSet ^= 1;
+        [_renderer updateBoardColors];
         [self.tableView reloadData];
         settings.colorBlind = _renderer.colorSet;
         _renderer.paused = NO;

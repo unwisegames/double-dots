@@ -29,6 +29,6 @@ namespace DotTexCoords {
 
 - (void)hint:(const std::shared_ptr<ShapeMatches>&)sm;
 
-- (void)updateBoardColors:(bool)swap;
+- (void)updateBoardColors;
 
 @end
