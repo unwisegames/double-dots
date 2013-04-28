@@ -281,14 +281,15 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 #pragma mark - Actions
 
 - (IBAction)tappedMatch {
-    _game->match();
-    _game->filterMatcheses(*_matcheses);
+    if (_game->match()) {
+        [self calculatePossibles];
     [_renderer hint:nullptr];
     if (_matcheses->empty()) {
         [self restartGame:nullptr];
     } else {
         [self.tableView reloadData];
     }
+}
 }
 
 - (IBAction)tappedSeed {

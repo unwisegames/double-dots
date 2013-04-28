@@ -10,6 +10,8 @@
 struct Match {
     brac::BitBoard shape1, shape2;
     int score;
+
+    Match(brac::BitBoard const & a, brac::BitBoard const & b, int score) : shape1(a), shape2(b), score(score) { }
 };
 
 struct ShapeMatches {

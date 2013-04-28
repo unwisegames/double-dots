@@ -40,7 +40,7 @@ public:
 
     GameState(size_t nColors, size_t width, size_t height, size_t * seed = nullptr);
 
-    void match();
+    bool match();
 
     size_t                  seed  () { return seed_     ; }
     size_t                  width () { return width_    ; }
@@ -61,7 +61,6 @@ public:
     static std::function<brac::BitBoard(brac::BitBoard const &)> canonicaliser(brac::BitBoard const & bb);
 
     static ShapeMatcheses possibleMoves(Board const & board);
-    void filterMatcheses(ShapeMatcheses & matcheses);
 
 private:
     size_t                      seed_;

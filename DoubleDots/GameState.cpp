@@ -22,7 +22,6 @@ GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed)
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
 
     seed_ = seed ? *seed : arc4random();
-    //seed_ = 0x024e4967;
     std::mt19937 gen(seed_);
     std::uniform_int_distribution<> dist(0, board_.nColors() - 1);
 
@@ -31,7 +30,7 @@ GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed)
             board_.colors[dist(gen)].set(x, y);
 }
 
-void GameState::match() {
+bool GameState::match() {
     std::vector<brac::BitBoard> bbs; bbs.reserve(sels_.size());
     std::transform(begin(sels_), end(sels_), back_inserter(bbs), [](Selections::value_type const & s) { return s.second.is_selected; });
     auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard::empty());
@@ -43,7 +42,9 @@ void GameState::match() {
         sels_.clear();
         boardChanged_();
         selectionChanged_();
+        return true;
     }
+    return false;
 }
 
 void GameState::touchesBegan(std::vector<Touch> const & touches) {
@@ -238,6 +239,7 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
     for (const auto& p : pairs) {
         int score = p[0].count();
 
+#if 0
         // Add the score of every smaller match that this pair clobbers but doesn't contain.
         for (const auto& m : matches) {
             brac::BitBoard bb = m.shape1 | m.shape2;
@@ -245,8 +247,9 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
             if (diff && diff != bb)
                 score += m.shape1.count();
         }
+#endif
 
-        matches.push_back({p[0], p[1], score});
+        matches.emplace_back(p[0], p[1], score);
     }
 
     typedef std::unordered_map<brac::BitBoard, std::vector<Match>> ShapeMap;
@@ -273,27 +276,4 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
     });
 
     return matcheses;
-}
-
-void GameState::filterMatcheses(ShapeMatcheses & matcheses) {
-    auto was_removed = ~board_.computeMask();
-    std::for_each(begin(matcheses), end(matcheses), [&](std::shared_ptr<ShapeMatches> & matches) {
-        auto & m = matches->matches;
-        auto new_end = std::remove_if(begin(m), end(m), [&](Match const & match) {
-            return !!(was_removed & (match.shape1 | match.shape2));
-        });
-        if (new_end != m.end())
-            matches->hinted = 0;
-        m.erase(new_end, m.end());
-    });
-    
-    matcheses.erase(std::remove_if(begin(matcheses), end(matcheses), [](std::shared_ptr<ShapeMatches> const & matches) {
-        return matches->matches.empty();
-    }), matcheses.end());
-
-    size_t n = std::accumulate(begin(matcheses), end(matcheses), 0, [](size_t acc, std::shared_ptr<ShapeMatches> const & matches) {
-        return acc + matches->matches.size();
-    });
-
-    std::cerr << "Filtered down to " << n << " matches in " << matcheses.size() << " distinct patterns.\n";
 }
