@@ -171,10 +171,10 @@ void GameState::tapped(vec2 p) {
 BitBoard::WithOrientation GameState::canonicalise(BitBoard const & bb) {
     int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
     BitBoard::WithOrientation bbs[4] = {
-        BitBoard::ShiftRotate{{wm, sm}, 0}(bb),
-        BitBoard::ShiftRotate{{nm, wm}, 1}(bb),
-        BitBoard::ShiftRotate{{em, nm}, 2}(bb),
-        BitBoard::ShiftRotate{{sm, em}, 3}(bb),
+        BitBoard::ShiftRotate{{-wm, -sm}, 0}(bb),
+        BitBoard::ShiftRotate{{-wm,  nm}, 1}(bb),
+        BitBoard::ShiftRotate{{ em,  nm}, 2}(bb),
+        BitBoard::ShiftRotate{{ em, -sm}, 3}(bb),
     };
 
     // Deskew symmetric patterns.

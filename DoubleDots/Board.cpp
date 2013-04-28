@@ -104,7 +104,6 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                         }
                     }
                     if (!foundBigger) {
-                        assert(!((bbs[0] | bbs[1]) & ~computeMask()));
                         result.insert(bbs);
                         result_masks.push_back({~bbs[0], ~bbs[1]});
                     } else {
