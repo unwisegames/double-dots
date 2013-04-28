@@ -168,24 +168,22 @@ void GameState::tapped(vec2 p) {
     selectionChanged_();
 }
 
-std::function<BitBoard(BitBoard const &)> GameState::canonicaliser(BitBoard const & bb) {
+BitBoard::WithOrientation GameState::canonicalise(BitBoard const & bb) {
     int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
-    std::function<BitBoard(BitBoard const &)> bbs[4] = {
-        [=](BitBoard const & bb) { return bb          .shiftWS(wm, sm); },
-        [=](BitBoard const & bb) { return bb.rotL   ().shiftWS(nm, wm); },
-        [=](BitBoard const & bb) { return bb.reverse().shiftWS(em, nm); },
-        [=](BitBoard const & bb) { return bb.rotR   ().shiftWS(sm, em); },
+    BitBoard::WithOrientation bbs[4] = {
+        BitBoard::ShiftRotate{{wm, sm}, 0}(bb),
+        BitBoard::ShiftRotate{{nm, wm}, 1}(bb),
+        BitBoard::ShiftRotate{{em, nm}, 2}(bb),
+        BitBoard::ShiftRotate{{sm, em}, 3}(bb),
     };
 
     // Deskew symmetric patterns.
     std::mt19937 rng{std::hash<BitBoard>()(bb)};
-    std::shuffle(begin(bbs), end(bbs), rng);
+    std::shuffle(std::begin(bbs), std::end(bbs), rng);
 
     return *std::min_element(std::begin(bbs), std::end(bbs),
-                             [&](std::function<BitBoard(BitBoard const &)> const & a,
-                                 std::function<BitBoard(BitBoard const &)> const & b)
-                             {
-                                 return a(bb) < b(bb);
+                             [&](BitBoard::WithOrientation const & a, BitBoard::WithOrientation const & b) {
+                                 return a.bb < b.bb;
                              });
 }
 
@@ -255,7 +253,7 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
     typedef std::unordered_map<brac::BitBoard, std::vector<Match>> ShapeMap;
     ShapeMap shape_histogram;
     for (const auto& m : matches) {
-        shape_histogram[canonicaliser(m.shape1)(m.shape1)].push_back(m);
+        shape_histogram[canonicalise(m.shape1).bb].push_back(m);
     }
     matcheses.clear(); matcheses.reserve(shape_histogram.size());
     std::transform(begin(shape_histogram), end(shape_histogram), back_inserter(matcheses),

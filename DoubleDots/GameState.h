@@ -58,7 +58,7 @@ public:
     void touchesCancelled(std::vector<Touch> const & touches);
     void tapped(brac::vec2 p);
 
-    static std::function<brac::BitBoard(brac::BitBoard const &)> canonicaliser(brac::BitBoard const & bb);
+    static brac::BitBoard::WithOrientation canonicalise(brac::BitBoard const & bb);
 
     static ShapeMatcheses possibleMoves(Board const & board);
 

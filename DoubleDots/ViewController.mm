@@ -77,9 +77,9 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         auto hint       = std::get<1>(bbcols);
         auto colorSet   = std::get<2>(bbcols);
 
-        auto canonicalise = GameState::canonicaliser(bb);
+        auto canonicalised = GameState::canonicalise(bb);
 
-        bb = canonicalise(bb);
+        bb = canonicalised.bb;
 
         size_t w = 16 - bb.marginE(), h = 16 - bb.marginN();
         size_t W = 2 * gBorder + gGrid * w, H = 2 * gBorder + gGrid * h;
@@ -136,7 +136,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         // Hint dots
         for (size_t c = 0; c <= board.nColors(); ++c)
             if (hint & (1 << c)) {
-                auto color = canonicalise(board.colors[c]) & bb;
+                auto color = (canonicalised.sr * board.colors[c]) & bb;
                 for (size_t y = 0; y < h; ++y)
                     for (size_t x = 0; x < w; ++x)
                         if (color.isSet(x, y))
@@ -230,7 +230,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     auto const & sm = *(*_matcheses)[indexPath.row];
-    auto bb = GameState::canonicaliser(sm.shape)(sm.shape);
+    auto bb = GameState::canonicalise(sm.shape).bb;
 
     size_t h = 16 - bb.marginN();
     size_t H = 2 * gBorder + gGrid * h;
