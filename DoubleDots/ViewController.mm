@@ -208,12 +208,12 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [_gear.layer removeAllAnimations];
 
     float currentAngle = ((NSNumber *)[_gear.layer.presentationLayer valueForKeyPath:@"transform.rotation.z"]).floatValue;
-    float finishAngle = std::ceil(1 / (0.5 * M_PI) * currentAngle) * (0.5 * M_PI);
+    float finishAngle = std::round(1 / (0.5 * M_PI) * currentAngle) * (0.5 * M_PI);
 
     CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
     rotateGear.fromValue = @(currentAngle);
     rotateGear.toValue = @(finishAngle);
-    rotateGear.duration = 1 / (2 * M_PI * gGearHz) * (finishAngle - currentAngle);
+    rotateGear.duration = 0.5 / (2 * M_PI * gGearHz) * (finishAngle - currentAngle);
     rotateGear.repeatCount = 1;
     [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
 }
@@ -283,13 +283,13 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 - (IBAction)tappedMatch {
     if (_game->match()) {
         [self calculatePossibles];
-    [_renderer hint:nullptr];
-    if (_matcheses->empty()) {
-        [self restartGame:nullptr];
-    } else {
-        [self.tableView reloadData];
+        [_renderer hint:nullptr];
+        if (_matcheses->empty()) {
+            [self restartGame:nullptr];
+        } else {
+            [self.tableView reloadData];
+        }
     }
-}
 }
 
 - (IBAction)tappedSeed {
