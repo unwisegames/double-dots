@@ -104,6 +104,7 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                         }
                     }
                     if (!foundBigger) {
+                        assert(!((bbs[0] | bbs[1]) & ~computeMask()));
                         result.insert(bbs);
                         result_masks.push_back({~bbs[0], ~bbs[1]});
                     } else {
@@ -120,20 +121,11 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
 
     auto enumerateTriples = [&](TripleMap const & m) {
         for (auto i = begin(m); i != end(m);) {
-            if (i->first == 2 + 5 * 3 + 25 * 2)
-                std::cerr << "Blue-purple-blue!\n";
-            else if (i->first == 0 + 5 * 2 + 25 * 3)
-                std::cerr << "Red-blue-purple!\n";
             auto j = m.equal_range(i->first).second;
             for (auto bb0 = i; bb0 != j; ++bb0)
                 for (auto bb1 = bb0; ++bb1 != j;) {
                     auto const & a = bb0->second;
                     auto const & b = bb1->second;
-                    if (a.bb == BitBoard{(28ULL << 48), 0, 0, 0}) {
-                        std::cerr << "Maybe?\n";
-                        if (b.bb == BitBoard{0, (4ULL << 16) + (4ULL << 32) + (4ULL << 48), 0, 0})
-                            std::cerr << "Here we go!\n";
-                    }
                     analysePair({a.bb, b.bb}, b.sr * a.sr.inverse(), 3);
                 }
             i = j;
@@ -148,10 +140,6 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
             for (int8_t x = 0; x < 14; ++x) {
                 int *c = rotcolors[r][y] + x;
                 char c0 = c[0], c1 = c[1], c2 = c[2];
-                if (std::make_tuple(c0, c1, c2) == std::make_tuple(2, 3, 2))
-                    std::cerr << "Blue-purple-blue!\n";
-                else if (std::make_tuple(c0, c1, c2) == std::make_tuple(0, 2, 3))
-                    std::cerr << "Red-blue-purple!\n";
 
                 if (~c0 && ~c1 && ~c2 &&    // no missing dots and ...
                     c0 <= c2)               //   not greater of asymmetric pair
@@ -170,11 +158,11 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 int (&c)[16][16] = rotcolors[r];
                 char c0 = c[y + 1][x], c1 = c[y][x], c2 = c[y][x + 1];
                 if (~c0 && ~c1 && ~c2)
-                    l_triples.emplace(c0 + 5 * c1 + 25 * c2, BitBoard::ShiftRotate{{x, y}, r}(l3));
+                    l_triples.emplace(c0 + 5 * c1 + 25 * c2, BitBoard::ShiftRotate{{x, y}, -r}(l3));
             }
     enumerateTriples(l_triples);
 
-#if 1
+#if 0
     std::cerr << analyses << " analyses; " << tests << " tests; " << matches << " matches; " << overlaps << " overlaps; " << result.size() << " returned; " << discarded.size() << " discarded\n";
 #endif
     
