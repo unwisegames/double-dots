@@ -57,7 +57,7 @@ struct RgbaPixel {
     std::unique_ptr<BoardProgram    > _board    ;
 
     int _nBoardRows, _nBoardCols;
-    float _viewHeight;
+    float _viewHeight, _edgeThickness;
 
     mat4 _pmvMatrix, _pick;
     mat3 _normalMatrix;
@@ -222,9 +222,12 @@ struct RgbaPixel {
 - (void)setGame:(std::shared_ptr<GameState>)game {
     _game = game;
 
+    float scale = game->height() / 16.0;
+
     _nBoardCols = game->width();
     _nBoardRows = game->height();
-    _viewHeight = _nBoardRows + 2 * gEdgeThickness;
+    _edgeThickness = gEdgeThickness * scale;
+    _viewHeight = _nBoardRows + 2 * _edgeThickness;
 
     _game->onSelectionChanged([=]{
         auto const & sels = _game->sels();
@@ -272,9 +275,9 @@ struct RgbaPixel {
     });
 
 
-    float s = 2.7 / 16;
+    float s = 2.7 / _nBoardCols;
 
-    auto bvert = [&](vec2 p, vec2 l) {
+    auto bvert = [=](vec2 p, vec2 l) {
         return BoardVertex{p, p * s, l};
     };
 
@@ -286,7 +289,7 @@ struct RgbaPixel {
     };
 
     constexpr float ext = 5.7;
-    constexpr float e = gEdgeThickness;
+    float e = _edgeThickness;
 
     auto edge = [&](int x, int y, int ox, int oy) {
         return bvert({(_nBoardCols + ext) * x + e * ox, _nBoardRows * y + e * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)});
@@ -323,14 +326,14 @@ struct RgbaPixel {
     };
 
     {
-        float x0 = _nBoardCols + 0.35;
+        float x0 = _nBoardCols + 0.35 * scale;
         float y0 = _nBoardRows;
-        float y1 = 2.25;
-        float x2 = x0 + 2.25;
+        float y1 = 2.25 * scale;
+        float x2 = x0 + 2.25 * scale;
         float y2 = 0;
-        float gr = 0.2;
-        float r1 = 0.5;
-        float r2 = 1.25;
+        float gr = 0.2 * scale;
+        float r1 = 0.5 * scale;
+        float r2 = 1.25 * scale;
         size_t stitchSite = 0;
 
         std::vector<BoardVertex> verts; verts.reserve(100);
@@ -603,7 +606,7 @@ struct RgbaPixel {
     //proj *= mat4::scale(0.2) * mat4::translate({40, 40, 0});
 
     auto offset = cpBodyGetPos(_anchor);
-    auto mv = mat4::translate({gEdgeThickness + offset.x, gEdgeThickness + offset.y, 0});
+    auto mv = mat4::translate({_edgeThickness + offset.x, _edgeThickness + offset.y, 0});
 
     _pmvMatrix = proj*mv;
     _normalMatrix = mv.ToMat3().inverse().transpose();
