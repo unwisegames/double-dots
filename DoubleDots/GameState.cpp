@@ -22,6 +22,7 @@ GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed)
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
 
     seed_ = seed ? *seed : arc4random();
+    std::cerr << "SEED = " << std::hex << seed_ << std::dec << "\n";
     std::mt19937 gen(seed_);
     std::uniform_int_distribution<> dist(0, board_.nColors() - 1);
 
