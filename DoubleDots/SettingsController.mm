@@ -14,7 +14,7 @@
 
 @implementation SettingsController
 
-@synthesize colorBlind = _colorBlind, colorBlindButton = _colorBlindButton, newGame = _newGame, toggleColorBlind = _toggleColorBlind, tutorial = _tutorial;
+@synthesize colorBlind = _colorBlind, colorBlindButton = _colorBlindButton, newGame = _newGame, toggleColorBlind = _toggleColorBlind, tutorial = _tutorial, cancelled = _cancelled;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -44,6 +44,10 @@
 
 - (IBAction)tappedTutorial:(UIButton *)sender {
     _tutorial();
+}
+
+- (IBAction)tappedCancel:(UIButton *)sender {
+    _cancelled();
 }
 
 @end

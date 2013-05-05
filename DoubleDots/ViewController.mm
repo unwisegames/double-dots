@@ -311,17 +311,20 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     __weak SettingsController * settings = segue.destinationViewController;
-    __weak UIPopoverController * popover = [(UIStoryboardPopoverSegue *)segue popoverController];
+    __weak UIPopoverController * popover = nil;
+    if ([segue respondsToSelector:@selector(popoverController)]) {
+        popover = [(UIStoryboardPopoverSegue *)segue popoverController];
 
-    popover.delegate = self;
+        popover.delegate = self;
 
-    CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
-    rotateGear.toValue = @(2*M_PI);
-    rotateGear.duration = 1 / gGearHz;
-    rotateGear.cumulative = NO;
-    rotateGear.repeatCount = 1e20;
+        CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+        rotateGear.toValue = @(2*M_PI);
+        rotateGear.duration = 1 / gGearHz;
+        rotateGear.cumulative = NO;
+        rotateGear.repeatCount = 1e20;
 
-    [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
+        [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
+    }
 
     settings.colorBlind = _renderer.colorSet;
     settings.toggleColorBlind = [=]() {
@@ -340,7 +343,11 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         [ud synchronize];
 
         [self restartGame:nullptr];
-        [popover dismissPopoverAnimated:YES];
+        if (popover) {
+            [popover dismissPopoverAnimated:YES];
+        } else {
+            [self dismissModalViewControllerAnimated:YES];
+        }
         [self stopGear];
     };
 
@@ -353,6 +360,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
                          [self stopGear];
                      }
                             otherButtons:nil] show];
+    };
+
+    settings.cancelled = [=]{
+        [self dismissModalViewControllerAnimated:YES];
     };
 }
 
