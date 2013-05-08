@@ -110,7 +110,13 @@ struct Board {
     }
 
     std::unordered_set<std::array<brac::BitBoard, 2>> findMatchingPairs() const;
+
+    std::vector<brac::BitBoard> findOtherMatches(std::vector<brac::BitBoard> const & matches) const;
 };
+
+inline Board operator*(brac::BitBoard::ShiftRotate const & sr, Board const & b) {
+    return b.map([&](brac::BitBoard const & bb) { return sr * bb; });
+}
 
 std::ostream& write(std::ostream& os, Board const & b, std::initializer_list<brac::BitBoard> bbs, const char* colors, bool trimNorth = false);
 

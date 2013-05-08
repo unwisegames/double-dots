@@ -6,9 +6,9 @@
 
 @interface ViewController : UIViewController<UITableViewDataSource, UITableViewDelegate, UIPopoverControllerDelegate>
 
-@property (nonatomic, strong) IBOutlet UITableView      * tableView;
-@property (nonatomic, strong) IBOutlet UIButton         * seed;
-@property (nonatomic, strong) IBOutlet UIButton         * gear;
+@property (strong, nonatomic) IBOutlet UITableView      * tableView;
+@property (strong, nonatomic) IBOutlet UIButton         * seed;
+@property (strong, nonatomic) IBOutlet UIButton         * gear;
 
 - (IBAction)tappedMatch;
 - (IBAction)tappedSeed;

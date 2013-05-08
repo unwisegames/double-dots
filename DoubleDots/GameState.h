@@ -40,7 +40,7 @@ public:
 
     GameState(size_t nColors, size_t width, size_t height, size_t * seed = nullptr);
 
-    bool match();
+    bool match(bool & incomplete);
 
     size_t                  seed  () { return seed_     ; }
     size_t                  width () { return width_    ; }

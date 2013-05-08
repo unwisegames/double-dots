@@ -31,19 +31,26 @@ GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed)
             board_.colors[dist(gen)].set(x, y);
 }
 
-bool GameState::match() {
+bool GameState::match(bool & incomplete) {
     std::vector<brac::BitBoard> bbs; bbs.reserve(sels_.size());
     std::transform(begin(sels_), end(sels_), back_inserter(bbs), [](Selections::value_type const & s) { return s.second.is_selected; });
     auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard::empty());
-    if (finish - begin(bbs) > 1 && bbs[0].count() > 2 && board_.selectionsMatch(begin(bbs), finish)) {
-        for (auto& s : sels_) {
-            board_ &= ~s.second.is_selected;
+    if (finish - begin(bbs) > 1                     &&
+        bbs[0].count() > 2                          &&
+        board_.selectionsMatch(begin(bbs), finish))
+    {
+        if (!(incomplete = !board_.findOtherMatches(bbs).empty())) {
+            for (auto& s : sels_)
+                board_ &= ~s.second.is_selected;
+            for (auto const & sel : sels_)
+                indices_.insert(sel.first);
+            sels_.clear();
+            boardChanged_();
+            selectionChanged_();
+            return true;
         }
-        for (auto const & sel : sels_) indices_.insert(sel.first);
-        sels_.clear();
-        boardChanged_();
-        selectionChanged_();
-        return true;
+    } else {
+        incomplete = false;
     }
     return false;
 }

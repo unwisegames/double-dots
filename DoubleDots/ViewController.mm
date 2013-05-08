@@ -277,7 +277,8 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 #pragma mark - Actions
 
 - (IBAction)tappedMatch {
-    if (_game->match()) {
+    bool incomplete;
+    if (_game->match(incomplete)) {
         [self calculatePossibles];
         [_renderer hint:nullptr];
         if (_matcheses->empty()) {
@@ -285,6 +286,8 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         } else {
             [self.tableView reloadData];
         }
+    } else if (incomplete) {
+        [self performSegueWithIdentifier:@"incomplete" sender:self];
     }
 }
 
@@ -310,67 +313,81 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    __weak SettingsController * settings = segue.destinationViewController;
-    __weak UIPopoverController * popover = nil;
-    if ([segue respondsToSelector:@selector(popoverController)]) {
-        popover = [(UIStoryboardPopoverSegue *)segue popoverController];
+    if ([segue.destinationViewController isMemberOfClass:[SettingsController class]]) {
+        __weak SettingsController * settings = segue.destinationViewController;
+        __weak UIPopoverController * popover = nil;
 
-        popover.delegate = self;
+        if ([segue respondsToSelector:@selector(popoverController)]) {
+            popover = [(UIStoryboardPopoverSegue *)segue popoverController];
 
-        CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
-        rotateGear.toValue = @(2*M_PI);
-        rotateGear.duration = 1 / gGearHz;
-        rotateGear.cumulative = NO;
-        rotateGear.repeatCount = 1e20;
+            popover.delegate = self;
 
-        [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
-    }
+            CABasicAnimation * rotateGear = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+            rotateGear.toValue = @(2*M_PI);
+            rotateGear.duration = 1 / gGearHz;
+            rotateGear.cumulative = NO;
+            rotateGear.repeatCount = 1e20;
 
-    settings.colorBlind = _renderer.colorSet;
-    settings.toggleColorBlind = [=]() {
-        _renderer.colorSet ^= 1;
-        [_renderer updateBoardColors];
-        [self.tableView reloadData];
-        settings.colorBlind = _renderer.colorSet;
-        _renderer.paused = NO;
-    };
-
-    settings.newGame = [=](int level) {
-        _level = level;
-
-        auto ud = [NSUserDefaults standardUserDefaults];
-        [ud setInteger:_level forKey:@"GameLevel"];
-        [ud synchronize];
-
-        [self restartGame:nullptr];
-        if (popover) {
-            [popover dismissPopoverAnimated:YES];
-        } else {
-            [self dismissModalViewControllerAnimated:YES];
+            [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
         }
-        [self stopGear];
-    };
 
-    settings.tutorial = [=]{
-        [[UIAlertView alertViewWithTitle:@"Not implemented"
-                                 message:@"Tutorial mode coming soon..."
-                       cancelButtonTitle:@"Close"
-                     cancelButtonPressed:^{
-                         [popover dismissPopoverAnimated:YES];
-                         [self stopGear];
-                     }
-                            otherButtons:nil] show];
-    };
+        settings.colorBlind = _renderer.colorSet;
+        settings.toggleColorBlind = [=]() {
+            _renderer.colorSet ^= 1;
+            [_renderer updateBoardColors];
+            [self.tableView reloadData];
+            settings.colorBlind = _renderer.colorSet;
+            _renderer.paused = NO;
+        };
 
-    settings.cancelled = [=]{
-        [self dismissModalViewControllerAnimated:YES];
-    };
+        settings.newGame = [=](int level) {
+            _level = level;
+
+            auto ud = [NSUserDefaults standardUserDefaults];
+            [ud setInteger:_level forKey:@"GameLevel"];
+            [ud synchronize];
+
+            [self restartGame:nullptr];
+            if (popover) {
+                [popover dismissPopoverAnimated:YES];
+            } else {
+                [self dismissModalViewControllerAnimated:YES];
+            }
+            [self stopGear];
+        };
+
+        settings.tutorial = [=]{
+            [[UIAlertView alertViewWithTitle:@"Not implemented"
+                                     message:@"Tutorial mode coming soon..."
+                           cancelButtonTitle:@"Close"
+                         cancelButtonPressed:^{
+                             [popover dismissPopoverAnimated:YES];
+                             [self stopGear];
+                         }
+                                otherButtons:nil] show];
+        };
+
+        settings.cancelled = [=]{
+            [self dismissModalViewControllerAnimated:YES];
+        };
+    } else if ([segue.identifier isEqualToString:@"incomplete"]) {
+        if ([segue respondsToSelector:@selector(popoverController)]) {
+            UIPopoverController * popover = [(UIStoryboardPopoverSegue *)segue popoverController];
+            popover.contentViewController.view.superview.superview.superview.alpha = 0.5;
+        }
+    }
 }
 
 #pragma mark - UIPopoverControllerDelegate
 
 - (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController {
-    [self stopGear];
+    if ([popoverController.contentViewController isMemberOfClass:[SettingsController class]]) {
+        [self stopGear];
+    } else if ([popoverController.contentViewController.restorationIdentifier isEqualToString:@"incomplete"]) {
+    }
 }
 
+- (void)viewDidUnload {
+    [super viewDidUnload];
+}
 @end

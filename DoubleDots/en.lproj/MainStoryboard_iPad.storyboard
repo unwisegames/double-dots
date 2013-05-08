@@ -114,15 +114,15 @@
                         <color key="backgroundColor" red="0.14901960784313725" green="0.14901960784313725" blue="0.14901960784313725" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
                         <constraints>
+                            <constraint firstAttribute="trailing" secondItem="YJz-2S-rTi" secondAttribute="trailing" constant="12" id="4we-1i-sJm"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="leading" secondItem="7PZ-Jj-N0u" secondAttribute="leading" type="default" id="7pa-iD-Ysg"/>
+                            <constraint firstAttribute="trailing" secondItem="RYG-zX-G78" secondAttribute="trailing" constant="170" id="7t2-Fd-8X2"/>
                             <constraint firstItem="eQm-0j-1HB" firstAttribute="bottom" secondItem="5" secondAttribute="bottom" type="default" id="80q-kA-y1O"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="top" secondItem="5" secondAttribute="top" constant="20" symbolic="YES" type="default" id="DWt-zy-od5"/>
                             <constraint firstItem="eQm-0j-1HB" firstAttribute="trailing" secondItem="5" secondAttribute="trailing" type="default" id="F0M-fB-mfP"/>
-                            <constraint firstAttribute="trailing" secondItem="RYG-zX-G78" secondAttribute="trailing" constant="170" id="IPT-67-rGa"/>
                             <constraint firstAttribute="bottom" secondItem="RYG-zX-G78" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="JZ5-01-Ppf"/>
                             <constraint firstItem="7PZ-Jj-N0u" firstAttribute="top" secondItem="5" secondAttribute="top" constant="55" id="NSz-Qn-Wmt"/>
                             <constraint firstItem="J24-cX-DSB" firstAttribute="trailing" secondItem="7PZ-Jj-N0u" secondAttribute="trailing" type="default" id="reD-Rs-xRC"/>
-                            <constraint firstAttribute="trailing" secondItem="J24-cX-DSB" secondAttribute="trailing" constant="12" id="w2C-Rt-fFK"/>
                             <constraint firstAttribute="bottom" secondItem="J24-cX-DSB" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="xrq-R6-Nfl"/>
                             <constraint firstItem="YJz-2S-rTi" firstAttribute="trailing" secondItem="7PZ-Jj-N0u" secondAttribute="trailing" type="default" id="yB6-Xm-AjE"/>
                         </constraints>
@@ -133,6 +133,9 @@
                         <outlet property="gear" destination="J24-cX-DSB" id="vdV-Oh-kUp"/>
                         <outlet property="seed" destination="eQm-0j-1HB" id="aqS-GY-XF9"/>
                         <outlet property="tableView" destination="7PZ-Jj-N0u" id="U0a-Yt-bNt"/>
+                        <segue destination="zjq-EI-ZL6" kind="popover" identifier="incomplete" popoverAnchorView="RYG-zX-G78" id="IAQ-aG-z01">
+                            <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                        </segue>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
@@ -179,7 +182,7 @@
                     </connections>
                 </pinchGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="1200" y="-488"/>
+            <point key="canvasLocation" x="1362" y="-622"/>
         </scene>
         <!--Settings Controller-->
         <scene sceneID="05q-RN-3UP">
@@ -325,7 +328,73 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yz9-ph-y37" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1200" y="40"/>
+            <point key="canvasLocation" x="1387" y="229"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="4NO-V9-NAj">
+            <objects>
+                <viewController restorationIdentifier="incomplete" storyboardIdentifier="incomplete" id="zjq-EI-ZL6" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="asy-is-jBP">
+                        <rect key="frame" x="0.0" y="0.0" width="512" height="192"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" usesAttributedText="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L6S-9w-UgD">
+                                <color key="backgroundColor" white="0.0" alpha="0.69999999999999996" colorSpace="calibratedWhite"/>
+                                <attributedString key="attributedText">
+                                    <fragment>
+                                        <string key="content" base64-UTF8="YES">
+Cg
+</string>
+                                        <attributes>
+                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
+                                            <font key="NSFont" size="14" name="Helvetica"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                    <fragment>
+                                        <string key="content">You missed some!
+</string>
+                                        <attributes>
+                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
+                                            <font key="NSFont" size="36" name="AmericanTypewriter-Bold"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                    <fragment>
+                                        <string key="content" base64-UTF8="YES">
+Cg
+</string>
+                                        <attributes>
+                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
+                                            <font key="NSFont" size="14" name="Helvetica"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                    <fragment content="You've found some, but not all of the matches for that pattern.">
+                                        <attributes>
+                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
+                                            <font key="NSFont" size="36" name="GillSans-Light"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                </attributedString>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="L6S-9w-UgD" firstAttribute="bottom" secondItem="asy-is-jBP" secondAttribute="bottom" type="default" id="bBp-iw-lgq"/>
+                            <constraint firstItem="L6S-9w-UgD" firstAttribute="trailing" secondItem="asy-is-jBP" secondAttribute="trailing" type="default" id="gOI-LJ-6JN"/>
+                            <constraint firstItem="L6S-9w-UgD" firstAttribute="top" secondItem="asy-is-jBP" secondAttribute="top" type="default" id="wgb-TQ-OoL"/>
+                            <constraint firstItem="L6S-9w-UgD" firstAttribute="leading" secondItem="asy-is-jBP" secondAttribute="leading" type="default" id="zQA-qx-GEj"/>
+                        </constraints>
+                        <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    </view>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="H62-Pz-117" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1362" y="-85"/>
         </scene>
     </scenes>
     <resources>
@@ -349,6 +418,7 @@
         <class className="SettingsController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/SettingsController.h"/>
             <relationships>
+                <relationship kind="action" name="tappedCancel:" candidateClass="UIButton"/>
                 <relationship kind="action" name="tappedColorBlind:" candidateClass="UIButton"/>
                 <relationship kind="action" name="tappedNewGame:" candidateClass="UIButton"/>
                 <relationship kind="action" name="tappedTutorial:" candidateClass="UIButton"/>

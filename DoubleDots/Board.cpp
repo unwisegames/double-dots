@@ -168,6 +168,29 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
     return result;
 }
 
+std::vector<BitBoard> Board::findOtherMatches(std::vector<BitBoard> const & matches) const {
+    std::vector<BitBoard> result;
+
+    auto shape = matches[0].canonical();
+    auto pattern = (shape.sr * *this) & shape.bb;
+
+    auto mask = computeMask();
+    for (auto const & bb : matches)
+        mask &= ~bb;
+
+    size_t w = shape.bb.marginE(), h = shape.bb.marginN();
+    for (size_t r = 0; r < 4; ++r)
+        for (size_t y = 0; y < h; ++y)
+            for (size_t x = 0; x < w; ++x) {
+                BitBoard::ShiftRotate sr{{x, y}, r};
+                auto candidate = sr * shape.bb;
+                if ((mask & candidate) == candidate && sr.inverse() * (*this & candidate) == pattern)
+                    result.push_back(candidate);
+            }
+
+    return result;
+}
+
 std::ostream& write(std::ostream& os, Board const & b, std::initializer_list<BitBoard> bbs, const char* colors, bool trimNorth) {
     int mn = 16;
     for (auto const & bb : bbs)
