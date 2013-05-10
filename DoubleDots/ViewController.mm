@@ -61,8 +61,8 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (void)restartGame:(size_t *)seed {
-    _renderer.game = _game = (_level == 1 ? std::make_shared<GameState>(4, 10, 10, seed) :
-                              /* else */    std::make_shared<GameState>(5, 16, 16, seed));
+    _renderer.renderer->setGame(_game = (_level == 1 ? std::make_shared<GameState>(4, 10, 10, seed) :
+                                         /* else */    std::make_shared<GameState>(5, 16, 16, seed) ));
 
     // Report game seed.
     for (auto state : std::initializer_list<UIControlState>{UIControlStateNormal, UIControlStateHighlighted})
@@ -178,7 +178,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         UIGraphicsBeginImageContextWithOptions(CGSizeMake(16, 16), NO, 0);
         for (size_t i = 0; i < _dots.size(); ++i)
             for (size_t c = 0; c < _dots[i].size(); ++c) {
-                brac::vec2 dot = DotTexCoords::dots[i][c];
+                brac::vec2 dot = GameRenderer::dots[i][c];
                 [atlas drawInRect:CGRectMake(-64 * dot.x, -64 * dot.y, 64, 64)];
                 _dots[i][c] = UIGraphicsGetImageFromCurrentImageContext();
             }
@@ -245,7 +245,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         cell = [[ShapeCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
 
     auto const & sm = *(*_matcheses)[indexPath.row];
-    [cell setShapeMatches:sm image:(*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.colorSet))];
+    [cell setShapeMatches:sm image:(*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.renderer->colorSet()))];
 
     return cell;
 }
@@ -268,9 +268,9 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
                 break;
             }
         }
-        ((ShapeCell *)[tableView cellForRowAtIndexPath:indexPath]).shape.image = (*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.colorSet));
+        ((ShapeCell *)[tableView cellForRowAtIndexPath:indexPath]).shape.image = (*_shapeImages)(std::make_tuple(sm.matches[0].shape1, sm.hinted, _renderer.renderer->colorSet()));
     } else {
-        [_renderer hint:(*_matcheses)[indexPath.row]];
+        _renderer.renderer->hint((*_matcheses)[indexPath.row]);
     }
 }
 
@@ -280,7 +280,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     bool incomplete;
     if (_game->match(incomplete)) {
         [self calculatePossibles];
-        [_renderer hint:nullptr];
+        _renderer.renderer->hint(nullptr);
         if (_matcheses->empty()) {
             [self restartGame:nullptr];
         } else {
@@ -331,12 +331,12 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
             [_gear.layer addAnimation:rotateGear forKey:@"rotateGear"];
         }
 
-        settings.colorBlind = _renderer.colorSet;
+        settings.colorBlind = _renderer.renderer->colorSet();
         settings.toggleColorBlind = [=]() {
-            _renderer.colorSet ^= 1;
-            [_renderer updateBoardColors];
+            size_t colorSet = 1 - _renderer.renderer->colorSet();
+            _renderer.renderer->setColorSet(colorSet);
             [self.tableView reloadData];
-            settings.colorBlind = _renderer.colorSet;
+            settings.colorBlind = colorSet;
             _renderer.paused = NO;
         };
 

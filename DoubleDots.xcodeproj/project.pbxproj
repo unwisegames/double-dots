@@ -91,7 +91,7 @@
 		9C21A144171A0B26007E643C /* ChipmunkDebugDraw.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A143171A0B25007E643C /* ChipmunkDebugDraw.mm */; };
 		9C21A147171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A145171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.cpp */; };
 		9C21A149171A0E2F007E643C /* ShaderProgram.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A148171A0E2F007E643C /* ShaderProgram.mm */; };
-		9C21A14C171A5D20007E643C /* BoardRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A14A171A5D1F007E643C /* BoardRenderer.cpp */; };
+		9C21A14C171A5D20007E643C /* GameRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A14A171A5D1F007E643C /* GameRenderer.cpp */; };
 		9C21A14E171A6ED5007E643C /* Board.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C21A14D171A6ED5007E643C /* Board.cpp */; };
 		9C21A150171AA606007E643C /* Dots.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C21A14F171A740C007E643C /* Dots.shader.h */; };
 		9C21A153171AD69A007E643C /* colorblind0.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C21A151171AD69A007E643C /* colorblind0.png */; };
@@ -311,8 +311,8 @@
 		9C21A145171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChipmunkDebugDrawDoubleDots.cpp; sourceTree = "<group>"; };
 		9C21A146171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChipmunkDebugDrawDoubleDots.h; sourceTree = "<group>"; };
 		9C21A148171A0E2F007E643C /* ShaderProgram.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShaderProgram.mm; sourceTree = "<group>"; };
-		9C21A14A171A5D1F007E643C /* BoardRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoardRenderer.cpp; sourceTree = "<group>"; };
-		9C21A14B171A5D1F007E643C /* BoardRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoardRenderer.h; sourceTree = "<group>"; };
+		9C21A14A171A5D1F007E643C /* GameRenderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameRenderer.cpp; sourceTree = "<group>"; };
+		9C21A14B171A5D1F007E643C /* GameRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameRenderer.h; sourceTree = "<group>"; };
 		9C21A14D171A6ED5007E643C /* Board.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Board.cpp; sourceTree = "<group>"; };
 		9C21A14F171A740C007E643C /* Dots.shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Dots.shader.h; sourceTree = "<group>"; };
 		9C21A151171AD69A007E643C /* colorblind0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = colorblind0.png; sourceTree = "<group>"; };
@@ -345,6 +345,7 @@
 		9CCAACDF1703FEB700C495CA /* BitBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitBoard.h; sourceTree = "<group>"; };
 		9CCAACE11704094400C495CA /* Board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		9CCAACE217044DA700C495CA /* BitBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitBoard.cpp; sourceTree = "<group>"; };
+		9CF88E04173C45AD003C3B42 /* Texture2D.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Texture2D.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -433,8 +434,8 @@
 				9C21A143171A0B25007E643C /* ChipmunkDebugDraw.mm */,
 				9C21A145171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.cpp */,
 				9C21A146171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.h */,
-				9C21A14A171A5D1F007E643C /* BoardRenderer.cpp */,
-				9C21A14B171A5D1F007E643C /* BoardRenderer.h */,
+				9C21A14A171A5D1F007E643C /* GameRenderer.cpp */,
+				9C21A14B171A5D1F007E643C /* GameRenderer.h */,
 				9CABC7F8172AB7F40024D31C /* SettingsController.h */,
 				9CABC7F9172AB7F40024D31C /* SettingsController.mm */,
 			);
@@ -693,6 +694,7 @@
 				9C03077416E36B100087F0FB /* PVRTexture.mm */,
 				9C03077516E36B100087F0FB /* Texture2D.h */,
 				9C03077616E36B100087F0FB /* Texture2D.mm */,
+				9CF88E04173C45AD003C3B42 /* Texture2D.hpp */,
 				9C03077716E36B100087F0FB /* TextureMgr.h */,
 				9C03077816E36B100087F0FB /* TextureMgr.mm */,
 				9C03077916E36B100087F0FB /* UIImage+ExtraFormats.h */,
@@ -957,7 +959,7 @@
 				9C21A144171A0B26007E643C /* ChipmunkDebugDraw.mm in Sources */,
 				9C21A147171A0B5C007E643C /* ChipmunkDebugDrawDoubleDots.cpp in Sources */,
 				9C21A149171A0E2F007E643C /* ShaderProgram.mm in Sources */,
-				9C21A14C171A5D20007E643C /* BoardRenderer.cpp in Sources */,
+				9C21A14C171A5D20007E643C /* GameRenderer.cpp in Sources */,
 				9C21A14E171A6ED5007E643C /* Board.cpp in Sources */,
 				9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */,
 			);
