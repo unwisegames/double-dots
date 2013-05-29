@@ -34,9 +34,9 @@ static           float gLogScaleLimit   = std::log(gScaleLimit);
 static std::array<Color, 5> selectionColors = {{
     {1  , 0.7, 0.1},
     {0.5, 0.7, 1  },
-    {0.8, 0.4, 1  },
+    {0.9, 0.6, 1  },
     {0.5, 0.8, 0.3},
-    {0.8, 0.3, 0.2},
+    {1  , 0.5, 0.5},
 }};
 
 static brac::vec2 blue   {0.25, 0.25};
