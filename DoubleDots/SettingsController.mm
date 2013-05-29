@@ -39,6 +39,7 @@
 }
 
 - (IBAction)tappedColorBlind:(UIButton *)sender {
+    _colorBlindButton.selected ^= 1;
     _toggleColorBlind();
 }
 
