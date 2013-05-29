@@ -108,6 +108,7 @@
 		9C4FF2FB171EC9BE002CB60F /* Board.shader.h in Resources */ = {isa = PBXBuildFile; fileRef = 9C4FF2FA171EB64A002CB60F /* Board.shader.h */; };
 		9C656B471736048F00251508 /* red-dot.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C656B461736048F00251508 /* red-dot.png */; };
 		9C90732E16EDD05B00BC8A1B /* ShapeCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */; };
+		9C9EA593175608C2002F12E6 /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C9EA592175608C2002F12E6 /* Crashlytics.framework */; };
 		9CABC7F7172AB2BE0024D31C /* gear.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7F6172AB2BE0024D31C /* gear.png */; };
 		9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9CABC7F9172AB7F40024D31C /* SettingsController.mm */; };
 		9CABC801172B2FCD0024D31C /* button-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC7FD172B2FCD0024D31C /* button-blue.png */; };
@@ -332,6 +333,7 @@
 		9C656B461736048F00251508 /* red-dot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "red-dot.png"; sourceTree = "<group>"; };
 		9C90732C16EDD05B00BC8A1B /* ShapeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShapeCell.h; sourceTree = "<group>"; };
 		9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShapeCell.mm; sourceTree = "<group>"; };
+		9C9EA592175608C2002F12E6 /* Crashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crashlytics.framework; sourceTree = "<group>"; };
 		9CABC7F6172AB2BE0024D31C /* gear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gear.png; sourceTree = "<group>"; };
 		9CABC7F8172AB7F40024D31C /* SettingsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsController.h; sourceTree = "<group>"; };
 		9CABC7F9172AB7F40024D31C /* SettingsController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SettingsController.mm; sourceTree = "<group>"; };
@@ -363,6 +365,7 @@
 				9C0307C716E36C4A0087F0FB /* QuartzCore.framework in Frameworks */,
 				9C0307C616E36C440087F0FB /* libsqlite3.dylib in Frameworks */,
 				9C21A13E17181B31007E643C /* libChipmunk-iPhone.a in Frameworks */,
+				9C9EA593175608C2002F12E6 /* Crashlytics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,6 +406,7 @@
 				9C0306C716E36AA20087F0FB /* OpenGLES.framework */,
 				9C0307C416E36C330087F0FB /* AudioToolbox.framework */,
 				9C0307C216E36C2D0087F0FB /* QuartzCore.framework */,
+				9C9EA592175608C2002F12E6 /* Crashlytics.framework */,
 				9C0307C016E36C260087F0FB /* libsqlite3.dylib */,
 			);
 			name = Frameworks;
@@ -812,6 +816,7 @@
 				9C0306B916E36AA20087F0FB /* Frameworks */,
 				9C0306BA16E36AA20087F0FB /* Resources */,
 				9C9EA5831754DE55002F12E6 /* ShellScript */,
+				9C9EA59117560887002F12E6 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -900,6 +905,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "exec \"$PROJECT_DIR/bricabrac/Build/git-id-to-build-version.sh\"";
+		};
+		9C9EA59117560887002F12E6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "./Crashlytics.framework/run ffacdc4ce1f023bbafd5ec29ae1c9d135d3f463a";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1083,6 +1101,10 @@
 		9C0306EB16E36AA20087F0FB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "DoubleDots/DoubleDots-Prefix.pch";
 				INFOPLIST_FILE = "DoubleDots/DoubleDots-Info.plist";
@@ -1098,6 +1120,10 @@
 		9C0306EC16E36AA20087F0FB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "DoubleDots/DoubleDots-Prefix.pch";
 				INFOPLIST_FILE = "DoubleDots/DoubleDots-Info.plist";
@@ -1145,6 +1171,10 @@
 		9C9EA5851754E716002F12E6 /* Archive */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "DoubleDots/DoubleDots-Prefix.pch";
 				INFOPLIST_FILE = "DoubleDots/DoubleDots-Info.plist";
