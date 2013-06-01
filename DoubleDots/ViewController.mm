@@ -8,6 +8,8 @@
 #import "UIAlertView+Blocks.h"
 #import "SettingsController.h"
 
+#import <Crashlytics/Crashlytics.h>
+
 #import <QuartzCore/QuartzCore.h>
 
 static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
@@ -65,9 +67,11 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
                                          /* else */    std::make_shared<GameState>(5, 16, 16, seed) ));
 
     // Report game seed.
+    NSString * seedStr = [NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)];
     for (auto state : std::initializer_list<UIControlState>{UIControlStateNormal, UIControlStateHighlighted})
-        [_seed setTitle:[NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)]
-               forState:state];
+        [_seed setTitle:seedStr forState:state];
+
+    [Crashlytics setObjectValue:seedStr forKey:@"game-seed"];
 
     _matcheses->clear();
 
