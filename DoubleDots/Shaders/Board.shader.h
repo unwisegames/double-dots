@@ -7,6 +7,7 @@ BRICABRAC_ATTRIBUTE(vec2, texcoord  )
 BRICABRAC_ATTRIBUTE(vec2, lightcoord)
 
 BRICABRAC_UNIFORM(mat4, pmvMat)
+BRICABRAC_UNIFORM(mat4, texMat)
 
 #ifndef BRICABRAC_HOSTED
 
@@ -14,7 +15,7 @@ varying vec2 v_texcoord;
 varying vec2 v_lightcoord;
 
 void main() {
-    v_texcoord   = texcoord  ;
+    v_texcoord   = (texMat * vec4(texcoord, 0, 1)).xy;
     v_lightcoord = lightcoord;
 
     gl_Position = pmvMat*vec4(position, 0.0, 1.0);

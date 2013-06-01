@@ -497,6 +497,7 @@ void GameRenderer::render() {
 
     if (auto board = (*m->board)()) {
         board.vs.pmvMat = m->pmvMatrix;
+        board.vs.texMat = mat4::rotate(0.5, {0, 0, 1});
         board.fs.color = {1, 1, 1, 1};
 
         m->surface.activateAndBind();
