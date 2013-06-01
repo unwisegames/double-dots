@@ -118,6 +118,7 @@
 		9CABC806172B33AD0024D31C /* settings-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC805172B33AD0024D31C /* settings-background.png */; };
 		9CCAACDD1703D63600C495CA /* quat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACDB1703D63600C495CA /* quat.cpp */; };
 		9CCAACE317044DA700C495CA /* BitBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACE217044DA700C495CA /* BitBoard.cpp */; };
+		9CF88E07173CD75C003C3B42 /* IncompleteController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9CF88E06173CD75C003C3B42 /* IncompleteController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -348,6 +349,8 @@
 		9CCAACE11704094400C495CA /* Board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		9CCAACE217044DA700C495CA /* BitBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitBoard.cpp; sourceTree = "<group>"; };
 		9CF88E04173C45AD003C3B42 /* Texture2D.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Texture2D.hpp; sourceTree = "<group>"; };
+		9CF88E05173CD75C003C3B42 /* IncompleteController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncompleteController.h; sourceTree = "<group>"; };
+		9CF88E06173CD75C003C3B42 /* IncompleteController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = IncompleteController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -442,6 +445,8 @@
 				9C21A14B171A5D1F007E643C /* GameRenderer.h */,
 				9CABC7F8172AB7F40024D31C /* SettingsController.h */,
 				9CABC7F9172AB7F40024D31C /* SettingsController.mm */,
+				9CF88E05173CD75C003C3B42 /* IncompleteController.h */,
+				9CF88E06173CD75C003C3B42 /* IncompleteController.mm */,
 			);
 			path = DoubleDots;
 			sourceTree = "<group>";
@@ -997,6 +1002,7 @@
 				9C21A14C171A5D20007E643C /* GameRenderer.cpp in Sources */,
 				9C21A14E171A6ED5007E643C /* Board.cpp in Sources */,
 				9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */,
+				9CF88E07173CD75C003C3B42 /* IncompleteController.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

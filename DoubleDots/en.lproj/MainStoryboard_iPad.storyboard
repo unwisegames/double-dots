@@ -330,67 +330,44 @@
             </objects>
             <point key="canvasLocation" x="1387" y="229"/>
         </scene>
-        <!--View Controller-->
+        <!--Incomplete Controller-->
         <scene sceneID="4NO-V9-NAj">
             <objects>
-                <viewController restorationIdentifier="incomplete" storyboardIdentifier="incomplete" id="zjq-EI-ZL6" sceneMemberID="viewController">
+                <viewController restorationIdentifier="incomplete" storyboardIdentifier="incomplete" id="zjq-EI-ZL6" customClass="IncompleteController" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="asy-is-jBP">
                         <rect key="frame" x="0.0" y="0.0" width="512" height="192"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" usesAttributedText="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L6S-9w-UgD">
-                                <color key="backgroundColor" white="0.0" alpha="0.69999999999999996" colorSpace="calibratedWhite"/>
-                                <attributedString key="attributedText">
-                                    <fragment>
-                                        <string key="content" base64-UTF8="YES">
-Cg
-</string>
-                                        <attributes>
-                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
-                                            <font key="NSFont" size="14" name="Helvetica"/>
-                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
-                                        </attributes>
-                                    </fragment>
-                                    <fragment>
-                                        <string key="content">You missed some!
-</string>
-                                        <attributes>
-                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
-                                            <font key="NSFont" size="36" name="AmericanTypewriter-Bold"/>
-                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
-                                        </attributes>
-                                    </fragment>
-                                    <fragment>
-                                        <string key="content" base64-UTF8="YES">
-Cg
-</string>
-                                        <attributes>
-                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
-                                            <font key="NSFont" size="14" name="Helvetica"/>
-                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
-                                        </attributes>
-                                    </fragment>
-                                    <fragment content="You've found some, but not all of the matches for that pattern.">
-                                        <attributes>
-                                            <color key="NSColor" red="0.84141474184782605" green="0.84141474184782605" blue="0.84141474184782605" alpha="1" colorSpace="calibratedRGB"/>
-                                            <font key="NSFont" size="36" name="GillSans-Light"/>
-                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
-                                        </attributes>
-                                    </fragment>
-                                </attributedString>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="6av-VO-96u">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="213" id="G4p-gN-HP0"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Find more…" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2qC-ic-PUv">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="75" id="4BG-pa-sSI"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="AmericanTypewriter-Bold" family="American Typewriter" pointSize="36"/>
+                                <color key="textColor" red="0.92512313179347827" green="0.92512313179347827" blue="0.92512313179347827" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.70000000000000007" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="L6S-9w-UgD" firstAttribute="bottom" secondItem="asy-is-jBP" secondAttribute="bottom" type="default" id="bBp-iw-lgq"/>
-                            <constraint firstItem="L6S-9w-UgD" firstAttribute="trailing" secondItem="asy-is-jBP" secondAttribute="trailing" type="default" id="gOI-LJ-6JN"/>
-                            <constraint firstItem="L6S-9w-UgD" firstAttribute="top" secondItem="asy-is-jBP" secondAttribute="top" type="default" id="wgb-TQ-OoL"/>
-                            <constraint firstItem="L6S-9w-UgD" firstAttribute="leading" secondItem="asy-is-jBP" secondAttribute="leading" type="default" id="zQA-qx-GEj"/>
+                            <constraint firstItem="2qC-ic-PUv" firstAttribute="top" secondItem="asy-is-jBP" secondAttribute="top" constant="58" id="0f7-j3-2Cj"/>
+                            <constraint firstItem="6av-VO-96u" firstAttribute="top" secondItem="asy-is-jBP" secondAttribute="top" constant="20" symbolic="YES" type="default" id="2n6-7k-VCC"/>
+                            <constraint firstItem="6av-VO-96u" firstAttribute="leading" secondItem="2qC-ic-PUv" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="A21-sw-1WY"/>
+                            <constraint firstAttribute="bottom" secondItem="6av-VO-96u" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="GJg-Rj-baI"/>
+                            <constraint firstItem="2qC-ic-PUv" firstAttribute="leading" secondItem="asy-is-jBP" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="Y30-AP-1du"/>
+                            <constraint firstAttribute="trailing" secondItem="6av-VO-96u" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="deY-NA-Env"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="shape" destination="6av-VO-96u" id="BsT-KC-QTu"/>
+                        <outlet property="view" destination="asy-is-jBP" id="QWW-lE-dRF"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="H62-Pz-117" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -409,11 +386,22 @@ Cg
         <image name="settings-background.png" width="500" height="750"/>
     </resources>
     <classes>
+        <class className="IncompleteController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/IncompleteController.h"/>
+            <relationships>
+                <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
+            </relationships>
+        </class>
         <class className="NSLayoutConstraint" superclassName="NSObject">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/NSLayoutConstraint.h"/>
         </class>
         <class className="RenderController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
+            <relationships>
+                <relationship kind="action" name="panGestured:" candidateClass="UIPanGestureRecognizer"/>
+                <relationship kind="action" name="pinchGestured:" candidateClass="UIPinchGestureRecognizer"/>
+                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
+            </relationships>
         </class>
         <class className="SettingsController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/SettingsController.h"/>

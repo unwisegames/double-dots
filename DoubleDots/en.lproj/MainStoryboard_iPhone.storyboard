@@ -112,7 +112,6 @@
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
-                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
                     <connections>
                         <outlet property="gear" destination="gJq-U0-Gd4" id="dBZ-vl-RzQ"/>
                         <outlet property="seed" destination="6q1-oL-Ugm" id="IGY-BH-Dzn"/>
@@ -155,7 +154,7 @@
             <objects>
                 <viewController id="aa7-bh-KqL" customClass="SettingsController" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ZYW-kO-CSf">
-                        <rect key="frame" x="0.0" y="20" width="568" height="300"/>
+                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="settings-background.png" translatesAutoresizingMaskIntoConstraints="NO" id="VDZ-0D-04z"/>
@@ -284,16 +283,15 @@
                         <color key="backgroundColor" white="0.0" alpha="0.75" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="centerX" secondItem="4bT-0Q-142" secondAttribute="centerX" type="user" id="2dE-gL-Juy"/>
+                            <constraint firstItem="4bT-0Q-142" firstAttribute="top" secondItem="ZYW-kO-CSf" secondAttribute="top" constant="105" id="50T-cI-uaG"/>
                             <constraint firstItem="8oj-7r-8Fa" firstAttribute="top" secondItem="ZYW-kO-CSf" secondAttribute="top" constant="20" symbolic="YES" type="default" id="7h3-lT-mu7"/>
                             <constraint firstAttribute="trailing" secondItem="4Zd-qf-WnI" secondAttribute="trailing" constant="8" id="A8C-Kk-Zh0"/>
                             <constraint firstItem="VDZ-0D-04z" firstAttribute="bottom" secondItem="ZYW-kO-CSf" secondAttribute="bottom" type="default" id="CHo-Ip-u6k"/>
                             <constraint firstAttribute="bottom" secondItem="rYb-bR-7HC" secondAttribute="bottom" constant="32" id="FGg-6V-pmF"/>
                             <constraint firstItem="4Zd-qf-WnI" firstAttribute="top" secondItem="ZYW-kO-CSf" secondAttribute="top" constant="7" id="GKO-eB-Lyz"/>
-                            <constraint firstItem="4bT-0Q-142" firstAttribute="top" secondItem="Mwb-jj-tIK" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="NYw-73-d9c"/>
                             <constraint firstAttribute="bottom" secondItem="h4l-yR-ZJn" secondAttribute="bottom" constant="20" symbolic="YES" type="default" id="ObP-nd-W5F"/>
                             <constraint firstItem="h4l-yR-ZJn" firstAttribute="leading" secondItem="ZYW-kO-CSf" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="T2y-Ze-1sI"/>
                             <constraint firstItem="8oj-7r-8Fa" firstAttribute="leading" secondItem="ZYW-kO-CSf" secondAttribute="leading" constant="20" symbolic="YES" type="default" id="Vsj-UW-NMQ"/>
-                            <constraint firstItem="WtJ-mm-xai" firstAttribute="top" secondItem="4bT-0Q-142" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="Vzg-On-DII"/>
                             <constraint firstAttribute="centerX" secondItem="Mwb-jj-tIK" secondAttribute="centerX" type="user" id="X3u-uP-Yhs"/>
                             <constraint firstItem="VDZ-0D-04z" firstAttribute="trailing" secondItem="ZYW-kO-CSf" secondAttribute="trailing" type="default" id="bRd-vX-o8b"/>
                             <constraint firstItem="VDZ-0D-04z" firstAttribute="leading" secondItem="ZYW-kO-CSf" secondAttribute="leading" type="default" id="bTt-TW-vmo"/>
@@ -303,11 +301,12 @@
                             <constraint firstItem="Mwb-jj-tIK" firstAttribute="top" secondItem="8oj-7r-8Fa" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="o4L-8P-O2i"/>
                             <constraint firstAttribute="trailing" secondItem="8oj-7r-8Fa" secondAttribute="trailing" constant="20" symbolic="YES" type="default" id="pQB-qb-x7j"/>
                             <constraint firstAttribute="centerX" secondItem="WtJ-mm-xai" secondAttribute="centerX" type="user" id="qRc-Ha-B0v"/>
+                            <constraint firstAttribute="bottom" secondItem="WtJ-mm-xai" secondAttribute="bottom" constant="115" id="rge-ER-G5w"/>
                             <constraint firstItem="VDZ-0D-04z" firstAttribute="top" secondItem="ZYW-kO-CSf" secondAttribute="top" type="default" id="t7c-e3-Ths"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
-                    <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
+                    <nil key="simulatedStatusBarMetrics"/>
                     <connections>
                         <outlet property="colorBlindButton" destination="Ndd-qC-QKe" id="aPV-3y-feb"/>
                     </connections>
