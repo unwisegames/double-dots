@@ -118,6 +118,7 @@
 		9CABC806172B33AD0024D31C /* settings-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 9CABC805172B33AD0024D31C /* settings-background.png */; };
 		9CCAACDD1703D63600C495CA /* quat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACDB1703D63600C495CA /* quat.cpp */; };
 		9CCAACE317044DA700C495CA /* BitBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CCAACE217044DA700C495CA /* BitBoard.cpp */; };
+		9CE0EB90175BEB8A0059B408 /* DoubleDotsDatabase.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9CE0EB8F175BEB8A0059B408 /* DoubleDotsDatabase.mm */; };
 		9CF88E07173CD75C003C3B42 /* IncompleteController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9CF88E06173CD75C003C3B42 /* IncompleteController.mm */; };
 /* End PBXBuildFile section */
 
@@ -348,6 +349,8 @@
 		9CCAACDF1703FEB700C495CA /* BitBoard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitBoard.h; sourceTree = "<group>"; };
 		9CCAACE11704094400C495CA /* Board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Board.h; sourceTree = "<group>"; };
 		9CCAACE217044DA700C495CA /* BitBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitBoard.cpp; sourceTree = "<group>"; };
+		9CE0EB8E175BEB8A0059B408 /* DoubleDotsDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DoubleDotsDatabase.h; sourceTree = "<group>"; };
+		9CE0EB8F175BEB8A0059B408 /* DoubleDotsDatabase.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DoubleDotsDatabase.mm; sourceTree = "<group>"; };
 		9CF88E04173C45AD003C3B42 /* Texture2D.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Texture2D.hpp; sourceTree = "<group>"; };
 		9CF88E05173CD75C003C3B42 /* IncompleteController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IncompleteController.h; sourceTree = "<group>"; };
 		9CF88E06173CD75C003C3B42 /* IncompleteController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = IncompleteController.mm; sourceTree = "<group>"; };
@@ -447,6 +450,8 @@
 				9CABC7F9172AB7F40024D31C /* SettingsController.mm */,
 				9CF88E05173CD75C003C3B42 /* IncompleteController.h */,
 				9CF88E06173CD75C003C3B42 /* IncompleteController.mm */,
+				9CE0EB8E175BEB8A0059B408 /* DoubleDotsDatabase.h */,
+				9CE0EB8F175BEB8A0059B408 /* DoubleDotsDatabase.mm */,
 			);
 			path = DoubleDots;
 			sourceTree = "<group>";
@@ -1003,6 +1008,7 @@
 				9C21A14E171A6ED5007E643C /* Board.cpp in Sources */,
 				9CABC7FA172AB7F40024D31C /* SettingsController.mm in Sources */,
 				9CF88E07173CD75C003C3B42 /* IncompleteController.mm in Sources */,
+				9CE0EB90175BEB8A0059B408 /* DoubleDotsDatabase.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
