@@ -3,13 +3,13 @@
 #ifndef INCLUDED__DoubleDots__BoardRenderer_h
 #define INCLUDED__DoubleDots__BoardRenderer_h
 
-#include "GameState.h"
 #include "Color.h"
 #include "vec2.h"
 
 #include <memory>
 #include <functional>
 
+class GameView;
 struct ShapeMatches;
 
 class GameRenderer {
@@ -20,14 +20,14 @@ public:
 
     static std::array<std::array<brac::vec2, 5>, 2> dots;
 
-    GameRenderer(std::shared_ptr<GameState> const & game, size_t colorSet);
+    GameRenderer(std::shared_ptr<GameView> const & game, size_t colorSet);
 
-    void setGame(std::shared_ptr<GameState> const & game);
+    void setGameView(std::shared_ptr<GameView> const & game);
     void setColorSet(size_t colorSet);
     void setBackgroundColor(brac::Color const & c);
     void setViewAspectRatio(float aspect);
 
-    std::shared_ptr<GameState> const & game() const;
+    std::shared_ptr<GameView> const & gameView() const;
     size_t colorSet() const;
 
     void onColorSetChanged  (std::function<void(size_t)> const & f);

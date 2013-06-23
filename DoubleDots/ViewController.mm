@@ -3,7 +3,7 @@
 #import "ViewController.h"
 #import "ShapeCell.h"
 #import "Board.h"
-#import "GameState.h"
+#import "GameView.h"
 #import "LruCache.h"
 #import "UIAlertView+Blocks.h"
 #import "SettingsController.h"
@@ -23,7 +23,8 @@ static constexpr float gGearHz = 0.2;
 typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> ShapeImageCache;
 
 @interface ViewController () {
-    int _level;
+    int _width, _height, _nColors;
+    bool _timed;
     std::shared_ptr<GameState> _game;
     std::shared_ptr<GameState::ShapeMatcheses> _matcheses;
 
@@ -147,8 +148,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (void)restartGame:(size_t *)seed {
-    _renderer.renderer->setGame(_game = (_level == 1 ? std::make_shared<GameState>(4, 10, 10, seed) :
-                                         /* else */    std::make_shared<GameState>(5, 16, 16, seed) ));
+    _renderer.renderer->setGameView(std::make_shared<GameView>(_game = std::make_shared<GameState>(_nColors, _width, _height, seed)));
 
     // Report game seed.
     NSString * seedStr = [NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)];
@@ -206,8 +206,23 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
     [self.view sendSubviewToBack:_renderer.view];
     [_renderer didMoveToParentViewController:self];
 
-    _level = [[NSUserDefaults standardUserDefaults] integerForKey:@"GameLevel"];
-    if (!_level) _level = 2;
+
+    auto ud = [NSUserDefaults standardUserDefaults];
+    if ((_width  = [ud integerForKey:@"GameWidth" ])) {
+        _height  = [ud integerForKey:@"GameHeight"];
+        _nColors = [ud integerForKey:@"GameColors"];
+        _timed   = [ud boolForKey   :@"GameTimed" ];
+    } else if (iPad) {
+        _width   = 16;
+        _height  = 16;
+        _nColors =  5;
+        _timed   = false;
+    } else {
+        _width   = 12;
+        _height  =  8;
+        _nColors =  5;
+        _timed   = false;
+    }
     [self restartGame:nullptr];
 }
 
@@ -356,11 +371,17 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
             _renderer.paused = NO;
         };
 
-        settings.newGame = [=](int level) {
-            _level = level;
+        settings.newGame = [=](int w, int h, int nColors, bool timed) {
+            _width = w;
+            _height = h;
+            _nColors = nColors;
+            _timed = timed;
 
             auto ud = [NSUserDefaults standardUserDefaults];
-            [ud setInteger:_level forKey:@"GameLevel"];
+            [ud setInteger:_width   forKey:@"GameWidth"];
+            [ud setInteger:_height  forKey:@"GameHeight"];
+            [ud setInteger:_nColors forKey:@"GameNumColors"];
+            [ud setBool:_timed      forKey:@"GameTimed"];
             [ud synchronize];
 
             [self restartGame:nullptr];

@@ -1,10 +1,4 @@
-//
-//  SettingsController.m
-//  DoubleDots
-//
-//  Created by Marcelo Cantos on 26/04/13.
-//  Copyright (c) 2013 Marcelo Cantos. All rights reserved.
-//
+//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "SettingsController.h"
 
@@ -35,7 +29,13 @@
 }
 
 - (IBAction)tappedNewGame:(UIButton *)sender {
-    _newGame(sender.tag);
+    int tag = sender.tag;
+    int colors  = tag %  10; tag /=  10;
+    int y       = tag % 100; tag /= 100;
+    int x       = tag % 100; tag /= 100;
+    int timed   = tag %  10; tag /=  10;
+    assert(!tag);
+    _newGame(x, y, colors, timed);
 }
 
 - (IBAction)tappedColorBlind:(UIButton *)sender {

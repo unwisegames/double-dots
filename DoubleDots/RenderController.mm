@@ -2,7 +2,7 @@
 
 #import "RenderController.h"
 #import "ChipmunkDebugDrawDoubleDots.h"
-#import "GameState.h"
+#import "GameView.h"
 
 #include "vec2.h"
 
@@ -120,28 +120,28 @@ static char const g_TouchMovedKey = '\0';
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    _renderer->game()->touchesBegan([self touchPositions:touches]);
+    _renderer->gameView()->game()->touchesBegan([self touchPositions:touches]);
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     for (UITouch * touch in touches)
         objc_setAssociatedObject(touch, &g_TouchMovedKey, @"", OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    _renderer->game()->touchesMoved([self touchPositions:touches]);
+    _renderer->gameView()->game()->touchesMoved([self touchPositions:touches]);
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    _renderer->game()->touchesEnded([self touchPositions:touches]);
+    _renderer->gameView()->game()->touchesEnded([self touchPositions:touches]);
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    _renderer->game()->touchesCancelled([self touchPositions:touches]);
+    _renderer->gameView()->game()->touchesCancelled([self touchPositions:touches]);
 }
 
 #pragma mark - Actions
 
 - (IBAction)tapGestured:(UITapGestureRecognizer *)sender {
     if (auto pos = [self touchPosition:[sender locationInView:self.view]])
-        _renderer->game()->tapped(*pos);
+        _renderer->gameView()->game()->tapped(*pos);
 }
 
 - (IBAction)panGestured:(UIPanGestureRecognizer *)sender {

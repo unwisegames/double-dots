@@ -1,7 +1,7 @@
 //  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #include "GameRenderer.h"
-#include "GameState.h"
+#include "GameView.h"
 
 #include "MathUtil.h"
 #include "Texture2D.hpp"
@@ -54,7 +54,7 @@ struct RgbaPixel {
 };
 
 struct GameRenderer::Members {
-    std::shared_ptr<GameState> game;
+    std::shared_ptr<GameView> gameView;
     size_t colorSet;
 
     std::function<void(size_t)> colorSetChanged;
@@ -84,7 +84,7 @@ struct GameRenderer::Members {
     float hintIntensity = 0;
     std::array<BorderVertexBuffer, 2> vboHints;
 
-    Members(std::shared_ptr<GameState> const & game, size_t colorSet) : game(game), colorSet(colorSet) { }
+    Members(std::shared_ptr<GameView> const & game, size_t colorSet) : gameView(game), colorSet(colorSet) { }
 
     std::vector<BorderVertex> prepareSelectionBorder(brac::BitBoard const & bb) {
         std::vector<BorderVertex> border;
@@ -158,8 +158,8 @@ struct GameRenderer::Members {
     }
 
     void updateDots() {
-        if (game) {
-            auto const & board = game->board();
+        if (gameView) {
+            auto const & board = gameView->game()->board();
             int nCells = nBoardRows * nBoardCols;
             std::vector<DotsVertex> dotsVertsData; dotsVertsData.reserve(4 * nCells);
             auto vi = back_inserter(dotsVertsData);
@@ -196,14 +196,16 @@ std::array<std::array<brac::vec2, 5>, 2> GameRenderer::dots = {{
     {{red, green, dkblue, purple, white }},
 }};
 
-GameRenderer::GameRenderer(std::shared_ptr<GameState> const & game, size_t colorSet)
-: m(std::make_shared<Members>(game, colorSet))
+GameRenderer::GameRenderer(std::shared_ptr<GameView> const & gameView, size_t colorSet)
+: m(std::make_shared<Members>(gameView, colorSet))
 {
 
 }
 
-void GameRenderer::setGame(const std::shared_ptr<GameState> &game) {
-    m->game = game;
+void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
+    m->gameView = gameView;
+
+    auto game = gameView->game();
 
     float scale = game->height() / 16.0;
 
@@ -212,8 +214,8 @@ void GameRenderer::setGame(const std::shared_ptr<GameState> &game) {
     m->edgeThickness = gEdgeThickness * scale;
     m->viewHeight = m->nBoardRows + 2 * m->edgeThickness;
 
-    m->game->onSelectionChanged([=]{
-        auto const & sels = m->game->sels();
+    game->onSelectionChanged([=]{
+        auto const & sels = game->sels();
 
         // Remove deselected borders.
         for (auto i = begin(m->borders); i != end(m->borders);) {
@@ -239,8 +241,8 @@ void GameRenderer::setGame(const std::shared_ptr<GameState> &game) {
         m->refreshScene();
     });
 
-    m->game->onBoardChanged([=]{
-        auto mask = m->game->board().computeMask();
+    game->onBoardChanged([=]{
+        auto mask = game->board().computeMask();
         for (size_t y = 0; y < 16; ++y)
             for (size_t x = 0; x < 16; ++x) {
                 GLubyte v = mask.isSet(x, y) * 0xff;
@@ -251,10 +253,9 @@ void GameRenderer::setGame(const std::shared_ptr<GameState> &game) {
         m->refreshScene();
     });
 
-    m->game->onCancelTapGesture([=]{
+    game->onCancelTapGesture([=]{
         m->cancelTapGesture();
     });
-
 
     float s = 2.7 / m->nBoardCols;
 
@@ -377,8 +378,8 @@ void GameRenderer::setViewAspectRatio(float aspect) {
     m->aspect = aspect;
 }
 
-std::shared_ptr<GameState> const &  GameRenderer::game      () const { return m->game               ; }
-size_t                              GameRenderer::colorSet  () const { return m->colorSet           ; }
+std::shared_ptr<GameView> const &   GameRenderer::gameView  () const { return m->gameView   ; }
+size_t                              GameRenderer::colorSet  () const { return m->colorSet   ; }
 
 void GameRenderer::onColorSetChanged(std::function<void(size_t)> const & f) {
     m->colorSetChanged = f;
@@ -472,7 +473,7 @@ void GameRenderer::setupGL() {
 }
 
 void GameRenderer::update(float dt) {
-    if (!m->game) return;
+    if (!m->gameView) return;
 
     auto proj = mat4::ortho(0, m->viewHeight * m->aspect, 0, m->viewHeight, -5, 5);
     //proj *= mat4::scale(0.2) * mat4::translate({40, 40, 0});
@@ -491,7 +492,7 @@ void GameRenderer::update(float dt) {
 }
 
 void GameRenderer::render() {
-    if (!m->game) return;
+    if (!m->gameView) return;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -516,7 +517,7 @@ void GameRenderer::render() {
     if (auto border = (*m->border)()) {
         border.vs.pmvMat = m->pmvMatrix;
 
-        for (auto const & sel : m->game->sels()) {
+        for (auto const & sel : m->gameView->game()->sels()) {
             auto b = m->borders.find(sel.first);
             if (b != m->borders.end() && b->second) {
                 border.fs.color = vec4{(vec3)selectionColors[sel.first % selectionColors.size()] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
