@@ -136,16 +136,20 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
 
 void GameState::touchesEnded(std::vector<Touch> const & touches) {
     for (auto const & t : touches) {
-        auto sel = findSelection(t);
-        if (sel != end(sels_)) {
-            if (sel->second.is_selected.count() < 3) {
-                indices_.insert(sel->first);
-                sels_.erase(sel);
-                selectionChanged_();
-            } else {
-                sel->second.key = nullptr;
-                cancelTapGesture_();
+        if (t.hasMoved) {
+            auto sel = findSelection(t);
+            if (sel != end(sels_)) {
+                if (sel->second.is_selected.count() < 3) {
+                    indices_.insert(sel->first);
+                    sels_.erase(sel);
+                    selectionChanged_();
+                } else {
+                    sel->second.key = nullptr;
+                    cancelTapGesture_();
+                }
             }
+        } else {
+            tapped(t.p);
         }
     }
 }

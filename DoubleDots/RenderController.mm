@@ -6,9 +6,13 @@
 
 #include "vec2.h"
 
+#import <objc/runtime.h>
+
 using namespace brac;
 
 static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+
+static char const g_TouchMovedKey = '\0';
 
 @interface RenderController () {
     EAGLContext *_context;
@@ -111,7 +115,7 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
     std::vector<GameState::Touch> result; result.reserve(touches.count);
     for (UITouch * touch in touches)
         if (auto p = [self touchPosition:[touch locationInView:self.view]])
-            result.push_back(GameState::Touch{(__bridge void const *)touch, *p});
+            result.push_back(GameState::Touch{(__bridge void const *)touch, *p, !!objc_getAssociatedObject(touch, &g_TouchMovedKey)});
     return result;
 }
 
@@ -120,6 +124,8 @@ static bool iPad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    for (UITouch * touch in touches)
+        objc_setAssociatedObject(touch, &g_TouchMovedKey, @"", OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     _renderer->game()->touchesMoved([self touchPositions:touches]);
 }
 

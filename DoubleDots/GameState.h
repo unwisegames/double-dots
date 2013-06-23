@@ -1,7 +1,7 @@
 //  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
-#ifndef DoubleDots_GameState_h
-#define DoubleDots_GameState_h
+#ifndef INCLUDED__GameState_h
+#define INCLUDED__GameState_h
 
 #import "BitBoard.h"
 #import "Board.h"
@@ -31,6 +31,7 @@ public:
     struct Touch {
         void const * key;
         brac::vec2 p;
+        bool hasMoved;
     };
     
     typedef std::vector<std::shared_ptr<ShapeMatches>>  ShapeMatcheses;
@@ -42,11 +43,11 @@ public:
 
     bool match(bool & incomplete);
 
-    size_t                  seed  () { return seed_     ; }
-    size_t                  width () { return width_    ; }
-    size_t                  height() { return height_   ; }
-    Board           const & board () { return board_    ; }
-    Selections      const & sels  () { return sels_     ; }
+    size_t                  seed  () const { return seed_     ; }
+    size_t                  width () const { return width_    ; }
+    size_t                  height() const { return height_   ; }
+    Board           const & board () const { return board_    ; }
+    Selections      const & sels  () const { return sels_     ; }
 
     template <typename F> void onSelectionChanged   (F f) { selectionChanged_   = f; }
     template <typename F> void onBoardChanged       (F f) { boardChanged_       = f; f(); }
@@ -80,4 +81,4 @@ private:
     }
 };
 
-#endif
+#endif // INCLUDED__GameState_h

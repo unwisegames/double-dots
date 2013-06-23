@@ -154,23 +154,14 @@
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                         <connections>
                             <outlet property="delegate" destination="lu9-LA-aI2" id="5E0-yJ-AWf"/>
-                            <outletCollection property="gestureRecognizers" destination="tag-l9-W4n" appends="YES" id="Bgl-7b-k1e"/>
                             <outletCollection property="gestureRecognizers" destination="zBc-uT-Wk4" appends="YES" id="ZPn-tZ-R0R"/>
                             <outletCollection property="gestureRecognizers" destination="B5T-gi-NmP" appends="YES" id="nSr-cR-tWf"/>
                         </connections>
                     </glkView>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
-                    <connections>
-                        <outlet property="tapGestureRecognizer" destination="tag-l9-W4n" id="yzG-dP-w0j"/>
-                    </connections>
                 </glkViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="33O-AG-b6D" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <tapGestureRecognizer id="tag-l9-W4n">
-                    <connections>
-                        <action selector="tapGestured:" destination="lu9-LA-aI2" id="1V0-du-a84"/>
-                    </connections>
-                </tapGestureRecognizer>
                 <panGestureRecognizer enabled="NO" minimumNumberOfTouches="2" id="zBc-uT-Wk4">
                     <connections>
                         <action selector="panGestured:" destination="lu9-LA-aI2" id="gxW-jT-wmW"/>
@@ -224,7 +215,7 @@
                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aZ0-C9-8qQ">
+                            <button opaque="NO" tag="10104" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aZ0-C9-8qQ">
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="Ug4-Zl-cZZ"/>
                                 </constraints>
@@ -241,7 +232,7 @@
                                     <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="Dbg-rb-0oX"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nE7-01-62a">
+                            <button opaque="NO" tag="16165" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nE7-01-62a">
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="ocZ-Gq-hdm"/>
                                 </constraints>
@@ -258,7 +249,7 @@
                                     <action selector="tappedNewGame:" destination="yCD-3R-P83" eventType="touchUpInside" id="KEm-O2-Axm"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IPQ-dG-U1c">
+                            <button opaque="NO" tag="116165" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IPQ-dG-U1c">
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="o6S-8t-Ido"/>
                                 </constraints>
@@ -390,6 +381,7 @@
             <source key="sourceIdentifier" type="project" relativePath="./Classes/IncompleteController.h"/>
             <relationships>
                 <relationship kind="outlet" name="shape" candidateClass="UIImageView"/>
+                <relationship kind="outlet" name="shapeImage" candidateClass="UIImage"/>
             </relationships>
         </class>
         <class className="NSLayoutConstraint" superclassName="NSObject">
@@ -397,11 +389,6 @@
         </class>
         <class className="RenderController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
-            <relationships>
-                <relationship kind="action" name="panGestured:" candidateClass="UIPanGestureRecognizer"/>
-                <relationship kind="action" name="pinchGestured:" candidateClass="UIPinchGestureRecognizer"/>
-                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
-            </relationships>
         </class>
         <class className="SettingsController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/SettingsController.h"/>
