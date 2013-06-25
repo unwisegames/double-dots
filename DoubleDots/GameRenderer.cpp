@@ -46,6 +46,7 @@ static brac::vec2 green  {0.5 , 0.5 };
 static brac::vec2 dkblue {0.75, 0.5 };
 static brac::vec2 white  {0.5 , 0.75};
 static brac::vec2 yellow {0.75, 0.75};
+static brac::vec2 black  {0   , 0.25};
 
 typedef std::unordered_map<size_t, BorderVertexBuffer> Borders;
 
@@ -57,14 +58,10 @@ struct GameRenderer::Members {
     std::shared_ptr<GameView> gameView;
     size_t colorSet;
 
-    std::function<void(size_t)> colorSetChanged;
-    std::function<void()>       refreshScene;
-    std::function<void()>       cancelTapGesture;
-
-    std::unique_ptr<MatteProgram    > matte    ;
-    std::unique_ptr<BorderProgram   > border   ;
-    std::unique_ptr<DotsProgram     > dots     ;
-    std::unique_ptr<BoardProgram    > board    ;
+    std::unique_ptr<MatteProgram    > matte     ;
+    std::unique_ptr<BorderProgram   > border    ;
+    std::unique_ptr<DotsProgram     > dots      ;
+    std::unique_ptr<BoardProgram    > board     ;
 
     int nBoardRows = 0, nBoardCols = 0;
     float viewHeight = 0, edgeThickness = 0, aspect = 1;
@@ -214,7 +211,7 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
     m->edgeThickness = gEdgeThickness * scale;
     m->viewHeight = m->nBoardRows + 2 * m->edgeThickness;
 
-    game->onSelectionChanged([=]{
+    game->onSelectionChanged += [=]{
         auto const & sels = game->sels();
 
         // Remove deselected borders.
@@ -238,10 +235,11 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
                     i->second.data(verts);
                 }
             }
-        m->refreshScene();
-    });
 
-    game->onBoardChanged([=]{
+        toRefreshScene();
+    };
+
+    game->onBoardChanged += [=]{
         auto mask = game->board().computeMask();
         for (size_t y = 0; y < 16; ++y)
             for (size_t x = 0; x < 16; ++x) {
@@ -250,12 +248,9 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
             }
 
         m->dotStates.paste({m->dotsData, Tex2D::PixelFormat::Rgba8888, 16, 16, {16, 16}}, {0, 0});
-        m->refreshScene();
-    });
-
-    game->onCancelTapGesture([=]{
-        m->cancelTapGesture();
-    });
+        toRefreshScene();
+    };
+    game->onBoardChanged();
 
     float s = 2.7 / m->nBoardCols;
 
@@ -367,7 +362,7 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
 void GameRenderer::setColorSet(size_t colorSet) {
     m->colorSet = colorSet;
     m->updateDots();
-    m->colorSetChanged(colorSet);
+    onColorSetChanged(colorSet);
 }
 
 void GameRenderer::setBackgroundColor(Color const & bg) {
@@ -380,18 +375,6 @@ void GameRenderer::setViewAspectRatio(float aspect) {
 
 std::shared_ptr<GameView> const &   GameRenderer::gameView  () const { return m->gameView   ; }
 size_t                              GameRenderer::colorSet  () const { return m->colorSet   ; }
-
-void GameRenderer::onColorSetChanged(std::function<void(size_t)> const & f) {
-    m->colorSetChanged = f;
-}
-
-void GameRenderer::toRefreshScene(std::function<void()> const & f) {
-    m->refreshScene = f;
-}
-
-void GameRenderer::toCancelTapGesture(std::function<void()> const & f) {
-    m->cancelTapGesture = f;
-}
 
 void GameRenderer::hint(std::shared_ptr<ShapeMatches> const & sm) {
     if (auto hinted = m->shapeMatchesToHint.lock()) {
@@ -411,7 +394,7 @@ void GameRenderer::hint(std::shared_ptr<ShapeMatches> const & sm) {
         m->hintIntensity = 1;
     }
 
-    m->refreshScene();
+    toRefreshScene();
 }
 
 brac::vec2 GameRenderer::pick(brac::vec2 const & v) const {
@@ -487,7 +470,7 @@ void GameRenderer::update(float dt) {
     if (m->hintIntensity) {
         if ((m->hintIntensity -= dt) < 0)
             m->hintIntensity = 0;
-        m->refreshScene();
+        toRefreshScene();
     }
 }
 

@@ -333,6 +333,7 @@
 		9C4FF2F7171EB452002CB60F /* edging.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = edging.png; sourceTree = "<group>"; };
 		9C4FF2FA171EB64A002CB60F /* Board.shader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Board.shader.h; sourceTree = "<group>"; };
 		9C5A93611726923F002E93F2 /* LruCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LruCache.h; sourceTree = "<group>"; };
+		9C5AF76817786FD9004A1F45 /* Signal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signal.h; sourceTree = "<group>"; };
 		9C656B461736048F00251508 /* red-dot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "red-dot.png"; sourceTree = "<group>"; };
 		9C90732C16EDD05B00BC8A1B /* ShapeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShapeCell.h; sourceTree = "<group>"; };
 		9C90732D16EDD05B00BC8A1B /* ShapeCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ShapeCell.mm; sourceTree = "<group>"; };
@@ -752,6 +753,7 @@
 		9C134D8C1712E1D900CA0676 /* Utility */ = {
 			isa = PBXGroup;
 			children = (
+				9C5AF76817786FD9004A1F45 /* Signal.h */,
 				9C134D8D1712E1D900CA0676 /* StructMeta.h */,
 				9C5A93611726923F002E93F2 /* LruCache.h */,
 			);

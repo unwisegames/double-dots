@@ -19,12 +19,11 @@ static char const g_TouchMovedKey = '\0';
     bool _updating;
     bool _needsRefresh;
 }
-@property (nonatomic, strong) IBOutlet UITapGestureRecognizer * tapGestureRecognizer;
 @end
 
 @implementation RenderController
 
-@synthesize renderer = _renderer, tapGestureRecognizer = _tapGestureRecognizer;
+@synthesize renderer = _renderer;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -41,25 +40,20 @@ static char const g_TouchMovedKey = '\0';
 
     _renderer = std::make_shared<GameRenderer>(nullptr, 0);
 
-    _renderer->onColorSetChanged([=](size_t colorSet) {
+    _renderer->onColorSetChanged += [=](size_t colorSet) {
         auto ud = [NSUserDefaults standardUserDefaults];
         [ud setInteger:colorSet forKey:@"ColorBlind"];
         [ud synchronize];
         self.paused = NO;
-    });
+    };
 
-    _renderer->toRefreshScene([=]{
+    _renderer->toRefreshScene += [=]{
         if (_updating) {
             _needsRefresh = true;
         } else {
             self.paused = NO;
         }
-    });
-
-    _renderer->toCancelTapGesture([=]{
-        _tapGestureRecognizer.enabled = NO;
-        _tapGestureRecognizer.enabled = YES;
-    });
+    };
 
     _renderer->setColorSet([[NSUserDefaults standardUserDefaults] integerForKey:@"ColorBlind"]);
 
@@ -138,11 +132,6 @@ static char const g_TouchMovedKey = '\0';
 }
 
 #pragma mark - Actions
-
-- (IBAction)tapGestured:(UITapGestureRecognizer *)sender {
-    if (auto pos = [self touchPosition:[sender locationInView:self.view]])
-        _renderer->gameView()->game()->tapped(*pos);
-}
 
 - (IBAction)panGestured:(UIPanGestureRecognizer *)sender {
     //auto p = [sender locationInView:self.view] * (_viewHeight / self.view.bounds.size.height);

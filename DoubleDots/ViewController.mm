@@ -42,7 +42,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 
 @implementation ViewController
 
-@synthesize tableView = _tableView, seed = _seed, gear = _gear, renderer = _renderer;
+@synthesize tableView = _tableView, seed = _seed, gear = _gear, renderer = _renderer, score = _score;
 
 - (void)calculatePossibles {
     auto iUpdate = ++_nUpdates;
@@ -150,6 +150,10 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 - (void)restartGame:(size_t *)seed {
     _renderer.renderer->setGameView(std::make_shared<GameView>(_game = std::make_shared<GameState>(_nColors, _width, _height, seed)));
 
+    //_game->onSelectionChanged += [self]{
+    //    _score.text = @"+++";
+    //};
+
     // Report game seed.
     NSString * seedStr = [NSString stringWithFormat:@"%04lx:%04lx", _game->seed() >> 16, _game->seed() % (1 << 16)];
     for (auto state : std::initializer_list<UIControlState>{UIControlStateNormal, UIControlStateHighlighted})
@@ -229,6 +233,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 -(void)viewDidLayoutSubviews {
     _renderer.view.frame = CGRectMake(0, 0, iPad ? 1024 : std::ceil(480), iPad ? 768 : 320);
     _renderer.paused = NO;
+    _score.text = @"";
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -429,6 +434,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
 }
 
 - (void)viewDidUnload {
+    [self setScore:nil];
     [super viewDidUnload];
 }
 @end

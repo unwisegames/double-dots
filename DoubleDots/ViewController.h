@@ -9,6 +9,7 @@
 @property (strong, nonatomic) IBOutlet UITableView      * tableView;
 @property (strong, nonatomic) IBOutlet UIButton         * seed;
 @property (strong, nonatomic) IBOutlet UIButton         * gear;
+@property (strong, nonatomic) IBOutlet UILabel          * score;
 
 - (IBAction)tappedMatch;
 - (IBAction)tappedSeed;

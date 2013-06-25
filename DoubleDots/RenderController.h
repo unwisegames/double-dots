@@ -8,6 +8,7 @@
 
 @interface RenderController : GLKViewController<GLKViewDelegate>
 
-@property (nonatomic, assign) std::shared_ptr<GameRenderer> renderer;
+@property (assign, nonatomic) std::shared_ptr<GameRenderer> renderer;
+@property (assign, nonatomic) std::function<void()> sceneChanged;
 
 @end

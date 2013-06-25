@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12D78" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="2.0" toolsVersion="3084" systemVersion="12E55" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="2083"/>
     </dependencies>
@@ -31,7 +31,7 @@
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gJq-U0-Gd4" userLabel="Button - Color-blind">
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="48" id="TCE-6v-qpE"/>
+                                    <constraint firstAttribute="width" constant="48" id="Fgo-iD-8rZ"/>
                                     <constraint firstAttribute="height" constant="48" id="Ttc-LH-cQF"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="12"/>
@@ -96,24 +96,36 @@
                                     <color key="titleColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                             </button>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="999" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="G8C-hB-Og8">
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="54" id="w37-mZ-x7K"/>
+                                    <constraint firstAttribute="height" constant="31" id="wE4-Jb-zUN"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="ChalkboardSE-Bold" family="Chalkboard SE" pointSize="24"/>
+                                <color key="textColor" red="0.23772918339999999" green="1" blue="0.18209445499999999" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.11255781352519989" green="0.11255444586277008" blue="0.11255636066198349" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
                         <constraints>
+                            <constraint firstItem="gJq-U0-Gd4" firstAttribute="leading" secondItem="G8C-hB-Og8" secondAttribute="trailing" constant="8" symbolic="YES" type="default" id="KC4-nq-0AU"/>
                             <constraint firstItem="gJq-U0-Gd4" firstAttribute="top" secondItem="PAL-2f-BH6" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="Ogi-Ge-hac"/>
-                            <constraint firstItem="gJq-U0-Gd4" firstAttribute="top" secondItem="3" secondAttribute="top" constant="275" id="QAC-LY-ZCA"/>
                             <constraint firstItem="gJq-U0-Gd4" firstAttribute="trailing" secondItem="3" secondAttribute="trailing" type="default" id="Sho-rg-va3"/>
+                            <constraint firstItem="PAL-2f-BH6" firstAttribute="top" secondItem="3" secondAttribute="top" constant="9" id="Zjx-Nm-N7x"/>
                             <constraint firstItem="6q1-oL-Ugm" firstAttribute="trailing" secondItem="3" secondAttribute="trailing" type="default" id="kAs-XZ-gBU"/>
                             <constraint firstAttribute="bottom" secondItem="dkg-cs-M46" secondAttribute="bottom" constant="7" id="n5b-ot-kim"/>
+                            <constraint firstItem="G8C-hB-Og8" firstAttribute="bottom" secondItem="dkg-cs-M46" secondAttribute="bottom" type="default" id="nfK-6V-5nG"/>
                             <constraint firstItem="PAL-2f-BH6" firstAttribute="trailing" secondItem="3" secondAttribute="trailing" type="default" id="oea-TZ-PdB"/>
-                            <constraint firstAttribute="trailing" secondItem="dkg-cs-M46" secondAttribute="trailing" constant="150" id="sdv-FH-dtk"/>
                             <constraint firstAttribute="bottom" secondItem="6q1-oL-Ugm" secondAttribute="bottom" constant="37" id="vq4-FU-K5k"/>
+                            <constraint firstAttribute="trailing" secondItem="dkg-cs-M46" secondAttribute="trailing" constant="150" id="wQT-P0-Nan"/>
                         </constraints>
                         <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
                         <outlet property="gear" destination="gJq-U0-Gd4" id="dBZ-vl-RzQ"/>
+                        <outlet property="score" destination="G8C-hB-Og8" id="Od0-Ua-8LW"/>
                         <outlet property="seed" destination="6q1-oL-Ugm" id="IGY-BH-Dzn"/>
                         <outlet property="tableView" destination="PAL-2f-BH6" id="mSv-po-WiZ"/>
                     </connections>
@@ -410,11 +422,6 @@
         </class>
         <class className="RenderController" superclassName="GLKViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/RenderController.h"/>
-            <relationships>
-                <relationship kind="action" name="panGestured:" candidateClass="UIPanGestureRecognizer"/>
-                <relationship kind="action" name="pinchGestured:" candidateClass="UIPinchGestureRecognizer"/>
-                <relationship kind="action" name="tapGestured:" candidateClass="UITapGestureRecognizer"/>
-            </relationships>
         </class>
         <class className="SettingsController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/SettingsController.h"/>
@@ -438,6 +445,7 @@
                 <relationship kind="action" name="tappedMatch"/>
                 <relationship kind="action" name="tappedSeed"/>
                 <relationship kind="outlet" name="gear" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="score" candidateClass="UILabel"/>
                 <relationship kind="outlet" name="seed" candidateClass="UIButton"/>
                 <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
             </relationships>

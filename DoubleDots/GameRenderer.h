@@ -5,18 +5,17 @@
 
 #include "Color.h"
 #include "vec2.h"
+#include "Signal.h"
 
 #include <memory>
-#include <functional>
 
 class GameView;
 struct ShapeMatches;
 
 class GameRenderer {
 public:
-    struct Touch {
-
-    };
+    brac::Signal<void(size_t)> onColorSetChanged;
+    brac::Signal<void()> toRefreshScene;
 
     static std::array<std::array<brac::vec2, 5>, 2> dots;
 
@@ -29,10 +28,6 @@ public:
 
     std::shared_ptr<GameView> const & gameView() const;
     size_t colorSet() const;
-
-    void onColorSetChanged  (std::function<void(size_t)> const & f);
-    void toRefreshScene     (std::function<void()> const & f);
-    void toCancelTapGesture (std::function<void()> const & f);
 
     void hint(std::shared_ptr<ShapeMatches> const & sm);
 

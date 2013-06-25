@@ -15,9 +15,8 @@
 using namespace brac;
 
 GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed) : board_(nColors), width_(width), height_(height) {
-    for (size_t i = 0; i < 256 / 3 + 1; ++i) {
+    for (size_t i = 0; i < 256 / 3 + 1; ++i)
         indices_.insert(i);
-    }
 
     std::fill(begin(board_.colors), end(board_.colors), brac::BitBoard::empty());
 
@@ -33,20 +32,18 @@ GameState::GameState(size_t nColors, size_t width, size_t height, size_t * seed)
 
 bool GameState::match(bool & incomplete) {
     std::vector<brac::BitBoard> bbs; bbs.reserve(sels_.size());
-    std::transform(begin(sels_), end(sels_), back_inserter(bbs), [](Selections::value_type const & s) { return s.second.is_selected; });
+    std::transform(begin(sels_), end(sels_), back_inserter(bbs),
+                   [](Selections::value_type const & s) { return s.second.is_selected; });
     auto finish = std::remove(begin(bbs), end(bbs), brac::BitBoard::empty());
-    if (finish - begin(bbs) > 1                     &&
-        bbs[0].count() > 2                          &&
-        board_.selectionsMatch(begin(bbs), finish))
-    {
+    if (finish - begin(bbs) > 1 && bbs[0].count() > 2 && board_.selectionsMatch(begin(bbs), finish)) {
         if (!(incomplete = !board_.findOtherMatches(bbs).empty())) {
             for (auto& s : sels_)
                 board_ &= ~s.second.is_selected;
             for (auto const & sel : sels_)
                 indices_.insert(sel.first);
             sels_.clear();
-            boardChanged_();
-            selectionChanged_();
+            onBoardChanged();
+            onSelectionChanged();
             return true;
         }
     } else {
@@ -64,7 +61,7 @@ void GameState::touchesBegan(std::vector<Touch> const & touches) {
             auto i = std::min_element(begin(indices_), end(indices_));
             sel = sels_.emplace(*i, Selection{}).first;
             indices_.erase(i);
-            selectionChanged_();
+            onSelectionChanged();
         }
         if (sel != end(sels_)) {
             sel->second.key = t.key;
@@ -90,10 +87,7 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
                 sel.is_selected |= is_touched;
 
                 sel.added.push_back(t.p);
-
-                if (sel.is_selected.count() > 1)
-                    cancelTapGesture_();
-                selectionChanged_();
+                onSelectionChanged();
             } else if ((sel.added.empty() || (sel.added.size() >= 2 && t.p == sel.added.end()[-2])) &&
                        is_touched != sel.was_touched &&
                        (is_touched & is_occupied & sel.is_selected) &&
@@ -104,11 +98,9 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
                 if (floodFill(is_touched, erased) == erased)
                     sel.is_selected = erased;
 
-                cancelTapGesture_();
-
                 if (!sel.added.empty())
                     sel.added.pop_back();
-                selectionChanged_();
+                onSelectionChanged();
             } else if (container != end(sels_) && container != i && sel.is_selected.count() <= 1) {
                 auto & csel = container->second;
 
@@ -120,14 +112,12 @@ void GameState::touchesMoved(std::vector<Touch> const & touches) {
                 sel.is_selected = is_touched;
                 sel.has_deleted = true;
 
-                cancelTapGesture_();
-
                 if (!csel.is_selected) {
                     indices_.insert(container->first);
                     sels_.erase(container);
                 }
 
-                selectionChanged_();
+                onSelectionChanged();
             }
             sel.was_touched = is_touched;
         }
@@ -142,10 +132,9 @@ void GameState::touchesEnded(std::vector<Touch> const & touches) {
                 if (sel->second.is_selected.count() < 3) {
                     indices_.insert(sel->first);
                     sels_.erase(sel);
-                    selectionChanged_();
+                    onSelectionChanged();
                 } else {
                     sel->second.key = nullptr;
-                    cancelTapGesture_();
                 }
             }
         } else {
@@ -159,8 +148,7 @@ void GameState::touchesCancelled(std::vector<Touch> const & touches) {
         auto sel = findSelection(t);
         if (sel != end(sels_)) {
             sel->second.key = nullptr;
-            cancelTapGesture_();
-            selectionChanged_();
+            onSelectionChanged();
         }
     }
 }
@@ -171,13 +159,13 @@ void GameState::tapped(vec2 p) {
         if (i->second.is_selected & is_touched) {
             indices_.insert(i->first);
             i = sels_.erase(i);
-            selectionChanged_();
+            onSelectionChanged();
             return;
         }
     }
     for (auto const & sel : sels_) indices_.insert(sel.first);
     sels_.clear();
-    selectionChanged_();
+    onSelectionChanged();
 }
 
 BitBoard::WithOrientation GameState::canonicalise(BitBoard const & bb) {

@@ -6,13 +6,13 @@
 #import "BitBoard.h"
 #import "Board.h"
 #import "ShapeMatches.h"
+#import "Signal.h"
 
 #include "vec2.h"
 
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <functional>
 
 class GameState {
 public:
@@ -39,6 +39,9 @@ public:
     
     enum { minimumSelection = 3 };
 
+    brac::Signal<void()> onSelectionChanged;
+    brac::Signal<void()> onBoardChanged;
+
     GameState(size_t nColors, size_t width, size_t height, size_t * seed = nullptr);
 
     bool match(bool & incomplete);
@@ -48,10 +51,6 @@ public:
     size_t                  height() const { return height_   ; }
     Board           const & board () const { return board_    ; }
     Selections      const & sels  () const { return sels_     ; }
-
-    template <typename F> void onSelectionChanged   (F f) { selectionChanged_   = f; }
-    template <typename F> void onBoardChanged       (F f) { boardChanged_       = f; f(); }
-    template <typename F> void onCancelTapGesture   (F f) { cancelTapGesture_   = f; }
 
     void touchesBegan    (std::vector<Touch> const & touches);
     void touchesMoved    (std::vector<Touch> const & touches);
@@ -69,10 +68,6 @@ private:
     Board                       board_;
     Selections                  sels_;
     std::unordered_set<size_t>  indices_;
-
-    std::function<void()> selectionChanged_;
-    std::function<void()> boardChanged_;
-    std::function<void()> cancelTapGesture_;
 
     void handleTouch(brac::BitBoard is_touched, Selection& sel);
 
