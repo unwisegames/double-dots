@@ -91,7 +91,7 @@ static char const g_TouchMovedKey = '\0';
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
     if (_renderer) _renderer->render();
     if (!_needsRefresh) {
-        //self.paused = YES;
+        self.paused = YES;
     } else {
         _needsRefresh = false;
     }
