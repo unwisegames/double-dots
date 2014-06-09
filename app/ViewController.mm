@@ -1,5 +1,3 @@
-//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
-
 #import "ViewController.h"
 #import "ShapeCell.h"
 #import "Board.h"
