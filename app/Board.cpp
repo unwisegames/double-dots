@@ -138,7 +138,7 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 if (~c0 && ~c1 && ~c2 &&    // no missing dots and ...
                     c0 <= c2)               //   not greater of asymmetric pair
                 {
-                    s_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, -r}(s3));
+                    s_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, static_cast<int8_t>(-r)}(s3));
                 }
             }
     enumerateTriples(s_triples);
@@ -152,7 +152,7 @@ std::unordered_set<std::array<BitBoard, 2>> Board::findMatchingPairs() const {
                 int (&c)[16][16] = rotcolors[r];
                 char c0 = c[y + 1][x], c1 = c[y][x], c2 = c[y][x + 1];
                 if (~c0 && ~c1 && ~c2)
-                    l_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, -r}(l3));
+                    l_triples[c0 + 5 * c1 + 25 * c2].push_back(BitBoard::ShiftRotate{{x, y}, static_cast<int8_t>(-r)}(l3));
             }
     enumerateTriples(l_triples);
 
@@ -182,7 +182,7 @@ std::vector<BitBoard> Board::findOtherMatches(std::vector<BitBoard> const & matc
     for (size_t r = 0; r < 4; ++r)
         for (size_t y = 0; y < h; ++y)
             for (size_t x = 0; x < w; ++x) {
-                BitBoard::ShiftRotate sr{{x, y}, r};
+                BitBoard::ShiftRotate sr{{static_cast<signed char>(x), static_cast<signed char>(y)}, static_cast<int8_t>(r)};
                 auto candidate = sr * shape.bb;
                 if ((mask & candidate) == candidate && sr.inverse() * (*this & candidate) == pattern)
                     result.push_back(candidate);

@@ -1,10 +1,9 @@
 //  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
 
 #import "RenderController.h"
-#import "ChipmunkDebugDrawDoubleDots.h"
 #import "GameView.h"
 
-#include "vec2.h"
+#include <bricabrac/Math/vec2.h>
 
 #import <objc/runtime.h>
 
@@ -40,20 +39,20 @@ static char const g_TouchMovedKey = '\0';
 
     _renderer = std::make_shared<GameRenderer>(nullptr, 0);
 
-    _renderer->onColorSetChanged += [=](size_t colorSet) {
+    _renderer->onColorSetChanged.connect([=](size_t colorSet) {
         auto ud = [NSUserDefaults standardUserDefaults];
         [ud setInteger:colorSet forKey:@"ColorBlind"];
         [ud synchronize];
         self.paused = NO;
-    };
+    });
 
-    _renderer->toRefreshScene += [=]{
+    _renderer->toRefreshScene.connect([=]{
         if (_updating) {
             _needsRefresh = true;
         } else {
             self.paused = NO;
         }
-    };
+    });
 
     _renderer->setColorSet([[NSUserDefaults standardUserDefaults] integerForKey:@"ColorBlind"]);
 

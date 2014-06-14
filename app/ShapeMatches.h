@@ -1,9 +1,7 @@
-//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
+#ifndef INCLUDED__ShapeMatches_h
+#define INCLUDED__ShapeMatches_h
 
-#ifndef __DoubleDots__ShapeMatches__
-#define __DoubleDots__ShapeMatches__
-
-#include "BitBoard.h"
+#include <bricabrac/Math/BitBoard.h>
 
 #include <vector>
 
@@ -20,4 +18,4 @@ struct ShapeMatches {
     uint8_t hinted;
 };
 
-#endif /* defined(__DoubleDots__ShapeMatches__) */
+#endif // INCLUDED__ShapeMatches_h

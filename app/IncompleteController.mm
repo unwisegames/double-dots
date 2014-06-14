@@ -1,5 +1,3 @@
-//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
-
 #import "IncompleteController.h"
 
 @interface IncompleteController ()

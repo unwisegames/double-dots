@@ -2,8 +2,8 @@
 #import "ShapeCell.h"
 #import "Board.h"
 #import "GameView.h"
-#import "LruCache.h"
-#import "UIAlertView+Blocks.h"
+#import <bricabrac/Utility/LruCache.h>
+#import <bricabrac/Cocoa/UIAlertView+Blocks.h>
 #import "SettingsController.h"
 #import "IncompleteController.h"
 
@@ -101,7 +101,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         for (int y = 0; y <= h; ++y)
             for (int x = 0; x <= w; ++x) {
                 auto p = CGPointMake(gBorder + gGrid * x, H - (gBorder + gGrid * y));
-                uint32_t bits = bb.shiftWS(x - 1, y - 1).a;
+                uint32_t bits = static_cast<uint32_t>(bb.shiftWS(x - 1, y - 1).a);
                 bool west   = bits & (1 << 16);
                 bool center = bits & (2 << 16);
                 bool south  = bits & 2;
@@ -113,7 +113,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         for (int y = 0; y <= h; ++y)
             for (int x = 0; x <= w; ++x) {
                 auto p = CGPointMake(gBorder + gGrid * x, H - (gBorder + gGrid * y));
-                uint32_t bits = bb.shiftWS(x - 1, y - 1).a;
+                uint32_t bits = static_cast<uint32_t>(bb.shiftWS(x - 1, y - 1).a);
                 bool west   = bits & (1 << 16);
                 bool center = bits & (2 << 16);
                 bool south  = bits & 2;
@@ -391,7 +391,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
             if (popover) {
                 [popover dismissPopoverAnimated:YES];
             } else {
-                [self dismissModalViewControllerAnimated:YES];
+                [self dismissViewControllerAnimated:YES completion:^{}];
             }
             [self stopGear];
         };
@@ -408,7 +408,7 @@ typedef brac::LruCache<std::tuple<brac::BitBoard, uint8_t, size_t>, UIImage *> S
         };
 
         settings.cancelled = [=]{
-            [self dismissModalViewControllerAnimated:YES];
+            [self dismissViewControllerAnimated:YES completion:^{}];
         };
     } else if ([segue.destinationViewController isMemberOfClass:[IncompleteController class]]) {
         IncompleteController * incomplete = segue.destinationViewController;

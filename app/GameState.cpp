@@ -2,7 +2,7 @@
 
 #include "GameState.h"
 
-#include "vec2.h"
+#include <bricabrac/Math/vec2.h>
 
 #include <unordered_map>
 #include <iostream>
@@ -171,10 +171,10 @@ void GameState::tapped(vec2 p) {
 BitBoard::WithOrientation GameState::canonicalise(BitBoard const & bb) {
     int nm = bb.marginN(), sm = bb.marginS(), em = bb.marginE(), wm = bb.marginW();
     BitBoard::WithOrientation bbs[4] = {
-        BitBoard::ShiftRotate{{-wm, -sm}, 0}(bb),
-        BitBoard::ShiftRotate{{-wm,  nm}, 1}(bb),
-        BitBoard::ShiftRotate{{ em,  nm}, 2}(bb),
-        BitBoard::ShiftRotate{{ em, -sm}, 3}(bb),
+        BitBoard::ShiftRotate{{static_cast<int8_t>(-wm), static_cast<int8_t>(-sm)}, 0}(bb),
+        BitBoard::ShiftRotate{{static_cast<int8_t>(-wm), static_cast<int8_t>( nm)}, 1}(bb),
+        BitBoard::ShiftRotate{{static_cast<int8_t>( em), static_cast<int8_t>( nm)}, 2}(bb),
+        BitBoard::ShiftRotate{{static_cast<int8_t>( em), static_cast<int8_t>(-sm)}, 3}(bb),
     };
 
     // Deskew symmetric patterns.
@@ -211,7 +211,7 @@ GameState::ShapeMatcheses GameState::possibleMoves(Board const & board) {
     int biggest_count = 0;
 
     std::map<int, int> histogram;
-    for (const auto& p : pairs) {
+    for (auto const & p : pairs) {
         int count = p[0].count();
         ++histogram[count];
         if (biggest_count <= count) {

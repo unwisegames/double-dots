@@ -3,12 +3,14 @@
 #ifndef INCLUDED__GameState_h
 #define INCLUDED__GameState_h
 
-#import "BitBoard.h"
+#import <bricabrac/Math/BitBoard.h>
 #import "Board.h"
 #import "ShapeMatches.h"
 #import "Signal.h"
 
-#include "vec2.h"
+#include <bricabrac/Math/vec2.h>
+
+#include <boost/signals2.hpp>
 
 #include <vector>
 #include <unordered_map>
@@ -39,8 +41,8 @@ public:
     
     enum { minimumSelection = 3 };
 
-    brac::Signal<void()> onSelectionChanged;
-    brac::Signal<void()> onBoardChanged;
+    boost::signals2::signal<void()> onSelectionChanged;
+    boost::signals2::signal<void()> onBoardChanged;
 
     GameState(size_t nColors, size_t width, size_t height, size_t * seed = nullptr);
 

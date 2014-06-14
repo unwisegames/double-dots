@@ -3,9 +3,10 @@
 #ifndef INCLUDED__DoubleDots__BoardRenderer_h
 #define INCLUDED__DoubleDots__BoardRenderer_h
 
-#include "Color.h"
-#include "vec2.h"
-#include "Signal.h"
+#include <bricabrac/Math/Color.h>
+#include <bricabrac/Math/vec2.h>
+
+#include <boost/signals2/signal.hpp>
 
 #include <memory>
 
@@ -14,8 +15,8 @@ struct ShapeMatches;
 
 class GameRenderer {
 public:
-    brac::Signal<void(size_t)> onColorSetChanged;
-    brac::Signal<void()> toRefreshScene;
+    boost::signals2::signal<void(size_t)> onColorSetChanged;
+    boost::signals2::signal<void()> toRefreshScene;
 
     static std::array<std::array<brac::vec2, 5>, 2> dots;
 

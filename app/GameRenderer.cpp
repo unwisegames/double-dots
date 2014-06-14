@@ -3,9 +3,9 @@
 #include "GameRenderer.h"
 #include "GameView.h"
 
-#include "MathUtil.h"
-#include "Texture2D.hpp"
-#include "Color.h"
+#include <bricabrac/Math/MathUtil.h>
+#include <bricabrac/Texture/Texture.h>
+#include <bricabrac/Math/Color.h>
 
 #include <OpenGLES/ES2/glext.h>
 
@@ -17,13 +17,13 @@
 #include <algorithm>
 
 #define BRICABRAC_SHADER_NAME Matte
-#include "LoadShaders.h"
+#include <bricabrac/Shader/LoadShaders.h>
 #define BRICABRAC_SHADER_NAME Border
-#include "LoadShaders.h"
+#include <bricabrac/Shader/LoadShaders.h>
 #define BRICABRAC_SHADER_NAME Dots
-#include "LoadShaders.h"
+#include <bricabrac/Shader/LoadShaders.h>
 #define BRICABRAC_SHADER_NAME Board
-#include "LoadShaders.h"
+#include <bricabrac/Shader/LoadShaders.h>
 
 using namespace brac;
 
@@ -68,7 +68,7 @@ struct GameRenderer::Members {
 
     mat4 pmvMatrix, pick;
     mat3 normalMatrix;
-    Tex2D atlas, dotStates, surface, dimple, edging;
+    std::unique_ptr<Texture> atlas, dotStates, surface, dimple, edging;
     RgbaPixel dotsData[16 * 16];
     DotsVertexBuffer vboDots;
     ElementBuffer<> eboDots;
@@ -116,7 +116,7 @@ struct GameRenderer::Members {
 
         for (int y = 0; y < nBoardRows; ++y)
             for (int x = 0; x < nBoardCols; ++x) {
-                vec2 c{0.5 + x, 0.5 + y};
+                vec2 c{0.5f + x, 0.5f + y};
                 uint64_t hood = bb.shiftWS(x - 1, y - 1).a;
                 if (hood & (2ULL<<16)) {
                     bool SW = hood &  1ULL;
@@ -162,8 +162,8 @@ struct GameRenderer::Members {
             auto vi = back_inserter(dotsVertsData);
             for (size_t y = 0; y < nBoardRows; ++y)
                 for (size_t x = 0; x < nBoardCols; ++x) {
-                    vec2 position{ x            ,  y            };
-                    vec2 dotcoord{(x + 0.5) / 16, (y + 0.5) / 16};
+                    vec2 position{static_cast<float>(x)            ,  static_cast<float>(y)             };
+                    vec2 dotcoord{static_cast<float>((x + 0.5) / 16), static_cast<float>((y + 0.5) / 16)};
                     constexpr float s = 0.25;
                     int c = board.color(x, y);
                     vec2 tc = GameRenderer::dots[colorSet][c];
@@ -211,7 +211,7 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
     m->edgeThickness = gEdgeThickness * scale;
     m->viewHeight = m->nBoardRows + 2 * m->edgeThickness;
 
-    game->onSelectionChanged += [=]{
+    game->onSelectionChanged.connect([=]{
         auto const & sels = game->sels();
 
         // Remove deselected borders.
@@ -237,9 +237,9 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
             }
 
         toRefreshScene();
-    };
+    });
 
-    game->onBoardChanged += [=]{
+    game->onBoardChanged.connect([=]{
         auto mask = game->board().computeMask();
         for (size_t y = 0; y < 16; ++y)
             for (size_t x = 0; x < 16; ++x) {
@@ -247,9 +247,9 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
                 m->dotsData[16 * y + x] = {v, v, v, v};
             }
 
-        m->dotStates.paste({m->dotsData, Tex2D::PixelFormat::Rgba8888, 16, 16, {16, 16}}, {0, 0});
+        m->dotStates->paste({m->dotsData, Texture::PixelFormat::Rgba8888, 16, 16, {16, 16}}, {0, 0});
         toRefreshScene();
-    };
+    });
     game->onBoardChanged();
 
     float s = 2.7 / m->nBoardCols;
@@ -259,17 +259,17 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
     };
 
     m->vboBoardInterior = BoardVertexBuffer{
-        bvert({0            , m->nBoardRows}, {0            , m->nBoardRows}),
+        bvert({0            , static_cast<float>(m->nBoardRows)}, {0            , static_cast<float>(m->nBoardRows)}),
         bvert({0            , 0            }, {0            , 0            }),
-        bvert({m->nBoardCols, m->nBoardRows}, {m->nBoardCols, m->nBoardRows}),
-        bvert({m->nBoardCols, 0            }, {m->nBoardCols, 0            }),
+        bvert({static_cast<float>(m->nBoardCols), static_cast<float>(m->nBoardRows)}, {static_cast<float>(m->nBoardCols), static_cast<float>(m->nBoardRows)}),
+        bvert({static_cast<float>(m->nBoardCols), 0            }, {static_cast<float>(m->nBoardCols), 0            }),
     };
 
     constexpr float ext = 5.7;
     float e = m->edgeThickness;
 
     auto edge = [&](int x, int y, int ox, int oy) {
-        return bvert({(m->nBoardCols + ext) * x + e * ox, m->nBoardRows * y + e * oy}, {0.5 * (ox + 1), 0.5 * (oy + 1)});
+        return bvert({(m->nBoardCols + ext) * x + e * ox, m->nBoardRows * y + e * oy}, {0.5f * (ox + 1), 0.5f * (oy + 1)});
     };
 
     auto e00 = edge(0, 0, -1, -1);
@@ -289,10 +289,10 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
     auto e14 = edge(1, 1,  0,  1);
     auto e15 = edge(1, 1,  1,  1);
 
-    auto i0 = bvert({m->nBoardCols      , 0            }, {0.5, 0.5});
+    auto i0 = bvert({static_cast<float>(m->nBoardCols)      , 0            }, {0.5, 0.5});
     auto i1 = bvert({m->nBoardCols + ext, 0            }, {0.5, 0.5});
-    auto i2 = bvert({m->nBoardCols      , m->nBoardRows}, {0.5, 0.5});
-    auto i3 = bvert({m->nBoardCols + ext, m->nBoardRows}, {0.5, 0.5});
+    auto i2 = bvert({static_cast<float>(m->nBoardCols)      , static_cast<float>(m->nBoardRows)}, {0.5, 0.5});
+    auto i3 = bvert({m->nBoardCols + ext, static_cast<float>(m->nBoardRows)}, {0.5, 0.5});
 
     m->vboBoardEdge = BoardVertexBuffer{
         i0 , i1 , i2 , i3 , i3 , e00,   // Sidebar
@@ -316,8 +316,8 @@ void GameRenderer::setGameView(const std::shared_ptr<GameView> &gameView) {
         std::vector<BoardVertex> verts; verts.reserve(100);
         auto joint = [&](vec2 p, float angle, float u) {
             float c = std::cos(angle), s = std::sin(angle);
-            verts.push_back(bvert({p.x - gr * s, p.y + gr * c}, {0.5 * (1 - s + c * u), 0.5 * (1 + c + s * u)}));
-            verts.push_back(bvert({p.x + gr * s, p.y - gr * c}, {0.5 * (1 + s + c * u), 0.5 * (1 - c + s * u)}));
+            verts.push_back(bvert({p.x - gr * s, p.y + gr * c}, {0.5f * (1 - s + c * u), 0.5f * (1 + c + s * u)}));
+            verts.push_back(bvert({p.x + gr * s, p.y - gr * c}, {0.5f * (1 + s + c * u), 0.5f * (1 - c + s * u)}));
         };
         auto arc = [&](vec2 center, float r, float a1, float a2) {
             size_t n = 24 / M_PI * std::fabs(a2 - a1);
@@ -415,7 +415,7 @@ void GameRenderer::setupGL() {
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     auto loadImageTexture = [](const char *name, bool repeat) {
-        Tex2D tex{std::make_shared<Image>(name)};
+        Texture tex{Image(name)};
         glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
@@ -423,15 +423,15 @@ void GameRenderer::setupGL() {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         }
-        return tex;
+        return new Texture{std::move(tex)};
     };
 
-    m->atlas   = loadImageTexture("atlas.png"  , false);
-    m->surface = loadImageTexture("surface.png", true ); // http://seamless-pixels.blogspot.com.au/2012/09/seamless-floor-concrete-stone-pavement.html
-    m->dimple  = loadImageTexture("dimple.png" , true );
-    m->edging  = loadImageTexture("edging.png" , false);
+    m->atlas  .reset(loadImageTexture("atlas.png"  , false));
+    m->surface.reset(loadImageTexture("surface.png", true )); // http://seamless-pixels.blogspot.com.au/2012/09/seamless-floor-concrete-stone-pavement.html
+    m->dimple .reset(loadImageTexture("dimple.png" , true ));
+    m->edging .reset(loadImageTexture("edging.png" , false));
 
-    m->dotStates = {{m->dotsData, Tex2D::PixelFormat::Rgba8888, 16, 16, {16, 16}}};
+    m->dotStates.reset(new Texture{{m->dotsData, Texture::PixelFormat::Rgba8888, 16, 16, {16, 16}}});
 
     m->vboDots        = m->vboDots      .empty();
     m->eboDots        = m->eboDots      .empty();
@@ -440,18 +440,21 @@ void GameRenderer::setupGL() {
     for (size_t i = 0; i < 2; ++i)
         m->vboHints[i] = m->vboHints[i].empty();
 
-    if (auto border = (*m->border)()) {
-        border.fs.atlas = 0;
+    {
+        auto & border = (*m->border)();
+        border->atlas = 0;
     }
 
-    if (auto dots = (*m->dots)()) {
-        dots.fs.atlas = 0;
-        dots.fs.dots  = 1;
+    {
+        auto & dots = (*m->dots)();
+        dots->atlas = 0;
+        dots->dots  = 1;
     }
 
-    if (auto board = (*m->board)()) {
-        board.fs.texture = 0;
-        board.fs.light   = 1;
+    {
+        auto & board = (*m->board)();
+        board->texture = 0;
+        board->light   = 1;
     }
 }
 
@@ -479,49 +482,52 @@ void GameRenderer::render() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (auto board = (*m->board)()) {
-        board.vs.pmvMat = m->pmvMatrix;
-        board.vs.texMat = mat4::rotate(0.5, {0, 0, 1});
-        board.fs.color = {1, 1, 1, 1};
+    {
+        auto & board = (*m->board)();
+        board->pmvMat = m->pmvMatrix;
+        board->texMat = mat4::rotate(0.5, {0, 0, 1});
+        board->color = {1, 1, 1, 1};
 
-        m->surface.activateAndBind();
+        m->surface->activateAndBind();
 
-        m->edging.activateAndBind(GL_TEXTURE1);
+        m->edging->activateAndBind(GL_TEXTURE1);
         m->vboBoardEdge.render(board, GL_TRIANGLE_STRIP);
 
-        m->dimple.activateAndBind(GL_TEXTURE1);
+        m->dimple->activateAndBind(GL_TEXTURE1);
         m->vboBoardInterior.render(board, GL_TRIANGLE_STRIP);
         m->vboSeparator.render(board, GL_TRIANGLE_STRIP);
     }
 
-    m->atlas.activateAndBind(GL_TEXTURE0);
-    m->dotStates.activateAndBind(GL_TEXTURE1);
+    m->atlas->activateAndBind(GL_TEXTURE0);
+    m->dotStates->activateAndBind(GL_TEXTURE1);
 
-    if (auto border = (*m->border)()) {
-        border.vs.pmvMat = m->pmvMatrix;
+    {
+        auto & border = (*m->border)();
+        border->pmvMat = m->pmvMatrix;
 
         for (auto const & sel : m->gameView->game()->sels()) {
             auto b = m->borders.find(sel.first);
             if (b != m->borders.end() && b->second) {
-                border.fs.color = vec4{(vec3)selectionColors[sel.first % selectionColors.size()] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
+                border->color = vec4{(vec3)selectionColors[sel.first % selectionColors.size()] * (1 - 0.5 * (sel.second.is_selected.count() < GameState::minimumSelection)), 1};
 
                 b->second.render(border, GL_TRIANGLES);
             }
         }
 
         if (m->hintIntensity) {
-            border.fs.color = vec4{1, 1, 1, 1} * m->hintIntensity;
+            border->color = vec4{1, 1, 1, 1} * m->hintIntensity;
             for (const auto& hint : m->vboHints)
                 hint.render(border, GL_TRIANGLES);
         }
     }
 
-    if (auto dots = (*m->dots)()) {
-        dots.vs.pmvMat = m->pmvMatrix;
+    {
+        auto & dots = (*m->dots)();
+        dots->pmvMat = m->pmvMatrix;
 
         m->eboDots.render(dots, m->vboDots, GL_TRIANGLES);
     }
 
-    Tex2D::activateAndUnbind(GL_TEXTURE0);
-    Tex2D::activateAndUnbind(GL_TEXTURE1);
+    Texture::activateAndUnbind(GL_TEXTURE0);
+    Texture::activateAndUnbind(GL_TEXTURE1);
 }

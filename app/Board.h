@@ -1,11 +1,7 @@
-//  Copyright © 2013 Marcelo Cantos <me@marcelocantos.com>
+#ifndef INCLUDED__Board_h
+#define INCLUDED__Board_h
 
-#ifndef INCLUDED__DoubleDots__Board_h
-#define INCLUDED__DoubleDots__Board_h
-
-#import "common.h"
-#import "BitBoard.h"
-#import "bert.hpp"
+#import <bricabrac/Math/BitBoard.h>
 
 #include <utility>
 #include <algorithm>
@@ -120,4 +116,4 @@ inline Board operator*(brac::BitBoard::ShiftRotate const & sr, Board const & b) 
 
 std::ostream& write(std::ostream& os, Board const & b, std::initializer_list<brac::BitBoard> bbs, const char* colors, bool trimNorth = false);
 
-#endif // INCLUDED__DoubleDots__Board_h
+#endif // INCLUDED__Board_h
